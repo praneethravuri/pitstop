@@ -24,6 +24,7 @@ class RSSClient:
         "racefans": "https://www.racefans.net/feed/",
         "planetf1": "https://www.planetf1.com/feed/",
         "motorsport": "https://www.motorsport.com/rss/f1/news/",
+        "fia": "fia.com/rss/press-release"
     }
 
     def __init__(self):
