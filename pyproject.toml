@@ -8,4 +8,5 @@ dependencies = [
     "fastf1>=3.6.1",
     "httpx>=0.28.1",
     "mcp[cli]>=1.16.0",
+    "pydantic>=2.11.10",
 ]
