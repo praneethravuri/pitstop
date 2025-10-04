@@ -15,6 +15,7 @@ Pitstop is an MCP server that provides comprehensive Formula 1 data access throu
 
 - 📊 Driver Championship Standings
 - 🏆 Historical Season Data (1950-present)
+- 📰 Latest F1 News from Multiple Sources
 - ⚡ Fast caching for improved performance
 - 🔌 Easy integration with MCP-compatible clients
 - 🎯 Type-safe responses with Pydantic models
@@ -23,9 +24,15 @@ Pitstop is an MCP server that provides comprehensive Formula 1 data access throu
 
 ### Championship Data
 
-| Tool Name            | Description                                                                                                                                                                        | Parameters                                 | Returns                                                                                                                                                                                                   |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tool Name          | Description                                                                                                                                                                        | Parameters                               | Returns                                                                                                                                                                                                   |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `driver_standings` | Get complete Formula 1 driver championship standings for a specific season. Returns the final standings table showing each driver's position, points, wins, team, and driver code. | `year` (int): Season year (1950-present) | Championship standings with a list of all drivers, each containing: position, driver name, driver code (3-letter abbreviation), team/constructor name, total championship points, and number of race wins |
+
+### News & Updates
+
+| Tool Name  | Description                                                                                                                              | Parameters                                                                                                                                            | Returns                                                                                                                                                    |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `f1_news`  | Get latest Formula 1 news from trusted RSS feeds. Aggregates news from official F1 site, Autosport, The Race, RaceFans, and more sources. | `source` (str): News source - "formula1", "autosport", "the-race", "racefans", "planetf1", "motorsport", "all" (default: "formula1")<br>`limit` (int): Max articles 1-50 (default: 10) | News articles with title, link, published date, summary, source name, and author (if available) |
 
 ## Installation
 
@@ -52,6 +59,7 @@ uv sync
 This will create a virtual environment and install all required dependencies including:
 
 - FastF1 (Formula 1 data access)
+- feedparser (RSS feed parsing)
 - MCP (Model Context Protocol)
 - Pydantic (Data validation)
 - httpx (HTTP client)
@@ -93,6 +101,8 @@ Once configured, you can use Pitstop tools through your MCP client:
 
 ### Example Queries
 
+#### Championship Standings
+
 **Get Current Season Standings:**
 
 ```
@@ -111,7 +121,36 @@ What were the F1 driver standings in 2021?
 Show me the top 3 drivers from the 2024 and 2021 F1 seasons
 ```
 
+#### News & Updates
+
+**Get Latest F1 News:**
+
+```
+What's the latest F1 news?
+```
+
+**Get News from Specific Source:**
+
+```
+Show me the top 5 F1 articles from Autosport
+```
+
+**Get News from All Sources:**
+
+```
+Get me 20 F1 news articles from all sources
+```
+
+**Stay Updated:**
+
+```
+Any breaking F1 news today?
+What happened in F1 this week?
+```
+
 ### Response Data
+
+#### Championship Standings
 
 The server returns structured data including:
 
@@ -122,7 +161,20 @@ The server returns structured data including:
 - **Points**: Total championship points
 - **Wins**: Number of race wins
 
-### Example Response
+#### News Articles
+
+The server returns structured news data including:
+
+- **Title**: Article headline
+- **Link**: URL to full article
+- **Published**: Publication date and time
+- **Summary**: Article excerpt or description
+- **Source**: News source name (formula1, autosport, etc.)
+- **Author**: Article author (if available)
+
+### Example Responses
+
+#### Championship Standings
 
 **2024 Season:**
 
@@ -176,6 +228,64 @@ The server returns structured data including:
 }
 ```
 
+#### News Articles
+
+**Latest F1 News from Autosport:**
+
+```json
+{
+  "source": "autosport",
+  "fetched_at": "2024-10-04T18:30:00",
+  "article_count": 5,
+  "articles": [
+    {
+      "title": "How Russell nailed Singapore GP pole as Verstappen's dirty air complaint is examined",
+      "link": "https://www.autosport.com/f1/news/...",
+      "published": "Sat, 21 Sep 2024 19:45:00 GMT",
+      "summary": "George Russell claimed a stunning pole position for the Singapore Grand Prix...",
+      "source": "autosport",
+      "author": "Jonathan Noble"
+    },
+    {
+      "title": "What has happened to McLaren's 2025 F1 advantage?",
+      "link": "https://www.autosport.com/f1/news/...",
+      "published": "Sat, 21 Sep 2024 16:30:00 GMT",
+      "summary": "McLaren's dominant form in the second half of 2024 has raised questions...",
+      "source": "autosport",
+      "author": null
+    }
+  ]
+}
+```
+
+**Aggregated News from All Sources:**
+
+```json
+{
+  "source": "all",
+  "fetched_at": "2024-10-04T18:30:00",
+  "article_count": 12,
+  "articles": [
+    {
+      "title": "What are the tactical options for the Singapore GP?",
+      "link": "https://www.formula1.com/...",
+      "published": "2024-09-21T10:00:00Z",
+      "summary": "With Singapore's unique characteristics...",
+      "source": "formula1",
+      "author": null
+    },
+    {
+      "title": "Verstappen eyes redemption in Singapore",
+      "link": "https://www.racefans.net/...",
+      "published": "2024-09-21T09:30:00Z",
+      "summary": "Max Verstappen is looking to bounce back...",
+      "source": "racefans",
+      "author": "Keith Collantine"
+    }
+  ]
+}
+```
+
 ## Project Structure
 
 ```
@@ -183,14 +293,19 @@ pitstop/
 ├── server.py              # MCP server entry point
 ├── tools/                 # Tool implementations
 │   ├── driver_standings.py
+│   ├── news.py            # F1 news tool
 │   └── __init__.py
 ├── clients/               # API clients
 │   ├── fastf1_client.py
+│   ├── rss_client.py      # RSS feed client
 │   └── __init__.py
 ├── models/                # Pydantic data models
 │   ├── driver_standings.py
+│   ├── news.py            # News models
 │   └── __init__.py
 ├── utils/                 # Utility functions
+│   ├── date_validator.py
+│   └── __init__.py
 ├── cache/                 # FastF1 cache directory
 ├── pyproject.toml         # Project dependencies
 └── README.md
@@ -216,6 +331,15 @@ uv run python -c "from tools import driver_standings; result = driver_standings(
 
 # Test driver standings for 2021
 uv run python -c "from tools import driver_standings; result = driver_standings(2021); print(f'Champion: {result.standings[0].driver_name} - {result.standings[0].points} points')"
+
+# Test F1 news from official F1 site
+uv run python -c "from tools import f1_news; result = f1_news('formula1', 3); print(f'Found {result.article_count} articles from {result.source}'); print(f'Latest: {result.articles[0].title}')"
+
+# Test F1 news from Autosport
+uv run python -c "from tools import f1_news; result = f1_news('autosport', 5); print(f'Found {result.article_count} articles'); [print(f'  - {article.title}') for article in result.articles[:3]]"
+
+# Test aggregated news from all sources
+uv run python -c "from tools import f1_news; result = f1_news('all', 3); print(f'Total articles: {result.article_count}'); sources = set([a.source for a in result.articles]); print(f'Sources: {sources}')"
 ```
 
 ### Adding New Tools
