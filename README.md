@@ -23,9 +23,9 @@ Pitstop is an MCP server that provides comprehensive Formula 1 data access throu
 
 ### Championship Data
 
-| Tool Name                     | Description                                                                                                            | Parameters                               | Returns                                                                                                                                                                         |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `driver_standings`     | Get complete Formula 1 driver championship standings for a specific season. Returns the final standings table showing each driver's position, points, wins, team, and driver code. | `year` (int): Season year (1950-present) | Championship standings with a list of all drivers, each containing: position, driver name, driver code (3-letter abbreviation), team/constructor name, total championship points, and number of race wins |
+| Tool Name            | Description                                                                                                                                                                        | Parameters                                 | Returns                                                                                                                                                                                                   |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `driver_standings` | Get complete Formula 1 driver championship standings for a specific season. Returns the final standings table showing each driver's position, points, wins, team, and driver code. | `year` (int): Season year (1950-present) | Championship standings with a list of all drivers, each containing: position, driver name, driver code (3-letter abbreviation), team/constructor name, total championship points, and number of race wins |
 
 ## Installation
 
@@ -39,7 +39,7 @@ Pitstop is an MCP server that provides comprehensive Formula 1 data access throu
 1. Clone the repository:
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/praneethravuri/pitstop.git
 cd pitstop
 ```
 
@@ -94,16 +94,19 @@ Once configured, you can use Pitstop tools through your MCP client:
 ### Example Queries
 
 **Get Current Season Standings:**
+
 ```
 What are the 2024 F1 driver championship standings?
 ```
 
 **Get Historical Standings:**
+
 ```
 What were the F1 driver standings in 2021?
 ```
 
 **Compare Seasons:**
+
 ```
 Show me the top 3 drivers from the 2024 and 2021 F1 seasons
 ```
@@ -122,6 +125,7 @@ The server returns structured data including:
 ### Example Response
 
 **2024 Season:**
+
 ```json
 {
   "year": 2024,
@@ -147,6 +151,7 @@ The server returns structured data including:
 ```
 
 **2021 Season (Historic Championship Battle):**
+
 ```json
 {
   "year": 2021,
@@ -250,6 +255,7 @@ uv run python -c "from tools import your_new_tool; print(your_new_tool(...))"
 **Tool Execution Errors**
 
 If a tool returns an error:
+
 1. Test the tool directly using the command line (see "Testing Tools Directly" section)
 2. Check that the year is valid (1950 to present)
 3. Clear the cache if data seems corrupted
@@ -258,6 +264,7 @@ If a tool returns an error:
 ### Data Source
 
 Pitstop uses the [Ergast F1 API](http://ergast.com/mrd/) (via FastF1) for historical data. The data includes:
+
 - Final championship standings for each season
 - Official FIA data from 1950 to present
 - Data is cached locally for faster subsequent requests
@@ -273,6 +280,7 @@ rm -rf cache/
 ```
 
 Or on Windows:
+
 ```bash
 rmdir /s cache
 ```
