@@ -7,642 +7,607 @@ Your one-stop shop for Formula 1 data and insights via the Model Context Protoco
 ![FastF1](https://img.shields.io/badge/FastF1-3.6.1%2B-red)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
+## 📋 Table of Contents
+
+- [Overview](#overview)
+- [Quick Start](#quick-start)
+- [Available Tools](#available-tools)
+  - [📰 News & Updates](#-news--updates)
+  - [🏁 Session Data](#-session-data)
+  - [📊 Telemetry](#-telemetry)
+  - [🌤️ Weather](#️-weather)
+  - [🚦 Race Control](#-race-control)
+- [Setup](#setup)
+- [Usage Examples](#usage-examples)
+- [Project Structure](#project-structure)
+- [Development](#development)
+
 ## Overview
 
-Pitstop is an MCP server that provides comprehensive Formula 1 data access through a simple, unified interface. Built on top of the FastF1 library, it offers real-time and historical F1 statistics, standings, and more.
+Pitstop is an MCP server that provides comprehensive Formula 1 data access through Claude Desktop. Built on top of the FastF1 library and RSS feeds, it offers:
 
-## Features
-
-- 📊 Driver Championship Standings
-- 🏆 Historical Season Data (1950-present)
-- 📰 Latest F1 News from Multiple Sources
-- 🔄 Silly Season & Transfer Rumors
-- 💼 Team Management Changes & Contract News
-- 🏁 **Race Weekend Coverage** (New!)
-  - 📅 Race calendars and schedules
-  - 🏎️ Race, qualifying, and sprint results
-  - ⚡ Practice session data and fastest laps
-  - 👤 Driver-specific performance analysis
-  - 🌤️ Session weather data
-  - 📰 Race weekend news and highlights
-- 🎯 Smart filtering by driver, team, or year
+✨ **Features**
+- 📰 Latest F1 news from multiple trusted sources
+- 🔄 Silly season & transfer rumors with smart filtering
+- 🏁 Complete session data (practice, qualifying, race)
+- 📊 Detailed telemetry & lap-by-lap analysis
+- 🌤️ Session weather conditions
+- 🚦 Race control messages & incidents
 - ⚡ Fast caching for improved performance
-- 🔌 Easy integration with MCP-compatible clients
 - 🎯 Type-safe responses with Pydantic models
 
-## Available Tools
-
-### Championship Data
-
-| Tool Name          | Description                                                                                                                                                                        | Parameters                               | Returns                                                                                                                                                                                                   |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `driver_standings` | Get complete Formula 1 driver championship standings for a specific season. Returns the final standings table showing each driver's position, points, wins, team, and driver code. | `year` (int): Season year (1950-present) | Championship standings with a list of all drivers, each containing: position, driver name, driver code (3-letter abbreviation), team/constructor name, total championship points, and number of race wins |
-
-### News & Updates
-
-| Tool Name  | Description                                                                                                                              | Parameters                                                                                                                                            | Returns                                                                                                                                                    |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `f1_news`  | Get latest Formula 1 news from trusted RSS feeds. Aggregates news from official F1 site, FIA press releases, Autosport, The Race, RaceFans, and more sources. | `source` (str): News source - "formula1", "fia", "autosport", "the-race", "racefans", "planetf1", "motorsport", "all" (default: "formula1")<br>`limit` (int): Max articles 1-50 (default: 10) | News articles with title, link, published date, summary, source name, and author (if available) |
-| `latest_f1_news` | Get latest F1 news from all sources (driver announcements, team changes, rule updates, race reports). | `source` (str): News source (default: "all")<br>`limit` (int): Max articles 1-50 (default: 15) | Latest news articles with titles, links, dates, summaries, and sources |
-
-### Silly Season & Transfer News
-
-| Tool Name  | Description                                                                                                                              | Parameters                                                                                                                                            | Returns                                                                                                                                                    |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `silly_season_news` | Get F1 silly season news including driver transfers, team changes, and rumors. Filter by year, driver, or constructor. | `year` (int, optional): Filter by year<br>`driver` (str, optional): Filter by driver name<br>`constructor` (str, optional): Filter by team name<br>`limit` (int): Max articles 1-50 (default: 20) | Silly season articles with titles, links, dates, summaries, categories, and relevance scores |
-| `driver_transfer_rumors` | Get latest driver transfer rumors and speculation. Can be filtered by specific driver. | `driver` (str, optional): Filter by driver name<br>`limit` (int): Max articles 1-50 (default: 15) | Transfer-related news with rumored moves, confirmed signings, and negotiations |
-| `team_management_changes` | Get news about team management changes (team principals, technical directors, appointments, departures). | `constructor` (str, optional): Filter by team name<br>`limit` (int): Max articles 1-50 (default: 15) | Management news including appointments, resignations, and restructuring |
-| `contract_news` | Get contract-related news (renewals, extensions, expirations). Filter by driver or team. | `driver` (str, optional): Filter by driver name<br>`constructor` (str, optional): Filter by team name<br>`limit` (int): Max articles 1-50 (default: 15) | Contract news including extensions, renewals, and multi-year deals |
-
-### Race Weekend Coverage
-
-#### Schedule & Calendar
-
-| Tool Name  | Description                                                                                                                              | Parameters                                                                                                                                            | Returns                                                                                                                                                    |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `get_race_calendar` | Get complete F1 race calendar for a season with all Grand Prix events | `year` (int): Season year (1950-present) | Race calendar with round numbers, race names, countries, locations, circuit names, and dates for all races |
-| `get_race_weekend_schedule` | Get complete weekend schedule for a specific GP (all sessions with dates/times) | `year` (int): Season year<br>`race_name` (str): Race name (e.g., 'Bahrain', 'Monaco') | Weekend schedule with all sessions (FP1, FP2, FP3, Qualifying, Sprint if applicable, Race) including dates and times |
-| `get_next_race` | Get information about the next upcoming race | `year` (int): Season year (typically current) | Next race info including race name, location, circuit, date, and days until race |
-
-#### Results & Performance
-
-| Tool Name  | Description                                                                                                                              | Parameters                                                                                                                                            | Returns                                                                                                                                                    |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `get_race_results` | Get complete race results for a Grand Prix | `year` (int): Season year (2018+ for detailed data)<br>`race_name` (str): Race name | Race classification with positions, times, status (Finished/DNF), and points for all drivers |
-| `get_qualifying_results` | Get qualifying results with Q1, Q2, Q3 times | `year` (int): Season year (2018+)<br>`race_name` (str): Race name | Qualifying results sorted by position with Q1/Q2/Q3 lap times for each driver |
-| `get_sprint_results` | Get sprint race results (if sprint format used) | `year` (int): Season year (2021+)<br>`race_name` (str): Race name | Sprint race results with positions, times, and points awarded |
-| `get_fastest_laps` | Get fastest laps from any session sorted by time | `year` (int): Season year (2018+)<br>`race_name` (str): Race name<br>`session` (str): Session type - "FP1", "FP2", "FP3", "Q", "S", "R" (default: "R") | Fastest lap per driver sorted by time, showing position, driver, team, and lap time |
-| `get_session_results` | Get results from practice sessions or any session | `year` (int): Season year (2018+)<br>`race_name` (str): Race name<br>`session` (str): Session type | Session results sorted by fastest lap time |
-| `get_driver_race_performance` | Get detailed performance for a specific driver in a race | `year` (int): Season year (2018+)<br>`race_name` (str): Race name<br>`driver` (str): Driver code or name | Driver performance including grid/finish positions, points, fastest lap, and pit stop data |
-| `get_session_weather` | Get weather conditions during a session | `year` (int): Season year (2018+)<br>`race_name` (str): Race name<br>`session` (str): Session type (default: "R") | Weather data including air/track temps, humidity, pressure, wind, and rainfall |
-
-#### Race Weekend News
-
-| Tool Name  | Description                                                                                                                              | Parameters                                                                                                                                            | Returns                                                                                                                                                    |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `get_race_weekend_news` | Get all news for a specific race weekend | `race_name` (str): Race name<br>`year` (int, optional): Year filter<br>`limit` (int): Max articles 1-50 (default: 15) | Comprehensive race weekend news covering practice, qualifying, and race |
-| `get_practice_reports` | Get practice session reports and analysis | `race_name` (str, optional): Race name filter<br>`year` (int, optional): Year filter<br>`limit` (int): Max articles 1-50 (default: 10) | Practice session news including lap times, pace analysis, and technical observations |
-| `get_qualifying_reports` | Get qualifying reports and pole position stories | `race_name` (str, optional): Race name filter<br>`year` (int, optional): Year filter<br>`limit` (int): Max articles 1-50 (default: 10) | Qualifying news including pole battles, Q1/Q2/Q3 analysis, and grid penalties |
-| `get_race_reports` | Get race reports, results, and post-race analysis | `race_name` (str, optional): Race name filter<br>`year` (int, optional): Year filter<br>`limit` (int): Max articles 1-50 (default: 15) | Race day news including reports, podium results, strategy analysis, and reactions |
-| `get_race_highlights` | Get race weekend highlights (team radio, key moments, driver quotes) | `race_name` (str, optional): Race name filter<br>`year` (int, optional): Year filter<br>`limit` (int): Max articles 1-50 (default: 10) | Highlight news including radio messages, incidents, controversies, and memorable moments |
-
-## Installation
+## Quick Start
 
 ### Prerequisites
 
-- Python 3.13 or higher
+- Python 3.13+
 - [uv](https://docs.astral.sh/uv/) package manager
 
-### Setup
-
-1. Clone the repository:
+### Installation
 
 ```bash
 git clone https://github.com/praneethravuri/pitstop.git
 cd pitstop
-```
-
-2. Install dependencies using uv:
-
-```bash
 uv sync
 ```
 
-This will create a virtual environment and install all required dependencies including:
+### Configure Claude Desktop
 
-- FastF1 (Formula 1 data access)
-- feedparser (RSS feed parsing)
-- MCP (Model Context Protocol)
-- Pydantic (Data validation)
-- httpx (HTTP client)
+**Windows:** Edit `%APPDATA%\Claude\claude_desktop_config.json`
 
-## Configuration
-
-### For Windows Users
-
-Add the following configuration to your MCP client settings (e.g., `claude_desktop_config.json`):
+**macOS:** Edit `~/Library/Application Support/Claude/claude_desktop_config.json`
 
 ```json
 {
   "mcpServers": {
-    "Pitstop": {
-      "command": "C:\\Users\\<YOUR_USERNAME>\\.local\\bin\\uv.EXE",
+    "pitstop": {
+      "command": "C:\\projects\\pitstop\\.venv\\Scripts\\python.exe",
       "args": [
+        "-m",
+        "mcp.server.fastmcp",
         "run",
-        "--directory",
-        "[ABSOLUTE PATH TO PROJECT]\\pitstop",
-        "mcp",
-        "run",
-        "[ABSOLUTE PATH TO PROJECT]\\pitstop\\server.py"
+        "C:\\projects\\pitstop\\server.py"
       ]
     }
   }
 }
 ```
 
-**Important Notes:**
+**Note:** Adjust paths to match your installation location. Use double backslashes (`\\`) on Windows.
 
-- Replace `<YOUR_USERNAME>` with your Windows username
-- Replace `C:\\projects\\pitstop` with the actual path to your Pitstop installation
-- The `--directory` flag is crucial - it ensures uv uses the project's virtual environment with all dependencies
-- Make sure to use double backslashes (`\\`) in Windows paths
+Restart Claude Desktop to activate the tools.
 
-## Usage
+## Available Tools
 
-Once configured, you can use Pitstop tools through your MCP client:
+| Tool Name | Category | Description |
+|-----------|----------|-------------|
+| `f1_news` | 📰 News & Updates | Get latest F1 news from trusted RSS feeds |
+| `latest_f1_news` | 📰 News & Updates | Get latest F1 news from multiple sources |
+| `silly_season_news` | 📰 News & Updates | Get F1 silly season news including transfers and rumors |
+| `driver_transfer_rumors` | 📰 News & Updates | Get latest driver transfer rumors and speculation |
+| `team_management_changes` | 📰 News & Updates | Get news about team management changes |
+| `contract_news` | 📰 News & Updates | Get contract-related news (renewals, extensions, expirations) |
+| `get_session_details` | 🏁 Session Data | Get comprehensive details of a specific F1 session |
+| `get_session_results` | 🏁 Session Data | Get results/classification from a specific session |
+| `get_session_laps` | 🏁 Session Data | Get all laps from a specific session |
+| `get_driver_laps` | 🏁 Session Data | Get all laps for a specific driver in a session |
+| `get_fastest_lap` | 🏁 Session Data | Get the fastest lap from a session |
+| `get_session_drivers` | 🏁 Session Data | Get list of drivers who participated in a session |
+| `get_tire_strategy` | 🏁 Session Data | Get tire strategy and compound usage for a session |
+| `get_lap_telemetry` | 📊 Telemetry | Get detailed telemetry data for a specific lap |
+| `compare_driver_telemetry` | 📊 Telemetry | Compare telemetry data between two drivers |
+| `get_session_weather` | 🌤️ Weather | Get weather data throughout a session |
+| `get_race_control_messages` | 🚦 Race Control | Get official race control messages for a session |
 
-### Example Queries
+### 📰 News & Updates
 
-#### Championship Standings
+#### `f1_news`
+Get the latest Formula 1 news from trusted RSS feeds.
 
-**Get Current Season Standings:**
+**Parameters:**
+- `source` (str, optional): News source - `"formula1"`, `"fia"`, `"autosport"`, `"the-race"`, `"racefans"`, `"planetf1"`, `"motorsport"`, or `"all"` (default: `"formula1"`)
+- `limit` (int, optional): Max articles 1-50 (default: `10`)
 
-```
-What are the 2024 F1 driver championship standings?
-```
+**Returns:** News articles with titles, links, publication dates, summaries, and source information.
 
-**Get Historical Standings:**
-
-```
-What were the F1 driver standings in 2021?
-```
-
-**Compare Seasons:**
-
-```
-Show me the top 3 drivers from the 2024 and 2021 F1 seasons
-```
-
-#### News & Updates
-
-**Get Latest F1 News:**
-
+**Example Prompts:**
 ```
 What's the latest F1 news?
-```
-
-**Get News from Specific Source:**
-
-```
-Show me the top 5 F1 articles from Autosport
-```
-
-**Get News from All Sources:**
-
-```
+Show me the top 5 articles from Autosport
 Get me 20 F1 news articles from all sources
 ```
 
-**Stay Updated:**
+---
 
+#### `latest_f1_news`
+Get the latest Formula 1 news from multiple sources.
+
+**Parameters:**
+- `source` (str, optional): News source (default: `"all"`)
+- `limit` (int, optional): Max articles 1-50 (default: `15`)
+
+**Returns:** Latest news from all sources including race results, driver announcements, and team updates.
+
+**Example Prompts:**
 ```
-Any breaking F1 news today?
 What happened in F1 this week?
+Any breaking F1 news today?
 ```
 
-#### Silly Season & Transfer News
+---
 
-**Get General Silly Season News:**
+#### `silly_season_news`
+Get F1 silly season news including driver transfers, team changes, and rumors.
 
+**Parameters:**
+- `year` (int, optional): Filter by year (e.g., 2024, 2025)
+- `driver` (str, optional): Filter by driver name (e.g., "Hamilton", "Verstappen")
+- `constructor` (str, optional): Filter by team name (e.g., "Ferrari", "Red Bull")
+- `limit` (int, optional): Max articles 1-50 (default: `20`)
+
+**Returns:** Silly season articles with relevance scores, sorted by relevance.
+
+**Example Prompts:**
 ```
 What's the latest silly season news?
 Show me driver transfer rumors for 2025
+Any silly season news about Ferrari?
 ```
 
-**Get Driver-Specific Transfer Rumors:**
+---
 
+#### `driver_transfer_rumors`
+Get the latest driver transfer rumors and speculation.
+
+**Parameters:**
+- `driver` (str, optional): Filter by driver name
+- `limit` (int, optional): Max articles 1-50 (default: `15`)
+
+**Returns:** Transfer-related news including rumored moves, confirmed signings, and negotiations.
+
+**Example Prompts:**
 ```
 Are there any transfer rumors about Lewis Hamilton?
 What are the latest rumors about Carlos Sainz?
-Show me transfer news for Max Verstappen
+Show me all driver transfer rumors
 ```
 
-**Get Team Management Changes:**
+---
 
+#### `team_management_changes`
+Get news about team management changes.
+
+**Parameters:**
+- `constructor` (str, optional): Filter by team name
+- `limit` (int, optional): Max articles 1-50 (default: `15`)
+
+**Returns:** Management news including appointments, resignations, and team restructuring.
+
+**Example Prompts:**
 ```
 Any management changes at Ferrari?
 Show me recent team principal appointments
 What management changes happened at Red Bull?
 ```
 
-**Get Contract News:**
+---
 
+#### `contract_news`
+Get contract-related news including renewals, extensions, and expirations.
+
+**Parameters:**
+- `driver` (str, optional): Filter by driver name
+- `constructor` (str, optional): Filter by team name
+- `limit` (int, optional): Max articles 1-50 (default: `15`)
+
+**Returns:** Contract news including extensions, renewals, and multi-year deals.
+
+**Example Prompts:**
 ```
 Which driver contracts are expiring soon?
 Show me contract extension news for Lando Norris
 Any contract news for McLaren?
 ```
 
-**Filter by Year:**
+---
 
+### 🏁 Session Data
+
+#### `get_session_details`
+Get comprehensive details of a specific F1 session.
+
+**Parameters:**
+- `year` (int): Season year (2018+)
+- `gp` (str | int): Grand Prix name (e.g., "Monza", "Monaco") or round number
+- `session` (str): Session type - `"FP1"`, `"FP2"`, `"FP3"`, `"Q"`, `"S"`, `"R"`
+- `include_weather` (bool, optional): Include weather data (default: `True`)
+- `include_fastest_lap` (bool, optional): Include fastest lap (default: `True`)
+
+**Returns:** Complete session details including results, weather, fastest lap, and session stats.
+
+**Example Prompts:**
 ```
-Show me silly season news from 2024
-What were the driver transfers in 2023?
+Give me the session details of free practice 1 of the 2019 Monza GP
+Get the race details from the 2024 Monaco GP
+Show me qualifying session details for 2023 Silverstone
 ```
 
-### Response Data
+---
 
-#### Championship Standings
+#### `get_session_results`
+Get results/classification from a specific session.
 
-The server returns structured data including:
+**Parameters:**
+- `year` (int): Season year (2018+)
+- `gp` (str | int): Grand Prix name or round number
+- `session` (str): Session type - `"FP1"`, `"FP2"`, `"FP3"`, `"Q"`, `"S"`, `"R"`
 
-- **Position**: Championship position (1st, 2nd, 3rd, etc.)
-- **Driver Name**: Full name of the driver
-- **Driver Code**: 3-letter driver abbreviation (e.g., VER, HAM, LEC)
-- **Team**: Constructor/team name
-- **Points**: Total championship points
-- **Wins**: Number of race wins
+**Returns:** Session results with positions, driver info, times, teams, and status.
 
-#### News Articles
+**Example Prompts:**
+```
+Get the race results from the 2024 Monaco Grand Prix
+Show me qualifying results from 2023 Singapore
+What were the FP1 results for the 2024 Bahrain GP?
+```
 
-The server returns structured news data including:
+---
 
-- **Title**: Article headline
-- **Link**: URL to full article
-- **Published**: Publication date and time
-- **Summary**: Article excerpt or description
-- **Source**: News source name (formula1, autosport, etc.)
-- **Author**: Article author (if available)
+#### `get_session_laps`
+Get all laps from a specific session.
 
-### Example Responses
+**Parameters:**
+- `year` (int): Season year (2018+)
+- `gp` (str | int): Grand Prix name or round number
+- `session` (str): Session type
 
-#### Championship Standings
+**Returns:** All laps with lap times, sectors, tire compounds, and track status.
 
-**2024 Season:**
+**Example Prompts:**
+```
+Get all laps from the 2024 Monza race
+Show me lap data from qualifying at Monaco 2024
+```
 
+---
+
+#### `get_driver_laps`
+Get all laps for a specific driver in a session.
+
+**Parameters:**
+- `year` (int): Season year (2018+)
+- `gp` (str | int): Grand Prix name or round number
+- `session` (str): Session type
+- `driver` (str | int): Driver identifier - 3-letter code (e.g., "VER") or number (e.g., 1)
+
+**Returns:** Driver's laps with timing data, sectors, compounds, and more.
+
+**Example Prompts:**
+```
+Get all laps for Verstappen in the 2024 Monza race
+Show me Hamilton's qualifying laps from Monaco 2024
+What were Leclerc's lap times in FP1 at Singapore 2023?
+```
+
+---
+
+#### `get_fastest_lap`
+Get the fastest lap from a session.
+
+**Parameters:**
+- `year` (int): Season year (2018+)
+- `gp` (str | int): Grand Prix name or round number
+- `session` (str): Session type
+- `driver` (str | int, optional): Driver identifier (if None, returns overall fastest)
+
+**Returns:** Fastest lap data including driver, time, lap number, and compound.
+
+**Example Prompts:**
+```
+Who set the fastest lap in the 2024 Monza qualifying?
+Get Verstappen's fastest lap from the 2024 Monaco race
+What was the fastest lap in FP2 at Singapore 2023?
+```
+
+---
+
+#### `get_session_drivers`
+Get list of drivers who participated in a session.
+
+**Parameters:**
+- `year` (int): Season year (2018+)
+- `gp` (str | int): Grand Prix name or round number
+- `session` (str): Session type
+
+**Returns:** List of driver identifiers who participated.
+
+**Example Prompts:**
+```
+Which drivers participated in the 2024 Monza race?
+Show me all drivers from FP1 at Monaco 2024
+```
+
+---
+
+#### `get_tire_strategy`
+Get tire strategy and compound usage for a session.
+
+**Parameters:**
+- `year` (int): Season year (2018+)
+- `gp` (str | int): Grand Prix name or round number
+- `session` (str): Session type
+- `driver` (str | int, optional): Driver identifier (if None, returns all drivers)
+
+**Returns:** Tire data per lap including compound, tire life, and stint information.
+
+**Example Prompts:**
+```
+What was the tire strategy in the 2024 Monza race?
+Show me Verstappen's tire strategy for the Monaco race
+Analyze tire usage in qualifying at Singapore 2023
+```
+
+---
+
+### 📊 Telemetry
+
+#### `get_lap_telemetry`
+Get detailed telemetry data for a specific lap.
+
+**Parameters:**
+- `year` (int): Season year (2018+)
+- `gp` (str | int): Grand Prix name or round number
+- `session` (str): Session type
+- `driver` (str | int): Driver identifier
+- `lap_number` (int): Specific lap number
+
+**Returns:** High-frequency telemetry including speed, throttle, brake, gear, RPM, and DRS.
+
+**Example Prompts:**
+```
+Get telemetry for Verstappen's lap 15 in the 2024 Monza race
+Show me Hamilton's fastest lap telemetry from Monaco qualifying
+Analyze Leclerc's lap 10 telemetry from Singapore 2023
+```
+
+---
+
+#### `compare_driver_telemetry`
+Compare telemetry data between two drivers.
+
+**Parameters:**
+- `year` (int): Season year (2018+)
+- `gp` (str | int): Grand Prix name or round number
+- `session` (str): Session type
+- `driver1` (str | int): First driver identifier
+- `driver2` (str | int): Second driver identifier
+- `lap1` (int, optional): Lap number for driver1 (uses fastest if None)
+- `lap2` (int, optional): Lap number for driver2 (uses fastest if None)
+
+**Returns:** Tuple of telemetry DataFrames for side-by-side comparison.
+
+**Example Prompts:**
+```
+Compare the telemetry between Verstappen and Hamilton in 2024 Monza qualifying
+Compare Leclerc and Sainz fastest laps from Monaco 2024
+Show me telemetry comparison for lap 20 between VER and NOR at Silverstone
+```
+
+---
+
+### 🌤️ Weather
+
+#### `get_session_weather`
+Get weather data throughout a session.
+
+**Parameters:**
+- `year` (int): Season year (2018+)
+- `gp` (str | int): Grand Prix name or round number
+- `session` (str): Session type
+
+**Returns:** Weather data including air/track temps, humidity, pressure, wind, and rainfall.
+
+**Example Prompts:**
+```
+What was the weather like during the 2024 Spa race?
+Show me weather conditions for Monaco qualifying 2024
+Get weather data from FP1 at Singapore 2023
+```
+
+---
+
+### 🚦 Race Control
+
+#### `get_race_control_messages`
+Get official race control messages for a session.
+
+**Parameters:**
+- `year` (int): Season year (2018+)
+- `gp` (str | int): Grand Prix name or round number
+- `session` (str): Session type
+
+**Returns:** Race control messages including flags, safety car periods, investigations, and penalties.
+
+**Example Prompts:**
+```
+What race control messages were issued during the 2024 Monaco race?
+Show me all flags and safety car periods from Spa 2024
+Get race control messages from Singapore qualifying 2023
+```
+
+---
+
+## Setup
+
+### 1. Install Dependencies
+
+```bash
+uv sync
+```
+
+This installs:
+- **FastF1** - Formula 1 data access
+- **feedparser** - RSS feed parsing
+- **MCP** - Model Context Protocol
+- **Pydantic** - Data validation
+- **httpx** - HTTP client
+
+### 2. Configure Claude Desktop
+
+Add the following to your Claude Desktop config:
+
+**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
 ```json
 {
-  "year": 2024,
-  "standings": [
-    {
-      "position": 1,
-      "driver_name": "Max Verstappen",
-      "driver_code": "VER",
-      "team": "Red Bull",
-      "points": 437.0,
-      "wins": 9
-    },
-    {
-      "position": 2,
-      "driver_name": "Lando Norris",
-      "driver_code": "NOR",
-      "team": "McLaren",
-      "points": 374.0,
-      "wins": 4
+  "mcpServers": {
+    "pitstop": {
+      "command": "C:\\projects\\pitstop\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "mcp.server.fastmcp", "run", "C:\\projects\\pitstop\\server.py"]
     }
-  ]
+  }
 }
 ```
 
-**2021 Season (Historic Championship Battle):**
-
+**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
 ```json
 {
-  "year": 2021,
-  "standings": [
-    {
-      "position": 1,
-      "driver_name": "Max Verstappen",
-      "driver_code": "VER",
-      "team": "Red Bull",
-      "points": 395.5,
-      "wins": 10
-    },
-    {
-      "position": 2,
-      "driver_name": "Lewis Hamilton",
-      "driver_code": "HAM",
-      "team": "Mercedes",
-      "points": 387.5,
-      "wins": 8
+  "mcpServers": {
+    "pitstop": {
+      "command": "/path/to/pitstop/.venv/bin/python",
+      "args": ["-m", "mcp.server.fastmcp", "run", "/path/to/pitstop/server.py"]
     }
-  ]
+  }
 }
 ```
 
-#### News Articles
+### 3. Restart Claude Desktop
 
-**Latest F1 News from Autosport:**
+Completely quit and restart Claude Desktop for changes to take effect.
 
-```json
-{
-  "source": "autosport",
-  "fetched_at": "2024-10-04T18:30:00",
-  "article_count": 5,
-  "articles": [
-    {
-      "title": "How Russell nailed Singapore GP pole as Verstappen's dirty air complaint is examined",
-      "link": "https://www.autosport.com/f1/news/...",
-      "published": "Sat, 21 Sep 2024 19:45:00 GMT",
-      "summary": "George Russell claimed a stunning pole position for the Singapore Grand Prix...",
-      "source": "autosport",
-      "author": "Jonathan Noble"
-    },
-    {
-      "title": "What has happened to McLaren's 2025 F1 advantage?",
-      "link": "https://www.autosport.com/f1/news/...",
-      "published": "Sat, 21 Sep 2024 16:30:00 GMT",
-      "summary": "McLaren's dominant form in the second half of 2024 has raised questions...",
-      "source": "autosport",
-      "author": null
-    }
-  ]
-}
+## Usage Examples
+
+Once configured, you can use Pitstop through Claude Desktop with natural language:
+
+**News & Updates:**
+```
+What's the latest F1 news?
+Show me transfer rumors about Hamilton
+Any contract news for McLaren?
 ```
 
-**Aggregated News from All Sources:**
+**Session Analysis:**
+```
+Give me the session details of free practice 1 of the 2019 Monza GP
+What was the tire strategy in the 2024 Monaco race?
+Show me qualifying results from 2023 Singapore
+```
 
-```json
-{
-  "source": "all",
-  "fetched_at": "2024-10-04T18:30:00",
-  "article_count": 12,
-  "articles": [
-    {
-      "title": "What are the tactical options for the Singapore GP?",
-      "link": "https://www.formula1.com/...",
-      "published": "2024-09-21T10:00:00Z",
-      "summary": "With Singapore's unique characteristics...",
-      "source": "formula1",
-      "author": null
-    },
-    {
-      "title": "Verstappen eyes redemption in Singapore",
-      "link": "https://www.racefans.net/...",
-      "published": "2024-09-21T09:30:00Z",
-      "summary": "Max Verstappen is looking to bounce back...",
-      "source": "racefans",
-      "author": "Keith Collantine"
-    }
-  ]
-}
+**Telemetry & Performance:**
+```
+Compare the telemetry between Verstappen and Hamilton in qualifying
+Get Leclerc's fastest lap data from the Monaco race
+Show me the weather during the 2024 Spa race
+```
+
+**Race Control:**
+```
+What penalties were given in the Monaco race?
+Show me all safety car periods from the 2024 season
 ```
 
 ## Project Structure
 
 ```
 pitstop/
-├── server.py                      # MCP server entry point
-├── tools/                         # Tool implementations (organized by category)
-│   ├── championships/            # Championship & Standings tools
-│   │   ├── drivers.py           # Driver standings tool
-│   │   └── __init__.py
-│   ├── news/                    # News & Media tools
-│   │   ├── general.py          # General F1 news tools
-│   │   ├── silly_season/       # Silly season specific tools
-│   │   │   ├── silly_season.py # Transfer rumors, contracts, management
-│   │   │   └── __init__.py
-│   │   └── __init__.py
-│   ├── races/                   # Race Weekend Coverage tools
-│   │   ├── schedule.py         # Calendar and weekend schedules
-│   │   ├── results.py          # Race results and performance
-│   │   ├── news.py            # Race weekend news
-│   │   └── __init__.py
-│   └── __init__.py
-├── models/                       # Pydantic data models (organized by category)
-│   ├── championships/           # Championship data models
-│   │   ├── drivers.py          # Driver standings models
-│   │   └── __init__.py
-│   ├── news/                   # News data models
-│   │   ├── general.py         # General news models
-│   │   ├── silly_season.py    # Silly season models
-│   │   └── __init__.py
-│   ├── races/                  # Race data models
-│   │   ├── schedule.py        # Schedule and calendar models
-│   │   ├── results.py         # Results and performance models
-│   │   ├── news.py           # Race news models
-│   │   └── __init__.py
-│   └── __init__.py
-├── clients/                     # API clients
-│   ├── fastf1_client.py        # FastF1 API client
-│   ├── rss_client.py           # RSS feed client
-│   └── __init__.py
-├── utils/                       # Utility functions
-│   ├── date_validator.py       # Date validation utilities
-│   ├── text_cleaner.py         # Text cleaning utilities
-│   └── __init__.py
-├── cache/                       # FastF1 cache directory
-├── pyproject.toml               # Project dependencies
-└── README.md
+├── server.py                          # MCP server entry point
+├── clients/                           # API clients
+│   ├── fastf1_client.py              # FastF1 core functions
+│   └── rss_client.py                 # RSS feed aggregator
+├── tools/                            # Tool implementations
+│   ├── news_and_updates/
+│   │   ├── general/                 # General F1 news
+│   │   │   ├── f1_news.py
+│   │   │   └── latest_news.py
+│   │   └── silly_season/            # Transfer & contract news
+│   │       ├── filters.py           # Keyword filtering logic
+│   │       ├── general_news.py
+│   │       ├── transfers.py
+│   │       ├── management.py
+│   │       └── contracts.py
+│   ├── sessions/                    # Session data tools
+│   │   ├── session_details.py
+│   │   ├── results.py
+│   │   ├── laps.py
+│   │   ├── drivers.py
+│   │   └── tire_strategy.py
+│   ├── telemetry/                   # Telemetry analysis
+│   │   ├── lap_telemetry.py
+│   │   └── compare.py
+│   ├── weather/                     # Weather data
+│   │   └── session_weather.py
+│   └── race_control/                # Race control messages
+│       └── messages.py
+├── models/                          # Pydantic data models
+│   ├── news_and_updates/
+│   │   ├── general.py
+│   │   └── silly_season.py
+│   └── sessions/
+│       └── session_details.py
+└── utils/                           # Utility functions
+    ├── date_validator.py
+    └── text_cleaner.py
 ```
-
-### Directory Organization
-
-The codebase is organized into **main categories** and **subcategories** for easy scalability:
-
-#### Main Categories
-
-1. **Championships** - Championship standings and related data
-   - `drivers.py` - Driver championship standings
-
-2. **News** - News and media content
-   - `general.py` - General F1 news from various sources
-   - **Silly Season** (subcategory) - Transfer news, contracts, and management changes
-     - `silly_season.py` - All silly season related tools
-
-3. **Races** - Race weekend coverage and data
-   - `schedule.py` - Race calendars and weekend schedules
-   - `results.py` - Race/qualifying/sprint results, fastest laps, driver performance, weather
-   - `news.py` - Race weekend news and highlights
-
-#### Future Categories (Roadmap)
-
-- **Statistics** - Driver stats, team stats, circuit information
-- **Live Timing** - Real-time race data and telemetry
-- **Technical** - Car development, upgrades, regulations
 
 ## Development
 
-### Running Locally
+### Run Locally
 
-You can test the server locally using the MCP CLI:
+Test the server using the MCP CLI:
 
 ```bash
 uv run mcp run server.py
 ```
 
-### Testing Tools Directly
-
-Test tools directly without running the MCP server:
+### Test Tools Directly
 
 ```bash
-# Test driver standings for 2024
-uv run python -c "from tools import driver_standings; result = driver_standings(2024); print(f'Champion: {result.standings[0].driver_name} - {result.standings[0].points} points')"
+# Test F1 news
+uv run python -c "from tools import f1_news; result = f1_news('autosport', 3); print(result.articles[0].title)"
 
-# Test driver standings for 2021
-uv run python -c "from tools import driver_standings; result = driver_standings(2021); print(f'Champion: {result.standings[0].driver_name} - {result.standings[0].points} points')"
+# Test session details
+uv run python -c "from tools import get_session_details; result = get_session_details(2019, 'Monza', 'FP1'); print(result.session_info.name)"
 
-# Test F1 news from official F1 site
-uv run python -c "from tools import f1_news; result = f1_news('formula1', 3); print(f'Found {result.article_count} articles from {result.source}'); print(f'Latest: {result.articles[0].title}')"
-
-# Test F1 news from Autosport
-uv run python -c "from tools import f1_news; result = f1_news('autosport', 5); print(f'Found {result.article_count} articles'); [print(f'  - {article.title}') for article in result.articles[:3]]"
-
-# Test aggregated news from all sources
-uv run python -c "from tools import f1_news; result = f1_news('all', 3); print(f'Total articles: {result.article_count}'); sources = set([a.source for a in result.articles]); print(f'Sources: {sources}')"
-
-# Test silly season news
-uv run python -c "from tools import silly_season_news; result = silly_season_news(limit=5); print(f'Found {result.article_count} silly season articles'); print(f'Top article: {result.articles[0].title}')"
-
-# Test driver transfer rumors for specific driver
-uv run python -c "from tools import driver_transfer_rumors; result = driver_transfer_rumors(driver='Hamilton', limit=5); print(f'Transfer rumors for Hamilton: {result.article_count} articles')"
-
-# Test team management changes
-uv run python -c "from tools import team_management_changes; result = team_management_changes(constructor='Ferrari', limit=5); print(f'Management changes at Ferrari: {result.article_count} articles')"
-
-# Test contract news
-uv run python -c "from tools import contract_news; result = contract_news(driver='Verstappen', limit=5); print(f'Contract news for Verstappen: {result.article_count} articles')"
-
-# Test latest F1 news
-uv run python -c "from tools import latest_f1_news; result = latest_f1_news(limit=5); print(f'Latest F1 news: {result.article_count} articles from {result.source}')"
+# Test telemetry comparison
+uv run python -c "from tools import compare_driver_telemetry; tel1, tel2 = compare_driver_telemetry(2024, 'Monaco', 'Q', 'VER', 'HAM'); print('Telemetry compared')"
 ```
-
-### Adding New Tools
-
-The codebase is organized by categories to make it easy to add and find tools.
-
-#### 1. Determine the category for your tool
-
-- **Championships** - For standings, championship data
-- **News** - For news, media content, or analysis
-  - Use the `silly_season/` subcategory for transfer/contract related news
-- **Race Data** (future) - For race results, session data, lap times
-- **Statistics** (future) - For driver/team stats, circuit information
-
-#### 2. Create your tool function
-
-Add your tool to the appropriate category file in `tools/`:
-
-```python
-# Example: Adding a constructor standings tool
-# File: tools/championships/constructors.py
-
-from clients.fastf1_client import FastF1Client
-from models import ConstructorStandingsResponse
-
-f1_client = FastF1Client(cache_dir="cache", enable_cache=True)
-
-def constructor_standings(year: int) -> ConstructorStandingsResponse:
-    """Get constructor championship standings for a specific season."""
-    return f1_client.get_constructor_standings(year)
-```
-
-#### 3. Define corresponding Pydantic models
-
-Create models in the matching category under `models/`:
-
-```python
-# Example: models/championships/constructors.py
-
-from pydantic import BaseModel
-
-class ConstructorStanding(BaseModel):
-    position: int
-    constructor_name: str
-    points: float
-    wins: int
-
-class ConstructorStandingsResponse(BaseModel):
-    year: int
-    standings: list[ConstructorStanding]
-```
-
-#### 4. Update the category's `__init__.py`
-
-Export your new tool and models:
-
-```python
-# tools/championships/__init__.py
-from .drivers import driver_standings
-from .constructors import constructor_standings  # Add this
-
-__all__ = [
-    "driver_standings",
-    "constructor_standings",  # Add this
-]
-```
-
-```python
-# models/championships/__init__.py
-from .drivers import DriverStanding, DriverStandingsResponse
-from .constructors import ConstructorStanding, ConstructorStandingsResponse  # Add this
-
-__all__ = [
-    "DriverStanding",
-    "DriverStandingsResponse",
-    "ConstructorStanding",  # Add this
-    "ConstructorStandingsResponse",  # Add this
-]
-```
-
-#### 5. Register the tool in `server.py`
-
-```python
-from tools import your_new_tool
-
-mcp.tool()(your_new_tool)
-```
-
-#### 6. Test your tool
-
-```bash
-uv run python -c "from tools import your_new_tool; print(your_new_tool(...))"
-```
-
-#### Tips for Organization
-
-- If you're adding multiple related tools, consider creating a new subcategory (like `silly_season/`)
-- Keep related tools in the same file if they share helper functions or constants
-- Always update both the `tools/` and `models/` directories to maintain parallel structure
-
-## Troubleshooting
-
-### Common Issues
-
-**Module Not Found Error**
-
-- Ensure you've run `uv sync` to install dependencies
-- Verify your MCP configuration uses `--directory` flag to point to the project root
-- Make sure you're NOT using `--with mcp[cli]` as this creates a temporary environment without your dependencies
-
-**Server Connection Issues**
-
-- Check that the paths in your MCP configuration are correct
-- Ensure Python 3.13+ is installed
-- Verify uv is installed and accessible from the specified path
-
-**Tool Execution Errors**
-
-If a tool returns an error:
-
-1. Test the tool directly using the command line (see "Testing Tools Directly" section)
-2. Check that the year is valid (1950 to present)
-3. Clear the cache if data seems corrupted
-4. Check the MCP server logs for detailed error messages
-
-### Data Source
-
-Pitstop uses the [Ergast F1 API](http://ergast.com/mrd/) (via FastF1) for historical data. The data includes:
-
-- Final championship standings for each season
-- Official FIA data from 1950 to present
-- Data is cached locally for faster subsequent requests
-
-**Note**: For the current season, data may not be final until the season concludes. Mid-season standings reflect results up to the most recent race.
 
 ### Cache Management
 
-FastF1 caches data in the `cache/` directory to improve performance. To clear the cache:
+FastF1 caches data in `cache/` for performance. To clear:
 
 ```bash
+# Unix/macOS
 rm -rf cache/
-```
 
-Or on Windows:
-
-```bash
+# Windows
 rmdir /s cache
 ```
+
+## Troubleshooting
+
+**Import Errors:**
+- Run `uv sync` to install dependencies
+- Verify Python 3.13+ is installed
+
+**Connection Issues:**
+- Check paths in Claude Desktop config are correct
+- Ensure double backslashes on Windows
+- Restart Claude Desktop after config changes
+
+**Data Issues:**
+- Clear cache if data seems corrupted
+- Verify year is 2018+ for session data
+- Check that Grand Prix names are spelled correctly
 
 ## Contributing
 
@@ -650,24 +615,13 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT License - see LICENSE file for details.
 
 ## Acknowledgments
 
-- [FastF1](https://github.com/theOehrly/Fast-F1) - For providing the excellent Formula 1 data library
-- [Model Context Protocol](https://modelcontextprotocol.io/) - For the MCP specification
-- Formula 1 community for their continued support of open data
-
-## Roadmap
-
-- [ ] Constructor/Team standings
-- [ ] Race results and session data
-- [ ] Driver and team statistics
-- [ ] Lap time analysis
-- [ ] Circuit information
-- [ ] Live timing data
-- [ ] Weather data
-- [ ] Telemetry data access
+- [FastF1](https://github.com/theOehrly/Fast-F1) - Excellent Formula 1 data library
+- [Model Context Protocol](https://modelcontextprotocol.io/) - MCP specification
+- F1 community for open data support
 
 ---
 

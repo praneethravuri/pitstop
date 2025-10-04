@@ -1,5 +1,4 @@
-from .championships import driver_standings
-from .news import (
+from .news_and_updates import (
     f1_news,
     latest_f1_news,
     silly_season_news,
@@ -7,45 +6,43 @@ from .news import (
     team_management_changes,
     contract_news,
 )
-from .races import (
-    get_race_calendar,
-    get_race_weekend_schedule,
-    get_next_race,
-    get_race_results,
-    get_qualifying_results,
-    get_sprint_results,
-    get_fastest_laps,
+from .sessions import (
+    get_session_details,
     get_session_results,
-    get_driver_race_performance,
-    get_session_weather,
-    get_race_weekend_news,
-    get_practice_reports,
-    get_qualifying_reports,
-    get_race_reports,
-    get_race_highlights,
+    get_session_laps,
+    get_driver_laps,
+    get_fastest_lap,
+    get_session_drivers,
+    get_tire_strategy,
 )
+from .telemetry import (
+    get_lap_telemetry,
+    compare_driver_telemetry,
+)
+from .weather import get_session_weather
+from .race_control import get_race_control_messages
 
 __all__ = [
-    "driver_standings",
+    # News
     "f1_news",
     "latest_f1_news",
     "silly_season_news",
     "driver_transfer_rumors",
     "team_management_changes",
     "contract_news",
-    "get_race_calendar",
-    "get_race_weekend_schedule",
-    "get_next_race",
-    "get_race_results",
-    "get_qualifying_results",
-    "get_sprint_results",
-    "get_fastest_laps",
+    # Sessions
+    "get_session_details",
     "get_session_results",
-    "get_driver_race_performance",
+    "get_session_laps",
+    "get_driver_laps",
+    "get_fastest_lap",
+    "get_session_drivers",
+    "get_tire_strategy",
+    # Telemetry
+    "get_lap_telemetry",
+    "compare_driver_telemetry",
+    # Weather
     "get_session_weather",
-    "get_race_weekend_news",
-    "get_practice_reports",
-    "get_qualifying_reports",
-    "get_race_reports",
-    "get_race_highlights",
+    # Race Control
+    "get_race_control_messages",
 ]
