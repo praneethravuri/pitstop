@@ -16,6 +16,9 @@ Pitstop is an MCP server that provides comprehensive Formula 1 data access throu
 - 📊 Driver Championship Standings
 - 🏆 Historical Season Data (1950-present)
 - 📰 Latest F1 News from Multiple Sources
+- 🔄 Silly Season & Transfer Rumors
+- 💼 Team Management Changes & Contract News
+- 🎯 Smart filtering by driver, team, or year
 - ⚡ Fast caching for improved performance
 - 🔌 Easy integration with MCP-compatible clients
 - 🎯 Type-safe responses with Pydantic models
@@ -33,6 +36,16 @@ Pitstop is an MCP server that provides comprehensive Formula 1 data access throu
 | Tool Name  | Description                                                                                                                              | Parameters                                                                                                                                            | Returns                                                                                                                                                    |
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `f1_news`  | Get latest Formula 1 news from trusted RSS feeds. Aggregates news from official F1 site, FIA press releases, Autosport, The Race, RaceFans, and more sources. | `source` (str): News source - "formula1", "fia", "autosport", "the-race", "racefans", "planetf1", "motorsport", "all" (default: "formula1")<br>`limit` (int): Max articles 1-50 (default: 10) | News articles with title, link, published date, summary, source name, and author (if available) |
+| `latest_f1_news` | Get latest F1 news from all sources (driver announcements, team changes, rule updates, race reports). | `source` (str): News source (default: "all")<br>`limit` (int): Max articles 1-50 (default: 15) | Latest news articles with titles, links, dates, summaries, and sources |
+
+### Silly Season & Transfer News
+
+| Tool Name  | Description                                                                                                                              | Parameters                                                                                                                                            | Returns                                                                                                                                                    |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `silly_season_news` | Get F1 silly season news including driver transfers, team changes, and rumors. Filter by year, driver, or constructor. | `year` (int, optional): Filter by year<br>`driver` (str, optional): Filter by driver name<br>`constructor` (str, optional): Filter by team name<br>`limit` (int): Max articles 1-50 (default: 20) | Silly season articles with titles, links, dates, summaries, categories, and relevance scores |
+| `driver_transfer_rumors` | Get latest driver transfer rumors and speculation. Can be filtered by specific driver. | `driver` (str, optional): Filter by driver name<br>`limit` (int): Max articles 1-50 (default: 15) | Transfer-related news with rumored moves, confirmed signings, and negotiations |
+| `team_management_changes` | Get news about team management changes (team principals, technical directors, appointments, departures). | `constructor` (str, optional): Filter by team name<br>`limit` (int): Max articles 1-50 (default: 15) | Management news including appointments, resignations, and restructuring |
+| `contract_news` | Get contract-related news (renewals, extensions, expirations). Filter by driver or team. | `driver` (str, optional): Filter by driver name<br>`constructor` (str, optional): Filter by team name<br>`limit` (int): Max articles 1-50 (default: 15) | Contract news including extensions, renewals, and multi-year deals |
 
 ## Installation
 
@@ -146,6 +159,46 @@ Get me 20 F1 news articles from all sources
 ```
 Any breaking F1 news today?
 What happened in F1 this week?
+```
+
+#### Silly Season & Transfer News
+
+**Get General Silly Season News:**
+
+```
+What's the latest silly season news?
+Show me driver transfer rumors for 2025
+```
+
+**Get Driver-Specific Transfer Rumors:**
+
+```
+Are there any transfer rumors about Lewis Hamilton?
+What are the latest rumors about Carlos Sainz?
+Show me transfer news for Max Verstappen
+```
+
+**Get Team Management Changes:**
+
+```
+Any management changes at Ferrari?
+Show me recent team principal appointments
+What management changes happened at Red Bull?
+```
+
+**Get Contract News:**
+
+```
+Which driver contracts are expiring soon?
+Show me contract extension news for Lando Norris
+Any contract news for McLaren?
+```
+
+**Filter by Year:**
+
+```
+Show me silly season news from 2024
+What were the driver transfers in 2023?
 ```
 
 ### Response Data
@@ -294,6 +347,10 @@ pitstop/
 ├── tools/                 # Tool implementations
 │   ├── driver_standings.py
 │   ├── news.py            # F1 news tool
+│   ├── news_and_updates/  # News and updates directory
+│   │   ├── silly_season.py    # Silly season tools
+│   │   ├── latest_news.py     # Latest F1 news tool
+│   │   └── __init__.py
 │   └── __init__.py
 ├── clients/               # API clients
 │   ├── fastf1_client.py
@@ -302,9 +359,11 @@ pitstop/
 ├── models/                # Pydantic data models
 │   ├── driver_standings.py
 │   ├── news.py            # News models
+│   ├── silly_season.py    # Silly season models
 │   └── __init__.py
 ├── utils/                 # Utility functions
 │   ├── date_validator.py
+│   ├── text_cleaner.py
 │   └── __init__.py
 ├── cache/                 # FastF1 cache directory
 ├── pyproject.toml         # Project dependencies
@@ -340,6 +399,21 @@ uv run python -c "from tools import f1_news; result = f1_news('autosport', 5); p
 
 # Test aggregated news from all sources
 uv run python -c "from tools import f1_news; result = f1_news('all', 3); print(f'Total articles: {result.article_count}'); sources = set([a.source for a in result.articles]); print(f'Sources: {sources}')"
+
+# Test silly season news
+uv run python -c "from tools import silly_season_news; result = silly_season_news(limit=5); print(f'Found {result.article_count} silly season articles'); print(f'Top article: {result.articles[0].title}')"
+
+# Test driver transfer rumors for specific driver
+uv run python -c "from tools import driver_transfer_rumors; result = driver_transfer_rumors(driver='Hamilton', limit=5); print(f'Transfer rumors for Hamilton: {result.article_count} articles')"
+
+# Test team management changes
+uv run python -c "from tools import team_management_changes; result = team_management_changes(constructor='Ferrari', limit=5); print(f'Management changes at Ferrari: {result.article_count} articles')"
+
+# Test contract news
+uv run python -c "from tools import contract_news; result = contract_news(driver='Verstappen', limit=5); print(f'Contract news for Verstappen: {result.article_count} articles')"
+
+# Test latest F1 news
+uv run python -c "from tools import latest_f1_news; result = latest_f1_news(limit=5); print(f'Latest F1 news: {result.article_count} articles from {result.source}')"
 ```
 
 ### Adding New Tools
