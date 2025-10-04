@@ -25,7 +25,7 @@ Pitstop is an MCP server that provides comprehensive Formula 1 data access throu
 
 | Tool Name                     | Description                                                                                                            | Parameters                               | Returns                                                                                                                                                                         |
 | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `get_f1_driver_standings`     | Get complete Formula 1 driver championship standings for a specific season. Returns the final standings table showing each driver's position, points, wins, team, and driver code. | `year` (int): Season year (1950-present) | Championship standings with a list of all drivers, each containing: position, driver name, driver code (3-letter abbreviation), team/constructor name, total championship points, and number of race wins |
+| `driver_standings`     | Get complete Formula 1 driver championship standings for a specific season. Returns the final standings table showing each driver's position, points, wins, team, and driver code. | `year` (int): Season year (1950-present) | Championship standings with a list of all drivers, each containing: position, driver name, driver code (3-letter abbreviation), team/constructor name, total championship points, and number of race wins |
 
 ## Installation
 
@@ -207,10 +207,10 @@ Test tools directly without running the MCP server:
 
 ```bash
 # Test driver standings for 2024
-uv run python -c "from tools import get_f1_driver_standings; result = get_f1_driver_standings(2024); print(f'Champion: {result.standings[0].driver_name} - {result.standings[0].points} points')"
+uv run python -c "from tools import driver_standings; result = driver_standings(2024); print(f'Champion: {result.standings[0].driver_name} - {result.standings[0].points} points')"
 
 # Test driver standings for 2021
-uv run python -c "from tools import get_f1_driver_standings; result = get_f1_driver_standings(2021); print(f'Champion: {result.standings[0].driver_name} - {result.standings[0].points} points')"
+uv run python -c "from tools import driver_standings; result = driver_standings(2021); print(f'Champion: {result.standings[0].driver_name} - {result.standings[0].points} points')"
 ```
 
 ### Adding New Tools

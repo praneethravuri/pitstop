@@ -5,7 +5,7 @@ from models import DriverStandingsResponse
 f1_client = FastF1Client(cache_dir="cache", enable_cache=True)
 
 
-def get_f1_driver_standings(year: int) -> DriverStandingsResponse:
+def driver_standings(year: int) -> DriverStandingsResponse:
     """
     Get complete Formula 1 driver championship standings for a specific season.
 
