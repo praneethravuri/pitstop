@@ -1,16 +1,11 @@
-from .championships import DriverStanding, DriverStandingsResponse
-from .news import (
-    NewsArticle,
-    NewsResponse,
-    SillySeasonArticle,
-    SillySeasonResponse,
-)
-from .races import (
+from .schedule import (
     RaceEvent,
     RaceCalendar,
     SessionInfo,
     WeekendSchedule,
     NextRaceInfo,
+)
+from .results import (
     DriverResult,
     RaceResultResponse,
     QualifyingTime,
@@ -22,22 +17,17 @@ from .races import (
     DriverPerformanceResponse,
     WeatherData,
     SessionWeatherResponse,
-    RaceNewsArticle,
-    RaceNewsResponse,
 )
+from .news import RaceNewsArticle, RaceNewsResponse
 
 __all__ = [
-    "DriverStanding",
-    "DriverStandingsResponse",
-    "NewsArticle",
-    "NewsResponse",
-    "SillySeasonArticle",
-    "SillySeasonResponse",
+    # Schedule models
     "RaceEvent",
     "RaceCalendar",
     "SessionInfo",
     "WeekendSchedule",
     "NextRaceInfo",
+    # Results models
     "DriverResult",
     "RaceResultResponse",
     "QualifyingTime",
@@ -49,6 +39,7 @@ __all__ = [
     "DriverPerformanceResponse",
     "WeatherData",
     "SessionWeatherResponse",
+    # News models
     "RaceNewsArticle",
     "RaceNewsResponse",
 ]

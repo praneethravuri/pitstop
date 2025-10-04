@@ -18,6 +18,13 @@ Pitstop is an MCP server that provides comprehensive Formula 1 data access throu
 - 📰 Latest F1 News from Multiple Sources
 - 🔄 Silly Season & Transfer Rumors
 - 💼 Team Management Changes & Contract News
+- 🏁 **Race Weekend Coverage** (New!)
+  - 📅 Race calendars and schedules
+  - 🏎️ Race, qualifying, and sprint results
+  - ⚡ Practice session data and fastest laps
+  - 👤 Driver-specific performance analysis
+  - 🌤️ Session weather data
+  - 📰 Race weekend news and highlights
 - 🎯 Smart filtering by driver, team, or year
 - ⚡ Fast caching for improved performance
 - 🔌 Easy integration with MCP-compatible clients
@@ -46,6 +53,38 @@ Pitstop is an MCP server that provides comprehensive Formula 1 data access throu
 | `driver_transfer_rumors` | Get latest driver transfer rumors and speculation. Can be filtered by specific driver. | `driver` (str, optional): Filter by driver name<br>`limit` (int): Max articles 1-50 (default: 15) | Transfer-related news with rumored moves, confirmed signings, and negotiations |
 | `team_management_changes` | Get news about team management changes (team principals, technical directors, appointments, departures). | `constructor` (str, optional): Filter by team name<br>`limit` (int): Max articles 1-50 (default: 15) | Management news including appointments, resignations, and restructuring |
 | `contract_news` | Get contract-related news (renewals, extensions, expirations). Filter by driver or team. | `driver` (str, optional): Filter by driver name<br>`constructor` (str, optional): Filter by team name<br>`limit` (int): Max articles 1-50 (default: 15) | Contract news including extensions, renewals, and multi-year deals |
+
+### Race Weekend Coverage
+
+#### Schedule & Calendar
+
+| Tool Name  | Description                                                                                                                              | Parameters                                                                                                                                            | Returns                                                                                                                                                    |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get_race_calendar` | Get complete F1 race calendar for a season with all Grand Prix events | `year` (int): Season year (1950-present) | Race calendar with round numbers, race names, countries, locations, circuit names, and dates for all races |
+| `get_race_weekend_schedule` | Get complete weekend schedule for a specific GP (all sessions with dates/times) | `year` (int): Season year<br>`race_name` (str): Race name (e.g., 'Bahrain', 'Monaco') | Weekend schedule with all sessions (FP1, FP2, FP3, Qualifying, Sprint if applicable, Race) including dates and times |
+| `get_next_race` | Get information about the next upcoming race | `year` (int): Season year (typically current) | Next race info including race name, location, circuit, date, and days until race |
+
+#### Results & Performance
+
+| Tool Name  | Description                                                                                                                              | Parameters                                                                                                                                            | Returns                                                                                                                                                    |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get_race_results` | Get complete race results for a Grand Prix | `year` (int): Season year (2018+ for detailed data)<br>`race_name` (str): Race name | Race classification with positions, times, status (Finished/DNF), and points for all drivers |
+| `get_qualifying_results` | Get qualifying results with Q1, Q2, Q3 times | `year` (int): Season year (2018+)<br>`race_name` (str): Race name | Qualifying results sorted by position with Q1/Q2/Q3 lap times for each driver |
+| `get_sprint_results` | Get sprint race results (if sprint format used) | `year` (int): Season year (2021+)<br>`race_name` (str): Race name | Sprint race results with positions, times, and points awarded |
+| `get_fastest_laps` | Get fastest laps from any session sorted by time | `year` (int): Season year (2018+)<br>`race_name` (str): Race name<br>`session` (str): Session type - "FP1", "FP2", "FP3", "Q", "S", "R" (default: "R") | Fastest lap per driver sorted by time, showing position, driver, team, and lap time |
+| `get_session_results` | Get results from practice sessions or any session | `year` (int): Season year (2018+)<br>`race_name` (str): Race name<br>`session` (str): Session type | Session results sorted by fastest lap time |
+| `get_driver_race_performance` | Get detailed performance for a specific driver in a race | `year` (int): Season year (2018+)<br>`race_name` (str): Race name<br>`driver` (str): Driver code or name | Driver performance including grid/finish positions, points, fastest lap, and pit stop data |
+| `get_session_weather` | Get weather conditions during a session | `year` (int): Season year (2018+)<br>`race_name` (str): Race name<br>`session` (str): Session type (default: "R") | Weather data including air/track temps, humidity, pressure, wind, and rainfall |
+
+#### Race Weekend News
+
+| Tool Name  | Description                                                                                                                              | Parameters                                                                                                                                            | Returns                                                                                                                                                    |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get_race_weekend_news` | Get all news for a specific race weekend | `race_name` (str): Race name<br>`year` (int, optional): Year filter<br>`limit` (int): Max articles 1-50 (default: 15) | Comprehensive race weekend news covering practice, qualifying, and race |
+| `get_practice_reports` | Get practice session reports and analysis | `race_name` (str, optional): Race name filter<br>`year` (int, optional): Year filter<br>`limit` (int): Max articles 1-50 (default: 10) | Practice session news including lap times, pace analysis, and technical observations |
+| `get_qualifying_reports` | Get qualifying reports and pole position stories | `race_name` (str, optional): Race name filter<br>`year` (int, optional): Year filter<br>`limit` (int): Max articles 1-50 (default: 10) | Qualifying news including pole battles, Q1/Q2/Q3 analysis, and grid penalties |
+| `get_race_reports` | Get race reports, results, and post-race analysis | `race_name` (str, optional): Race name filter<br>`year` (int, optional): Year filter<br>`limit` (int): Max articles 1-50 (default: 15) | Race day news including reports, podium results, strategy analysis, and reactions |
+| `get_race_highlights` | Get race weekend highlights (team radio, key moments, driver quotes) | `race_name` (str, optional): Race name filter<br>`year` (int, optional): Year filter<br>`limit` (int): Max articles 1-50 (default: 10) | Highlight news including radio messages, incidents, controversies, and memorable moments |
 
 ## Installation
 
@@ -354,6 +393,11 @@ pitstop/
 │   │   │   ├── silly_season.py # Transfer rumors, contracts, management
 │   │   │   └── __init__.py
 │   │   └── __init__.py
+│   ├── races/                   # Race Weekend Coverage tools
+│   │   ├── schedule.py         # Calendar and weekend schedules
+│   │   ├── results.py          # Race results and performance
+│   │   ├── news.py            # Race weekend news
+│   │   └── __init__.py
 │   └── __init__.py
 ├── models/                       # Pydantic data models (organized by category)
 │   ├── championships/           # Championship data models
@@ -362,6 +406,11 @@ pitstop/
 │   ├── news/                   # News data models
 │   │   ├── general.py         # General news models
 │   │   ├── silly_season.py    # Silly season models
+│   │   └── __init__.py
+│   ├── races/                  # Race data models
+│   │   ├── schedule.py        # Schedule and calendar models
+│   │   ├── results.py         # Results and performance models
+│   │   ├── news.py           # Race news models
 │   │   └── __init__.py
 │   └── __init__.py
 ├── clients/                     # API clients
@@ -391,11 +440,16 @@ The codebase is organized into **main categories** and **subcategories** for eas
    - **Silly Season** (subcategory) - Transfer news, contracts, and management changes
      - `silly_season.py` - All silly season related tools
 
+3. **Races** - Race weekend coverage and data
+   - `schedule.py` - Race calendars and weekend schedules
+   - `results.py` - Race/qualifying/sprint results, fastest laps, driver performance, weather
+   - `news.py` - Race weekend news and highlights
+
 #### Future Categories (Roadmap)
 
-- **Race Data** - Race results, session data, lap times
 - **Statistics** - Driver stats, team stats, circuit information
 - **Live Timing** - Real-time race data and telemetry
+- **Technical** - Car development, upgrades, regulations
 
 ## Development
 
