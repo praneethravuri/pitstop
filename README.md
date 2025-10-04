@@ -343,32 +343,59 @@ The server returns structured news data including:
 
 ```
 pitstop/
-├── server.py              # MCP server entry point
-├── tools/                 # Tool implementations
-│   ├── driver_standings.py
-│   ├── news.py            # F1 news tool
-│   ├── news_and_updates/  # News and updates directory
-│   │   ├── silly_season.py    # Silly season tools
-│   │   ├── latest_news.py     # Latest F1 news tool
+├── server.py                      # MCP server entry point
+├── tools/                         # Tool implementations (organized by category)
+│   ├── championships/            # Championship & Standings tools
+│   │   ├── drivers.py           # Driver standings tool
+│   │   └── __init__.py
+│   ├── news/                    # News & Media tools
+│   │   ├── general.py          # General F1 news tools
+│   │   ├── silly_season/       # Silly season specific tools
+│   │   │   ├── silly_season.py # Transfer rumors, contracts, management
+│   │   │   └── __init__.py
 │   │   └── __init__.py
 │   └── __init__.py
-├── clients/               # API clients
-│   ├── fastf1_client.py
-│   ├── rss_client.py      # RSS feed client
+├── models/                       # Pydantic data models (organized by category)
+│   ├── championships/           # Championship data models
+│   │   ├── drivers.py          # Driver standings models
+│   │   └── __init__.py
+│   ├── news/                   # News data models
+│   │   ├── general.py         # General news models
+│   │   ├── silly_season.py    # Silly season models
+│   │   └── __init__.py
 │   └── __init__.py
-├── models/                # Pydantic data models
-│   ├── driver_standings.py
-│   ├── news.py            # News models
-│   ├── silly_season.py    # Silly season models
+├── clients/                     # API clients
+│   ├── fastf1_client.py        # FastF1 API client
+│   ├── rss_client.py           # RSS feed client
 │   └── __init__.py
-├── utils/                 # Utility functions
-│   ├── date_validator.py
-│   ├── text_cleaner.py
+├── utils/                       # Utility functions
+│   ├── date_validator.py       # Date validation utilities
+│   ├── text_cleaner.py         # Text cleaning utilities
 │   └── __init__.py
-├── cache/                 # FastF1 cache directory
-├── pyproject.toml         # Project dependencies
+├── cache/                       # FastF1 cache directory
+├── pyproject.toml               # Project dependencies
 └── README.md
 ```
+
+### Directory Organization
+
+The codebase is organized into **main categories** and **subcategories** for easy scalability:
+
+#### Main Categories
+
+1. **Championships** - Championship standings and related data
+   - `drivers.py` - Driver championship standings
+
+2. **News** - News and media content
+   - `general.py` - General F1 news from various sources
+   - **Silly Season** (subcategory) - Transfer news, contracts, and management changes
+     - `silly_season.py` - All silly season related tools
+
+#### Future Categories (Roadmap)
+
+- **Race Data** - Race results, session data, lap times
+- **Statistics** - Driver stats, team stats, circuit information
+- **Live Timing** - Real-time race data and telemetry
 
 ## Development
 
@@ -418,9 +445,83 @@ uv run python -c "from tools import latest_f1_news; result = latest_f1_news(limi
 
 ### Adding New Tools
 
-1. Create a new tool function in `tools/`
-2. Define corresponding Pydantic models in `models/`
-3. Register the tool in `server.py`:
+The codebase is organized by categories to make it easy to add and find tools.
+
+#### 1. Determine the category for your tool
+
+- **Championships** - For standings, championship data
+- **News** - For news, media content, or analysis
+  - Use the `silly_season/` subcategory for transfer/contract related news
+- **Race Data** (future) - For race results, session data, lap times
+- **Statistics** (future) - For driver/team stats, circuit information
+
+#### 2. Create your tool function
+
+Add your tool to the appropriate category file in `tools/`:
+
+```python
+# Example: Adding a constructor standings tool
+# File: tools/championships/constructors.py
+
+from clients.fastf1_client import FastF1Client
+from models import ConstructorStandingsResponse
+
+f1_client = FastF1Client(cache_dir="cache", enable_cache=True)
+
+def constructor_standings(year: int) -> ConstructorStandingsResponse:
+    """Get constructor championship standings for a specific season."""
+    return f1_client.get_constructor_standings(year)
+```
+
+#### 3. Define corresponding Pydantic models
+
+Create models in the matching category under `models/`:
+
+```python
+# Example: models/championships/constructors.py
+
+from pydantic import BaseModel
+
+class ConstructorStanding(BaseModel):
+    position: int
+    constructor_name: str
+    points: float
+    wins: int
+
+class ConstructorStandingsResponse(BaseModel):
+    year: int
+    standings: list[ConstructorStanding]
+```
+
+#### 4. Update the category's `__init__.py`
+
+Export your new tool and models:
+
+```python
+# tools/championships/__init__.py
+from .drivers import driver_standings
+from .constructors import constructor_standings  # Add this
+
+__all__ = [
+    "driver_standings",
+    "constructor_standings",  # Add this
+]
+```
+
+```python
+# models/championships/__init__.py
+from .drivers import DriverStanding, DriverStandingsResponse
+from .constructors import ConstructorStanding, ConstructorStandingsResponse  # Add this
+
+__all__ = [
+    "DriverStanding",
+    "DriverStandingsResponse",
+    "ConstructorStanding",  # Add this
+    "ConstructorStandingsResponse",  # Add this
+]
+```
+
+#### 5. Register the tool in `server.py`
 
 ```python
 from tools import your_new_tool
@@ -428,11 +529,17 @@ from tools import your_new_tool
 mcp.tool()(your_new_tool)
 ```
 
-4. Test your tool:
+#### 6. Test your tool
 
 ```bash
 uv run python -c "from tools import your_new_tool; print(your_new_tool(...))"
 ```
+
+#### Tips for Organization
+
+- If you're adding multiple related tools, consider creating a new subcategory (like `silly_season/`)
+- Keep related tools in the same file if they share helper functions or constants
+- Always update both the `tools/` and `models/` directories to maintain parallel structure
 
 ## Troubleshooting
 

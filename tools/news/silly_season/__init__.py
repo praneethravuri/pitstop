@@ -1,7 +1,4 @@
-from .championships import driver_standings
-from .news import (
-    f1_news,
-    latest_f1_news,
+from .silly_season import (
     silly_season_news,
     driver_transfer_rumors,
     team_management_changes,
@@ -9,9 +6,6 @@ from .news import (
 )
 
 __all__ = [
-    "driver_standings",
-    "f1_news",
-    "latest_f1_news",
     "silly_season_news",
     "driver_transfer_rumors",
     "team_management_changes",

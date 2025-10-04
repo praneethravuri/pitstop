@@ -1,5 +1,5 @@
 from clients.rss_client import RSSClient
-from models.silly_season import SillySeasonResponse, SillySeasonArticle
+from models import SillySeasonResponse, SillySeasonArticle
 from datetime import datetime
 
 # Initialize RSS client

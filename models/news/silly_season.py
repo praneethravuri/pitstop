@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from .news import NewsArticle
+from .general import NewsArticle
 
 
 class SillySeasonArticle(NewsArticle):
