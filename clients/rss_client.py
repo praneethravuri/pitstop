@@ -1,7 +1,7 @@
 import feedparser
-import re
 from datetime import datetime
 from models import NewsResponse, NewsArticle
+from utils import clean_html
 
 
 class RSSClient:
@@ -10,6 +10,7 @@ class RSSClient:
 
     Aggregates F1 news from multiple trusted sources including:
     - Official Formula 1 website
+    - FIA (press releases)
     - Autosport
     - The Race
     - RaceFans
@@ -78,7 +79,7 @@ class RSSClient:
                     title=entry.get("title", "No title"),
                     link=entry.get("link", ""),
                     published=entry.get("published", entry.get("updated", "Unknown date")),
-                    summary=self._clean_summary(
+                    summary=clean_html(
                         entry.get("summary", entry.get("description", "No summary available"))
                     ),
                     source=source,
@@ -117,11 +118,3 @@ class RSSClient:
             article_count=len(all_articles),
             articles=all_articles,
         )
-
-    def _clean_summary(self, summary: str) -> str:
-        """Clean HTML tags from summary if present."""
-        # Remove HTML tags
-        clean = re.sub(r"<[^<]+?>", "", summary)
-        # Remove extra whitespace
-        clean = re.sub(r"\s+", " ", clean)
-        return clean.strip()

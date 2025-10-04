@@ -14,8 +14,8 @@ def f1_news(source: str = "formula1", limit: int = 10) -> NewsResponse:
 
     Args:
         source: News source to fetch from. Options: "formula1" (official F1 website),
-                "autosport", "the-race", "racefans", "planetf1", "motorsport", "all".
-                Default: "formula1"
+                "fia" (FIA press releases), "autosport", "the-race", "racefans",
+                "planetf1", "motorsport", "all". Default: "formula1"
         limit: Maximum number of articles to return per source (1-50). Default: 10
 
     Returns:
