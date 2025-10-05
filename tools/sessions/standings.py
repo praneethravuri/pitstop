@@ -1,7 +1,7 @@
 from clients.fastf1_client import FastF1Client
 from typing import Union, Optional, Literal
 from models.sessions import StandingsResponse, DriverStanding, ConstructorStanding
-import pandas as pd
+from datetime import datetime
 
 fastf1_client = FastF1Client()
 
@@ -76,23 +76,29 @@ def get_standings(
     if round is not None:
         if isinstance(round, str):
             # Get event schedule and find the round number
-            schedule = fastf1_client.get_event_schedule(year, include_testing=False)
-            matching_events = schedule[
-                schedule['EventName'].str.contains(round, case=False, na=False) |
-                schedule['Country'].str.contains(round, case=False, na=False) |
-                schedule['Location'].str.contains(round, case=False, na=False)
+            schedule_df = fastf1_client.get_event_schedule(year, include_testing=False)
+            schedule = schedule_df.to_dict('records')
+
+            matching_events = [
+                event for event in schedule
+                if round.lower() in event['EventName'].lower()
+                or round.lower() in event['Country'].lower()
+                or round.lower() in event['Location'].lower()
             ]
+
             if len(matching_events) == 0:
                 raise ValueError(f"No event found matching '{round}' in {year}")
-            round_num = int(matching_events.iloc[0]['RoundNumber'])
-            round_name = str(matching_events.iloc[0]['EventName'])
+            round_num = int(matching_events[0]['RoundNumber'])
+            round_name = str(matching_events[0]['EventName'])
         else:
             round_num = round
             # Get the event name for this round
-            schedule = fastf1_client.get_event_schedule(year, include_testing=False)
-            event = schedule[schedule['RoundNumber'] == round_num]
-            if len(event) > 0:
-                round_name = str(event.iloc[0]['EventName'])
+            schedule_df = fastf1_client.get_event_schedule(year, include_testing=False)
+            schedule = schedule_df.to_dict('records')
+
+            matching_event = next((e for e in schedule if e['RoundNumber'] == round_num), None)
+            if matching_event:
+                round_name = str(matching_event['EventName'])
 
     driver_standings_list = None
     constructor_standings_list = None
@@ -100,28 +106,31 @@ def get_standings(
     # Get driver standings if requested
     if type is None or type == 'driver':
         if round_num is not None:
-            driver_standings_df = fastf1_client.ergast.get_driver_standings(
+            driver_standings_response = fastf1_client.ergast.get_driver_standings(
                 season=year, round=round_num
             )
         else:
-            driver_standings_df = fastf1_client.ergast.get_driver_standings(season=year)
+            driver_standings_response = fastf1_client.ergast.get_driver_standings(season=year)
+
+        # Extract DataFrame and convert to list of dicts
+        driver_standings_data = driver_standings_response.content[0].to_dict('records')
 
         # Filter by driver name if provided
         if driver_name:
-            driver_standings_df = driver_standings_df[
-                driver_standings_df['familyName'].str.contains(driver_name, case=False, na=False) |
-                driver_standings_df['givenName'].str.contains(driver_name, case=False, na=False)
+            driver_standings_data = [
+                row for row in driver_standings_data
+                if driver_name.lower() in row['familyName'].lower()
+                or driver_name.lower() in row['givenName'].lower()
             ]
 
         # Filter by team name if provided
         if team_name:
-            # Handle the fact that constructorNames is a list
-            mask = driver_standings_df['constructorNames'].apply(
-                lambda names: any(team_name.lower() in name.lower() for name in names)
-            )
-            driver_standings_df = driver_standings_df[mask]
+            driver_standings_data = [
+                row for row in driver_standings_data
+                if any(team_name.lower() in name.lower() for name in row['constructorNames'])
+            ]
 
-        # Convert DataFrame to Pydantic models
+        # Convert to Pydantic models
         driver_standings_list = [
             DriverStanding(
                 position=int(row['position']),
@@ -133,33 +142,37 @@ def get_standings(
                 driver_code=str(row['driverCode']),
                 given_name=str(row['givenName']),
                 family_name=str(row['familyName']),
-                date_of_birth=pd.to_datetime(row['dateOfBirth']).date() if pd.notna(row['dateOfBirth']) else None,
+                date_of_birth=datetime.fromisoformat(row['dateOfBirth']).date() if row.get('dateOfBirth') and isinstance(row['dateOfBirth'], str) else None,
                 nationality=str(row['driverNationality']),
                 constructor_ids=row['constructorIds'],
                 constructor_names=row['constructorNames'],
                 constructor_nationalities=row['constructorNationalities'],
             )
-            for _, row in driver_standings_df.iterrows()
+            for row in driver_standings_data
         ]
 
     # Get constructor standings if requested
     if type is None or type == 'constructor':
         if round_num is not None:
-            constructor_standings_df = fastf1_client.ergast.get_constructor_standings(
+            constructor_standings_response = fastf1_client.ergast.get_constructor_standings(
                 season=year, round=round_num
             )
         else:
-            constructor_standings_df = fastf1_client.ergast.get_constructor_standings(
+            constructor_standings_response = fastf1_client.ergast.get_constructor_standings(
                 season=year
             )
 
+        # Extract DataFrame and convert to list of dicts
+        constructor_standings_data = constructor_standings_response.content[0].to_dict('records')
+
         # Filter by team name if provided
         if team_name:
-            constructor_standings_df = constructor_standings_df[
-                constructor_standings_df['constructorName'].str.contains(team_name, case=False, na=False)
+            constructor_standings_data = [
+                row for row in constructor_standings_data
+                if team_name.lower() in row['constructorName'].lower()
             ]
 
-        # Convert DataFrame to Pydantic models
+        # Convert to Pydantic models
         constructor_standings_list = [
             ConstructorStanding(
                 position=int(row['position']),
@@ -170,7 +183,7 @@ def get_standings(
                 constructor_name=str(row['constructorName']),
                 nationality=str(row['constructorNationality']),
             )
-            for _, row in constructor_standings_df.iterrows()
+            for row in constructor_standings_data
         ]
 
     return StandingsResponse(
