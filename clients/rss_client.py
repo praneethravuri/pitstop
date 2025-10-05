@@ -16,16 +16,33 @@ class RSSClient:
     - RaceFans
     - PlanetF1
     - Motorsport.com
+    - Crash.net
+    - GPBlog
+    - F1i.com
+    - GrandPrix.com
+    - ESPN F1
+    - Sky Sports F1
     """
 
     RSS_FEEDS = {
+        # Official sources
         "formula1": "https://www.formula1.com/content/fom-website/en/latest/all.xml",
+        "fia": "https://www.fia.com/rss/press-release",
+
+        # Major F1 news outlets
         "autosport": "https://www.autosport.com/rss/feed/f1",
+        "motorsport": "https://www.motorsport.com/rss/f1/news/",
         "the-race": "https://the-race.com/formula-1/feed/",
         "racefans": "https://www.racefans.net/feed/",
         "planetf1": "https://www.planetf1.com/feed/",
-        "motorsport": "https://www.motorsport.com/rss/f1/news/",
-        "fia": "fia.com/rss/press-release"
+
+        # Additional specialized sources
+        "crash": "https://www.crash.net/rss/f1/news/1",
+        "gpblog": "https://www.gpblog.com/en/rss.xml",
+        "f1-insider": "https://f1i.com/feed",
+        "grandprix": "https://www.grandprix.com/feed/",
+        "espnf1": "https://www.espn.com/espn/rss/rpm/news",
+        "skysportsf1": "https://www.skysports.com/rss/12040",
     }
 
     def __init__(self):

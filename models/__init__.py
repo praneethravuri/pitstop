@@ -1,8 +1,6 @@
 from .news_and_updates import (
     NewsArticle,
     NewsResponse,
-    SillySeasonArticle,
-    SillySeasonResponse,
 )
 from .sessions import (
     SessionDetailsResponse,
@@ -15,8 +13,6 @@ from .sessions import (
 __all__ = [
     "NewsArticle",
     "NewsResponse",
-    "SillySeasonArticle",
-    "SillySeasonResponse",
     "SessionDetailsResponse",
     "SessionInfo",
     "DriverSessionResult",

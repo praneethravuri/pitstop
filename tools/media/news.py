@@ -1,158 +1,179 @@
 from clients.rss_client import RSSClient
-from models import NewsResponse, SillySeasonResponse
+from models import NewsResponse
 from datetime import datetime
 from typing import Optional, Literal
-from .silly_season.filters import (
-    filter_news_by_keywords,
-    TRANSFER_KEYWORDS,
-    MANAGEMENT_KEYWORDS,
-    CONTRACT_KEYWORDS
-)
 
 # Initialize RSS client
 rss_client = RSSClient()
 
+# Keyword sets for different news categories
+CATEGORY_KEYWORDS = {
+    "transfers": [
+        "transfer", "move", "sign", "join", "switch", "switch to", "rumour", "rumor",
+        "linked", "target", "interest", "reportedly", "deal", "agreement", "swap",
+        "loan", "option", "clause", "leaving", "exit", "departure", "replace"
+    ],
+    "contracts": [
+        "contract", "extension", "renewal", "extend", "renew", "signed", "deal",
+        "agreement", "multi-year", "option", "expire", "expiring", "expire at",
+        "terms", "negotiate", "negotiation", "re-sign", "commit"
+    ],
+    "technical": [
+        "upgrade", "development", "aero", "aerodynamic", "chassis", "engine",
+        "power unit", "regulation", "technical", "innovation", "design", "concept",
+        "performance", "wind tunnel", "CFD", "floor", "sidepod", "rear wing", "front wing"
+    ],
+    "calendar": [
+        "calendar", "schedule", "race", "grand prix", "venue", "circuit", "track",
+        "postpone", "cancel", "reschedule", "new race", "date", "host", "return",
+        "rotation", "contract extension", "race weekend", "sprint"
+    ],
+    "regulations": [
+        "regulation", "rule", "FIA", "sporting", "technical directive", "clarification",
+        "illegal", "legal", "penalty", "fine", "ban", "sanction", "investigation",
+        "protest", "appeal", "steward"
+    ],
+    "management": [
+        "team principal", "CEO", "manage", "appoint", "hire", "resign", "leave",
+        "director", "technical director", "sporting director", "depart", "join as",
+        "promote", "reshuffle", "reorganize", "restructure", "leadership"
+    ]
+}
+
 
 def get_f1_news(
-    source: str = "formula1",
+    source: str = "all",
     limit: int = 10,
-    category: Optional[Literal["general", "transfers", "management", "contracts", "silly_season"]] = "general",
-    driver: Optional[str] = None,
-    team: Optional[str] = None,
-    year: Optional[int] = None
+    category: Optional[Literal["general", "transfers", "contracts", "technical", "calendar", "regulations", "management"]] = "general",
+    filter_text: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None
 ):
     """
     Get Formula 1 news with flexible filtering options.
 
-    A composable function to retrieve F1 news - general news, silly season rumors,
-    transfer news, management changes, or contract updates. Use this single tool
-    for all news-related queries instead of multiple separate tools.
+    A unified tool to retrieve all types of F1 news - latest updates, driver transfers,
+    technical developments, calendar changes, regulations, contracts, and more.
 
     Use this tool to:
-    - Get general F1 news from various sources
+    - Get latest F1 news from various sources
     - Find driver transfer rumors and confirmed moves
-    - Track team management changes and appointments
-    - Monitor contract renewals, extensions, and expirations
-    - Filter silly season news by driver, team, or year
+    - Track technical developments and upgrades
+    - Monitor calendar changes and new races
+    - Follow regulation changes and FIA decisions
+    - Track contract renewals, extensions, and expirations
+    - Monitor team management changes
 
     Args:
-        source: News source - "formula1" (official F1), "fia", "autosport",
-                "the-race", "racefans", "planetf1", "motorsport", or "all"
-                Default: "formula1"
+        source: News source - "formula1", "fia", "autosport", "motorsport", "the-race",
+                "racefans", "planetf1", "crash", "gpblog", "f1-insider", "grandprix",
+                "espnf1", "skysportsf1", or "all" (default: "all")
         limit: Maximum number of articles to return (1-50). Default: 10
-        category: News category - "general" (all F1 news), "transfers" (driver moves),
-                 "management" (team leadership), "contracts" (renewals/extensions),
-                 "silly_season" (all silly season news). Default: "general"
-        driver: Optional - Filter by driver name (e.g., "Hamilton", "Verstappen")
-                Works with transfers, contracts, and silly_season categories
-        team: Optional - Filter by team/constructor (e.g., "Ferrari", "Red Bull", "McLaren")
-              Works with management, contracts, and silly_season categories
-        year: Optional - Filter by year (e.g., 2024, 2025)
-              Works with silly_season category
+        category: News category to filter by:
+                 - "general": All F1 news (default)
+                 - "transfers": Driver moves, signings, and rumors
+                 - "contracts": Contract renewals, extensions, and negotiations
+                 - "technical": Technical updates, upgrades, and developments
+                 - "calendar": Race calendar changes and new venues
+                 - "regulations": FIA rules, penalties, and investigations
+                 - "management": Team leadership and organizational changes
+        filter_text: Optional text to filter articles (searches in title and summary)
+                     Examples: "Hamilton", "Ferrari", "Red Bull", "2025"
+        date_from: Optional start date to filter articles (format: "YYYY-MM-DD")
+        date_to: Optional end date to filter articles (format: "YYYY-MM-DD")
 
     Returns:
-        NewsResponse or SillySeasonResponse: News articles with titles, links,
-        publication dates, summaries, and source information. Silly season news
-        includes relevance scores and is sorted by relevance.
+        NewsResponse: News articles with titles, links, publication dates,
+                     summaries, and source information
 
     Examples:
-        >>> # Get latest general F1 news from official website
+        >>> # Get latest F1 news from all sources
         >>> news = get_f1_news()
 
-        >>> # Get news from all sources
-        >>> all_news = get_f1_news(source="all", limit=20)
+        >>> # Get news from official F1 website only
+        >>> f1_news = get_f1_news(source="formula1", limit=20)
 
-        >>> # Get driver transfer rumors
+        >>> # Get driver transfer news
         >>> transfers = get_f1_news(category="transfers", limit=15)
 
-        >>> # Get transfer rumors about a specific driver
-        >>> sainz_rumors = get_f1_news(category="transfers", driver="Sainz")
+        >>> # Get transfer news about a specific driver
+        >>> sainz = get_f1_news(category="transfers", filter_text="Sainz")
 
-        >>> # Get team management changes
-        >>> management = get_f1_news(category="management")
+        >>> # Get technical developments
+        >>> tech = get_f1_news(category="technical", limit=20)
 
-        >>> # Get management news for Ferrari
-        >>> ferrari_mgmt = get_f1_news(category="management", team="Ferrari")
+        >>> # Get Ferrari technical news
+        >>> ferrari_tech = get_f1_news(category="technical", filter_text="Ferrari")
+
+        >>> # Get calendar changes
+        >>> calendar = get_f1_news(category="calendar")
 
         >>> # Get contract news
         >>> contracts = get_f1_news(category="contracts")
 
-        >>> # Get contract news for a driver
-        >>> hamilton_contract = get_f1_news(category="contracts", driver="Hamilton")
+        >>> # Get news for a specific date range
+        >>> recent = get_f1_news(date_from="2025-10-01", date_to="2025-10-05")
 
-        >>> # Get all silly season news for 2025
-        >>> silly_2025 = get_f1_news(category="silly_season", year=2025, limit=20)
-
-        >>> # Get silly season news about Red Bull
-        >>> rb_silly = get_f1_news(category="silly_season", team="Red Bull")
+        >>> # Get regulation news from FIA
+        >>> regs = get_f1_news(source="fia", category="regulations")
     """
     # Validate limit
     if not 1 <= limit <= 50:
         raise ValueError("Limit must be between 1 and 50")
 
-    # Handle general news category
-    if category == "general":
-        return rss_client.get_news(source=source, limit=limit)
+    # Fetch news from source(s)
+    # For filtered categories, fetch more articles to ensure we have enough after filtering
+    fetch_limit = limit if category == "general" else min(limit * 3, 50)
+    news_response = rss_client.get_news(source=source, limit=fetch_limit)
 
-    # For filtered categories, fetch from all sources with increased limit
-    news_response = rss_client.get_news(source="all", limit=max(limit * 2, 30))
-
-    # Apply filtering based on category
-    if category == "transfers":
-        filtered_articles = filter_news_by_keywords(
-            news_response.articles,
-            TRANSFER_KEYWORDS,
-            "driver_transfer",
-            driver
-        )
-        query_type = "transfer_rumors"
-        query_value = driver
-
-    elif category == "management":
-        filtered_articles = filter_news_by_keywords(
-            news_response.articles,
-            MANAGEMENT_KEYWORDS,
-            "team_management",
-            team
-        )
-        query_type = "management_changes"
-        query_value = team
-
-    elif category == "contracts":
-        # Combine driver and team filtering for contracts
-        query_value = driver or team
-        filtered_articles = filter_news_by_keywords(
-            news_response.articles,
-            CONTRACT_KEYWORDS,
-            "contract",
-            query_value
-        )
-        query_type = "contract_news"
-
-    elif category == "silly_season":
-        # Combine all silly season keywords
-        all_keywords = TRANSFER_KEYWORDS + MANAGEMENT_KEYWORDS + CONTRACT_KEYWORDS
-        # Apply filters for year, driver, or team
-        query_value = driver or team or (str(year) if year else None)
-        filtered_articles = filter_news_by_keywords(
-            news_response.articles,
-            all_keywords,
-            "silly_season",
-            query_value
-        )
-        query_type = "silly_season"
-
+    # Apply category filtering
+    if category != "general" and category in CATEGORY_KEYWORDS:
+        keywords = CATEGORY_KEYWORDS[category]
+        filtered_articles = [
+            article for article in news_response.articles
+            if any(keyword.lower() in article.title.lower() or
+                   keyword.lower() in article.summary.lower()
+                   for keyword in keywords)
+        ]
     else:
-        # Default to general if unknown category
-        return rss_client.get_news(source=source, limit=limit)
+        filtered_articles = news_response.articles
+
+    # Apply text filtering
+    if filter_text:
+        filtered_articles = [
+            article for article in filtered_articles
+            if filter_text.lower() in article.title.lower() or
+               filter_text.lower() in article.summary.lower()
+        ]
+
+    # Apply date filtering
+    if date_from or date_to:
+        date_filtered = []
+        for article in filtered_articles:
+            try:
+                # Parse article date (handling various formats)
+                article_date = datetime.fromisoformat(article.published.replace('Z', '+00:00'))
+                article_date_str = article_date.strftime("%Y-%m-%d")
+
+                # Check date range
+                if date_from and article_date_str < date_from:
+                    continue
+                if date_to and article_date_str > date_to:
+                    continue
+
+                date_filtered.append(article)
+            except Exception:
+                # If date parsing fails, include the article
+                date_filtered.append(article)
+
+        filtered_articles = date_filtered
 
     # Limit results
     filtered_articles = filtered_articles[:limit]
 
-    # Return appropriate response type
-    return SillySeasonResponse(
-        query_type=query_type,
-        query_value=query_value,
+    # Return response
+    return NewsResponse(
+        source=source,
         fetched_at=datetime.now().isoformat(),
         article_count=len(filtered_articles),
         articles=filtered_articles
