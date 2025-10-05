@@ -19,6 +19,7 @@ Your one-stop shop for Formula 1 data and insights via the Model Context Protoco
   - [🚦 Race Control](#-race-control)
 - [Setup](#setup)
 - [Usage Examples](#usage-examples)
+- [Testing with Playground](#testing-with-playground)
 - [Project Structure](#project-structure)
 - [Development](#development)
 
@@ -80,19 +81,15 @@ Restart Claude Desktop to activate the tools.
 
 ## Available Tools
 
+**🎯 Composable & Generic Tools** - Each tool is designed to handle multiple use cases with flexible parameters, reducing complexity and improving usability.
+
 | Tool Name                     | Category          | Description                                                   |
 | ----------------------------- | ----------------- | ------------------------------------------------------------- |
-| `f1_news`                   | 📰 News & Updates | Get latest F1 news from trusted RSS feeds                     |
-| `latest_f1_news`            | 📰 News & Updates | Get latest F1 news from multiple sources                      |
-| `silly_season_news`         | 📰 News & Updates | Get F1 silly season news including transfers and rumors       |
-| `driver_transfer_rumors`    | 📰 News & Updates | Get latest driver transfer rumors and speculation             |
-| `team_management_changes`   | 📰 News & Updates | Get news about team management changes                        |
-| `contract_news`             | 📰 News & Updates | Get contract-related news (renewals, extensions, expirations) |
+| `get_f1_news`               | 📰 News & Updates | Get F1 news with flexible filtering (general, transfers, management, contracts, silly season) |
+| `get_standings`             | 🏆 Championships  | Get driver/constructor championship standings for any season or round |
 | `get_session_details`       | 🏁 Session Data   | Get comprehensive details of a specific F1 session            |
 | `get_session_results`       | 🏁 Session Data   | Get results/classification from a specific session            |
-| `get_session_laps`          | 🏁 Session Data   | Get all laps from a specific session                          |
-| `get_driver_laps`           | 🏁 Session Data   | Get all laps for a specific driver in a session               |
-| `get_fastest_lap`           | 🏁 Session Data   | Get the fastest lap from a session                            |
+| `get_laps`                  | 🏁 Session Data   | Get lap data with filtering (all laps, driver laps, fastest laps) |
 | `get_session_drivers`       | 🏁 Session Data   | Get list of drivers who participated in a session             |
 | `get_tire_strategy`         | 🏁 Session Data   | Get tire strategy and compound usage for a session            |
 | `get_lap_telemetry`         | 📊 Telemetry      | Get detailed telemetry data for a specific lap                |
@@ -102,130 +99,57 @@ Restart Claude Desktop to activate the tools.
 
 ### 📰 News & Updates
 
-#### `f1_news`
+#### `get_f1_news`
 
-Get the latest Formula 1 news from trusted RSS feeds.
+Get Formula 1 news with flexible filtering options - a single composable tool for all news needs.
 
 **Parameters:**
 
 - `source` (str, optional): News source - `"formula1"`, `"fia"`, `"autosport"`, `"the-race"`, `"racefans"`, `"planetf1"`, `"motorsport"`, or `"all"` (default: `"formula1"`)
 - `limit` (int, optional): Max articles 1-50 (default: `10`)
+- `category` (str, optional): News category - `"general"`, `"transfers"`, `"management"`, `"contracts"`, `"silly_season"` (default: `"general"`)
+- `driver` (str, optional): Filter by driver name (works with transfers, contracts, silly_season)
+- `team` (str, optional): Filter by team name (works with management, contracts, silly_season)
+- `year` (int, optional): Filter by year (works with silly_season)
 
-**Returns:** News articles with titles, links, publication dates, summaries, and source information.
+**Returns:** News articles with titles, links, dates, summaries, and sources. Filtered news includes relevance scores.
 
 **Example Prompts:**
 
 ```
 What's the latest F1 news?
-Show me the top 5 articles from Autosport
-Get me 20 F1 news articles from all sources
-```
-
----
-
-#### `latest_f1_news`
-
-Get the latest Formula 1 news from multiple sources.
-
-**Parameters:**
-
-- `source` (str, optional): News source (default: `"all"`)
-- `limit` (int, optional): Max articles 1-50 (default: `15`)
-
-**Returns:** Latest news from all sources including race results, driver announcements, and team updates.
-
-**Example Prompts:**
-
-```
-What happened in F1 this week?
-Any breaking F1 news today?
-```
-
----
-
-#### `silly_season_news`
-
-Get F1 silly season news including driver transfers, team changes, and rumors.
-
-**Parameters:**
-
-- `year` (int, optional): Filter by year (e.g., 2024, 2025)
-- `driver` (str, optional): Filter by driver name (e.g., "Hamilton", "Verstappen")
-- `constructor` (str, optional): Filter by team name (e.g., "Ferrari", "Red Bull")
-- `limit` (int, optional): Max articles 1-50 (default: `20`)
-
-**Returns:** Silly season articles with relevance scores, sorted by relevance.
-
-**Example Prompts:**
-
-```
-What's the latest silly season news?
-Show me driver transfer rumors for 2025
-Any silly season news about Ferrari?
-```
-
----
-
-#### `driver_transfer_rumors`
-
-Get the latest driver transfer rumors and speculation.
-
-**Parameters:**
-
-- `driver` (str, optional): Filter by driver name
-- `limit` (int, optional): Max articles 1-50 (default: `15`)
-
-**Returns:** Transfer-related news including rumored moves, confirmed signings, and negotiations.
-
-**Example Prompts:**
-
-```
-Are there any transfer rumors about Lewis Hamilton?
-What are the latest rumors about Carlos Sainz?
-Show me all driver transfer rumors
-```
-
----
-
-#### `team_management_changes`
-
-Get news about team management changes.
-
-**Parameters:**
-
-- `constructor` (str, optional): Filter by team name
-- `limit` (int, optional): Max articles 1-50 (default: `15`)
-
-**Returns:** Management news including appointments, resignations, and team restructuring.
-
-**Example Prompts:**
-
-```
+Show me driver transfer rumors
+Get contract news about Hamilton
 Any management changes at Ferrari?
-Show me recent team principal appointments
-What management changes happened at Red Bull?
+What's the silly season news for 2025?
+Show me all Red Bull silly season news
 ```
 
 ---
 
-#### `contract_news`
+### 🏆 Championships
 
-Get contract-related news including renewals, extensions, and expirations.
+#### `get_standings`
+
+Get F1 World Championship standings for drivers and constructors.
 
 **Parameters:**
 
-- `driver` (str, optional): Filter by driver name
-- `constructor` (str, optional): Filter by team name
-- `limit` (int, optional): Max articles 1-50 (default: `15`)
+- `year` (int): Season year (1950+)
+- `round` (int | str, optional): Round number or GP name (e.g., "Monaco", 10)
+- `type` (str, optional): `"driver"` or `"constructor"` (default: both)
+- `driver_name` (str, optional): Filter by driver name
+- `team_name` (str, optional): Filter by team name
 
-**Returns:** Contract news including extensions, renewals, and multi-year deals.
+**Returns:** Championship standings with positions, points, wins, and nationality.
 
 **Example Prompts:**
 
 ```
-Which driver contracts are expiring soon?
-Show me contract extension news for Lando Norris
-Any contract news for McLaren?
+Who won the 2021 drivers championship?
+Show me the 2024 constructor standings
+Get standings after Monaco 2024
+What's Verstappen's championship position?
 ```
 
 ---
@@ -278,69 +202,27 @@ What were the FP1 results for the 2024 Bahrain GP?
 
 ---
 
-#### `get_session_laps`
+#### `get_laps`
 
-Get all laps from a specific session.
+Get lap data from an F1 session with flexible filtering - a single composable tool for all lap queries.
 
 **Parameters:**
 
 - `year` (int): Season year (2018+)
 - `gp` (str | int): Grand Prix name or round number
-- `session` (str): Session type
+- `session` (str): Session type - `"FP1"`, `"FP2"`, `"FP3"`, `"Q"`, `"S"`, `"R"`
+- `driver` (str | int, optional): Driver identifier - 3-letter code or number (default: all drivers)
+- `lap_type` (str, optional): `"all"` or `"fastest"` (default: `"all"`)
 
-**Returns:** All laps with lap times, sectors, tire compounds, and track status.
+**Returns:** Lap data with times, sectors, tire compounds, track status, and speed data.
 
 **Example Prompts:**
 
 ```
 Get all laps from the 2024 Monza race
-Show me lap data from qualifying at Monaco 2024
-```
-
----
-
-#### `get_driver_laps`
-
-Get all laps for a specific driver in a session.
-
-**Parameters:**
-
-- `year` (int): Season year (2018+)
-- `gp` (str | int): Grand Prix name or round number
-- `session` (str): Session type
-- `driver` (str | int): Driver identifier - 3-letter code (e.g., "VER") or number (e.g., 1)
-
-**Returns:** Driver's laps with timing data, sectors, compounds, and more.
-
-**Example Prompts:**
-
-```
-Get all laps for Verstappen in the 2024 Monza race
-Show me Hamilton's qualifying laps from Monaco 2024
-What were Leclerc's lap times in FP1 at Singapore 2023?
-```
-
----
-
-#### `get_fastest_lap`
-
-Get the fastest lap from a session.
-
-**Parameters:**
-
-- `year` (int): Season year (2018+)
-- `gp` (str | int): Grand Prix name or round number
-- `session` (str): Session type
-- `driver` (str | int, optional): Driver identifier (if None, returns overall fastest)
-
-**Returns:** Fastest lap data including driver, time, lap number, and compound.
-
-**Example Prompts:**
-
-```
-Who set the fastest lap in the 2024 Monza qualifying?
-Get Verstappen's fastest lap from the 2024 Monaco race
-What was the fastest lap in FP2 at Singapore 2023?
+Show me Verstappen's laps in Monaco 2024
+What was the fastest lap in qualifying?
+Get Hamilton's fastest lap from the race
 ```
 
 ---
@@ -568,6 +450,49 @@ What penalties were given in the Monaco race?
 Show me all safety car periods from the 2024 season
 ```
 
+## Testing with Playground
+
+Pitstop includes a comprehensive testing playground (`playground.py`) that lets you test all tools without running the MCP server. This is perfect for:
+
+- **Development** - Test your changes quickly
+- **Learning** - Understand how each tool works
+- **Debugging** - Isolate and fix issues
+
+### Quick Start
+
+```bash
+# Run all tests
+python playground.py
+
+# Run specific test functions (edit playground.py)
+python playground.py
+```
+
+### Available Test Functions
+
+- `test_news()` - Test F1 news with various filters
+- `test_standings()` - Test championship standings
+- `test_session_data()` - Test session details and results
+- `test_laps()` - Test lap data and fastest laps
+- `test_tire_strategy()` - Test tire strategy analysis
+- `test_telemetry()` - Test telemetry data and comparisons
+- `test_weather()` - Test weather data
+- `test_race_control()` - Test race control messages
+
+### Example Output
+
+```
+==================================================
+Testing Championship Standings
+==================================================
+
+1. 2024 Driver Standings (top 5):
+  1. Max Verstappen - 393 pts
+  2. Lando Norris - 331 pts
+  3. Charles Leclerc - 307 pts
+  ...
+```
+
 ## Development
 
 ### Run Locally
@@ -580,15 +505,26 @@ uv run mcp run server.py
 
 ### Test Tools Directly
 
+Use the provided **playground.py** for interactive testing:
+
+```bash
+# Run all tests
+python playground.py
+
+# Or test individual tools by editing playground.py
+```
+
+Quick command-line tests:
+
 ```bash
 # Test F1 news
-uv run python -c "from tools import f1_news; result = f1_news('autosport', 3); print(result.articles[0].title)"
+uv run python -c "from tools import get_f1_news; result = get_f1_news(limit=3); print(result.articles[0].title)"
 
-# Test session details
-uv run python -c "from tools import get_session_details; result = get_session_details(2019, 'Monza', 'FP1'); print(result.session_info.name)"
+# Test standings
+uv run python -c "from tools import get_standings; result = get_standings(2024, type='driver'); print(result.drivers[0].family_name)"
 
-# Test telemetry comparison
-uv run python -c "from tools import compare_driver_telemetry; tel1, tel2 = compare_driver_telemetry(2024, 'Monaco', 'Q', 'VER', 'HAM'); print('Telemetry compared')"
+# Test session laps
+uv run python -c "from tools import get_laps; laps = get_laps(2024, 'Monaco', 'R', driver='VER', lap_type='fastest'); print(laps['LapTime'])"
 ```
 
 ### Cache Management

@@ -1,107 +1,83 @@
 from clients.fastf1_client import FastF1Client
-from typing import Union, Optional
+from typing import Union, Optional, Literal
 
 # Initialize FastF1 client
 fastf1_client = FastF1Client()
 
 
-def get_session_laps(year: int, gp: Union[str, int], session: str):
+def get_laps(
+    year: int,
+    gp: Union[str, int],
+    session: str,
+    driver: Optional[Union[str, int]] = None,
+    lap_type: Optional[Literal["all", "fastest"]] = "all"
+):
     """
-    Get all laps from a specific F1 session.
+    Get lap data from an F1 session with flexible filtering.
 
-    Retrieves complete lap data for all drivers in a session, including lap times,
-    sectors, tire compounds, and lap-by-lap information.
+    A composable function to retrieve lap data - all laps, specific driver's laps,
+    or fastest laps. Use this single tool for all lap-related queries instead of
+    multiple separate tools.
+
+    Use this tool to:
+    - Get all laps from a session (default behavior)
+    - Get a specific driver's laps (provide driver parameter)
+    - Get the fastest lap overall or for a driver (set lap_type='fastest')
+    - Analyze lap times, sectors, tire compounds, and lap progression
 
     Args:
-        year: The season year (2018 onwards)
+        year: The season year (2018 onwards for detailed data)
         gp: The Grand Prix name (e.g., 'Monza', 'Monaco') or round number
-        session: Session type - 'FP1', 'FP2', 'FP3', 'Q', 'S', 'R'
+        session: Session type - 'FP1' (Free Practice 1), 'FP2', 'FP3',
+                'Q' (Qualifying), 'S' (Sprint), 'R' (Race)
+        driver: Optional - Driver identifier as 3-letter code (e.g., 'VER', 'HAM')
+                or number (e.g., 1, 44). If None, returns data for all drivers.
+        lap_type: Optional - 'all' returns all laps (default), 'fastest' returns
+                 only the fastest lap(s)
 
     Returns:
-        pandas.DataFrame: All laps with columns including:
+        pandas.DataFrame or pandas.Series: Lap data with columns including:
         - LapTime: Total lap time
         - LapNumber: Lap number
         - Driver: Driver abbreviation
         - Sector1Time, Sector2Time, Sector3Time: Sector times
-        - Compound: Tire compound used
+        - Compound: Tire compound used (SOFT, MEDIUM, HARD, etc.)
         - TyreLife: Age of tires in laps
         - TrackStatus: Track status during lap
         - IsPersonalBest: Whether it's driver's fastest lap
+        - Speed data (SpeedI1, SpeedI2, SpeedFL, SpeedST)
 
     Examples:
-        >>> # Get all laps from 2024 Monza race
-        >>> laps = get_session_laps(2024, "Monza", "R")
+        >>> # Get all laps from 2024 Monza race (all drivers)
+        >>> all_laps = get_laps(2024, "Monza", "R")
 
-        >>> # Get qualifying laps
-        >>> quali_laps = get_session_laps(2024, "Monaco", "Q")
-    """
-    session_obj = fastf1_client.get_session(year, gp, session)
-    session_obj.load(laps=True, telemetry=False, weather=False, messages=False)
-    return session_obj.laps
-
-
-def get_driver_laps(year: int, gp: Union[str, int], session: str, driver: Union[str, int]):
-    """
-    Get all laps for a specific driver in a session.
-
-    Retrieves lap data for a single driver, useful for analyzing individual
-    driver performance and lap-by-lap progression.
-
-    Args:
-        year: The season year (2018 onwards)
-        gp: The Grand Prix name or round number
-        session: Session type - 'FP1', 'FP2', 'FP3', 'Q', 'S', 'R'
-        driver: Driver identifier - 3-letter code (e.g., 'VER', 'HAM') or number (e.g., 1, 44)
-
-    Returns:
-        pandas.DataFrame: Driver's laps with timing data, sectors, compounds, etc.
-
-    Examples:
         >>> # Get all laps for Verstappen in 2024 Monza race
-        >>> ver_laps = get_driver_laps(2024, "Monza", "R", "VER")
+        >>> ver_laps = get_laps(2024, "Monza", "R", driver="VER")
+
+        >>> # Get fastest lap overall from 2024 Monaco qualifying
+        >>> fastest = get_laps(2024, "Monaco", "Q", lap_type="fastest")
+
+        >>> # Get Verstappen's fastest lap from the race
+        >>> ver_fastest = get_laps(2024, "Monza", "R", driver="VER", lap_type="fastest")
 
         >>> # Get Hamilton's qualifying laps
-        >>> ham_laps = get_driver_laps(2024, "Monaco", "Q", 44)
+        >>> ham_quali = get_laps(2024, "Monaco", "Q", driver=44)
+
+        >>> # Get all FP1 laps
+        >>> fp1_laps = get_laps(2024, "Silverstone", "FP1")
     """
-    session_obj = fastf1_client.get_session(year, gp, session)
-    session_obj.load(laps=True, telemetry=False, weather=False, messages=False)
-    return session_obj.laps.pick_drivers(driver)
-
-
-def get_fastest_lap(year: int, gp: Union[str, int], session: str, driver: Optional[Union[str, int]] = None):
-    """
-    Get the fastest lap from a session, optionally for a specific driver.
-
-    Retrieves the fastest lap time set during a session, either overall or
-    for a specific driver.
-
-    Args:
-        year: The season year (2018 onwards)
-        gp: The Grand Prix name or round number
-        session: Session type - 'FP1', 'FP2', 'FP3', 'Q', 'S', 'R'
-        driver: Optional driver identifier (3-letter code or number).
-               If None, returns overall fastest lap
-
-    Returns:
-        pandas.Series: Fastest lap data including:
-        - LapTime: The lap time
-        - Driver: Driver who set the lap
-        - LapNumber: When it was set
-        - Compound: Tire compound used
-        - Sector times and speeds
-
-    Examples:
-        >>> # Get overall fastest lap from 2024 Monza qualifying
-        >>> fastest = get_fastest_lap(2024, "Monza", "Q")
-
-        >>> # Get Verstappen's fastest lap
-        >>> ver_fastest = get_fastest_lap(2024, "Monza", "R", "VER")
-    """
+    # Load session with lap data
     session_obj = fastf1_client.get_session(year, gp, session)
     session_obj.load(laps=True, telemetry=False, weather=False, messages=False)
 
+    # Get laps based on driver filter
     if driver:
-        driver_laps = session_obj.laps.pick_drivers(driver)
-        return driver_laps.pick_fastest()
+        laps = session_obj.laps.pick_drivers(driver)
     else:
-        return session_obj.laps.pick_fastest()
+        laps = session_obj.laps
+
+    # Return based on lap_type
+    if lap_type == "fastest":
+        return laps.pick_fastest()
+    else:
+        return laps
