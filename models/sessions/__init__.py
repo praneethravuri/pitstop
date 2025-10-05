@@ -5,6 +5,11 @@ from .session_details import (
     SessionWeather,
     LapInfo,
 )
+from .standings import (
+    StandingsResponse,
+    DriverStanding,
+    ConstructorStanding,
+)
 
 __all__ = [
     "SessionDetailsResponse",
@@ -12,4 +17,7 @@ __all__ = [
     "DriverSessionResult",
     "SessionWeather",
     "LapInfo",
+    "StandingsResponse",
+    "DriverStanding",
+    "ConstructorStanding",
 ]
