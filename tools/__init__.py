@@ -14,6 +14,7 @@ from .sessions import (
     get_fastest_lap,
     get_session_drivers,
     get_tire_strategy,
+    get_standings,
 )
 from .telemetry import (
     get_lap_telemetry,
@@ -38,6 +39,7 @@ __all__ = [
     "get_fastest_lap",
     "get_session_drivers",
     "get_tire_strategy",
+    "get_standings",
     # Telemetry
     "get_lap_telemetry",
     "compare_driver_telemetry",

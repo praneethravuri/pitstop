@@ -22,6 +22,7 @@ from tools import (
     get_session_weather,
     # Race Control
     get_race_control_messages,
+    get_standings,
 )
 
 mcp = FastMCP(name="Pitstop")
@@ -42,6 +43,7 @@ mcp.tool()(get_driver_laps)
 mcp.tool()(get_fastest_lap)
 mcp.tool()(get_session_drivers)
 mcp.tool()(get_tire_strategy)
+mcp.tool()(get_standings)
 
 # Telemetry tools
 mcp.tool()(get_lap_telemetry)
