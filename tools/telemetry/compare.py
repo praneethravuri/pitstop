@@ -7,6 +7,27 @@ import pandas as pd
 fastf1_client = FastF1Client()
 
 
+def _telemetry_to_points(telemetry_df):
+    """Convert telemetry DataFrame to list of TelemetryPoint pydantic models."""
+    points = []
+    for idx, row in telemetry_df.iterrows():
+        point = TelemetryPoint(
+            session_time=str(row['SessionTime']) if pd.notna(row.get('SessionTime')) else None,
+            distance=float(row['Distance']) if pd.notna(row.get('Distance')) else None,
+            speed=float(row['Speed']) if pd.notna(row.get('Speed')) else None,
+            rpm=float(row['RPM']) if pd.notna(row.get('RPM')) else None,
+            n_gear=int(row['nGear']) if pd.notna(row.get('nGear')) else None,
+            throttle=float(row['Throttle']) if pd.notna(row.get('Throttle')) else None,
+            brake=float(row['Brake']) if pd.notna(row.get('Brake')) else None,
+            drs=int(row['DRS']) if pd.notna(row.get('DRS')) else None,
+            x=float(row['X']) if pd.notna(row.get('X')) else None,
+            y=float(row['Y']) if pd.notna(row.get('Y')) else None,
+            z=float(row['Z']) if pd.notna(row.get('Z')) else None,
+        )
+        points.append(point)
+    return points
+
+
 def compare_driver_telemetry(
     year: int,
     gp: Union[str, int],
@@ -66,27 +87,8 @@ def compare_driver_telemetry(
     tel2_df = lap2_data.get_telemetry()
 
     # Convert to Pydantic models
-    def telemetry_to_points(telemetry_df):
-        points = []
-        for idx, row in telemetry_df.iterrows():
-            point = TelemetryPoint(
-                session_time=str(row['SessionTime']) if pd.notna(row.get('SessionTime')) else None,
-                distance=float(row['Distance']) if pd.notna(row.get('Distance')) else None,
-                speed=float(row['Speed']) if pd.notna(row.get('Speed')) else None,
-                rpm=float(row['RPM']) if pd.notna(row.get('RPM')) else None,
-                n_gear=int(row['nGear']) if pd.notna(row.get('nGear')) else None,
-                throttle=float(row['Throttle']) if pd.notna(row.get('Throttle')) else None,
-                brake=float(row['Brake']) if pd.notna(row.get('Brake')) else None,
-                drs=int(row['DRS']) if pd.notna(row.get('DRS')) else None,
-                x=float(row['X']) if pd.notna(row.get('X')) else None,
-                y=float(row['Y']) if pd.notna(row.get('Y')) else None,
-                z=float(row['Z']) if pd.notna(row.get('Z')) else None,
-            )
-            points.append(point)
-        return points
-
-    driver1_telemetry = telemetry_to_points(tel1_df)
-    driver2_telemetry = telemetry_to_points(tel2_df)
+    driver1_telemetry = _telemetry_to_points(tel1_df)
+    driver2_telemetry = _telemetry_to_points(tel2_df)
 
     return TelemetryComparisonResponse(
         session_name=session_obj.name,
