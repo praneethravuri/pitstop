@@ -12,16 +12,12 @@ Your one-stop shop for Formula 1 data and insights via the Model Context Protoco
 - [Overview](#overview)
 - [Quick Start](#quick-start)
 - [Available Tools](#available-tools)
-  - [📰 News &amp; Updates](#-news--updates)
-  - [🏁 Session Data](#-session-data)
-  - [📊 Telemetry](#-telemetry)
-  - [🌤️ Weather](#️-weather)
-  - [🚦 Race Control](#-race-control)
+  - [Tools Reference Table](#tools-reference-table)
+  - [Tool Details](#tool-details)
 - [Setup](#setup)
 - [Usage Examples](#usage-examples)
-- [Testing with Playground](#testing-with-playground)
-- [Project Structure](#project-structure)
 - [Development](#development)
+- [Testing](#testing)
 
 ## Overview
 
@@ -83,19 +79,25 @@ Restart Claude Desktop to activate the tools.
 
 **🎯 Composable & Generic Tools** - Each tool is designed to handle multiple use cases with flexible parameters, reducing complexity and improving usability.
 
-| Tool Name                     | Category          | Description                                                   |
-| ----------------------------- | ----------------- | ------------------------------------------------------------- |
-| `get_f1_news`               | 📰 News & Updates | Get F1 news with flexible filtering (general, transfers, management, contracts, silly season) |
-| `get_standings`             | 🏆 Championships  | Get driver/constructor championship standings for any season or round |
-| `get_session_details`       | 🏁 Session Data   | Get comprehensive details of a specific F1 session            |
-| `get_session_results`       | 🏁 Session Data   | Get results/classification from a specific session            |
-| `get_laps`                  | 🏁 Session Data   | Get lap data with filtering (all laps, driver laps, fastest laps) |
-| `get_session_drivers`       | 🏁 Session Data   | Get list of drivers who participated in a session             |
-| `get_tire_strategy`         | 🏁 Session Data   | Get tire strategy and compound usage for a session            |
-| `get_lap_telemetry`         | 📊 Telemetry      | Get detailed telemetry data for a specific lap                |
-| `compare_driver_telemetry`  | 📊 Telemetry      | Compare telemetry data between two drivers                    |
-| `get_session_weather`       | 🌤️ Weather      | Get weather data throughout a session                         |
-| `get_race_control_messages` | 🚦 Race Control   | Get official race control messages for a session              |
+### Tools Reference Table
+
+All tools return Pydantic models in JSON-serializable format for consistent data exchange.
+
+| Tool Name | Category | Description | Key Parameters | Return Type | Usage |
+|-----------|----------|-------------|----------------|-------------|-------|
+| `get_f1_news` | 📰 News & Updates | Get F1 news with flexible filtering options | `source` (str), `limit` (int), `category` (str), `filter_text` (str), `date_from` (str), `date_to` (str) | `NewsResponse` | General news, transfer rumors, contracts, technical updates, regulations |
+| `get_standings` | 🏆 Championships | Get driver/constructor championship standings | `year` (int), `round` (int\|str), `type` (str), `driver_name` (str), `team_name` (str) | `StandingsResponse` | Find champions, get standings, check positions |
+| `get_session_details` | 🏁 Session Data | Get comprehensive session details | `year` (int), `gp` (str\|int), `session` (str), `include_weather` (bool), `include_fastest_lap` (bool) | `SessionDetailsResponse` | Complete session overview with results and weather |
+| `get_session_results` | 🏁 Session Data | Get session results/classification | `year` (int), `gp` (str\|int), `session` (str) | `SessionResultsResponse` | Race/qualifying/practice results with driver data |
+| `get_laps` | 🏁 Session Data | Get lap data with flexible filtering | `year` (int), `gp` (str\|int), `session` (str), `driver` (str\|int), `lap_type` (str) | `LapsResponse\|FastestLapResponse` | All laps, driver laps, or fastest lap with full data |
+| `get_session_drivers` | 🏁 Session Data | Get list of drivers in a session | `year` (int), `gp` (str\|int), `session` (str) | `SessionDriversResponse` | Driver abbreviations who participated |
+| `get_tire_strategy` | 🏁 Session Data | Get tire strategy and compound usage | `year` (int), `gp` (str\|int), `session` (str), `driver` (str\|int) | `TireStrategyResponse` | Tire compounds, life, and stint data per lap |
+| `get_lap_telemetry` | 📊 Telemetry | Get detailed telemetry for a specific lap | `year` (int), `gp` (str\|int), `session` (str), `driver` (str\|int), `lap_number` (int) | `LapTelemetryResponse` | High-frequency speed, throttle, brake, gear, RPM, DRS |
+| `compare_driver_telemetry` | 📊 Telemetry | Compare telemetry between two drivers | `year` (int), `gp` (str\|int), `session` (str), `driver1` (str\|int), `driver2` (str\|int), `lap1` (int), `lap2` (int) | `TelemetryComparisonResponse` | Side-by-side telemetry comparison for two drivers |
+| `get_session_weather` | 🌤️ Weather | Get weather data throughout a session | `year` (int), `gp` (str\|int), `session` (str) | `SessionWeatherDataResponse` | Time-series weather data (temp, humidity, wind, rain) |
+| `get_race_control_messages` | 🚦 Race Control | Get official race control messages | `year` (int), `gp` (str\|int), `session` (str) | `RaceControlMessagesResponse` | Flags, safety cars, penalties, investigations |
+
+### Tool Details
 
 ### 📰 News & Updates
 
@@ -450,49 +452,6 @@ What penalties were given in the Monaco race?
 Show me all safety car periods from the 2024 season
 ```
 
-## Testing with Playground
-
-Pitstop includes a comprehensive testing playground (`playground.py`) that lets you test all tools without running the MCP server. This is perfect for:
-
-- **Development** - Test your changes quickly
-- **Learning** - Understand how each tool works
-- **Debugging** - Isolate and fix issues
-
-### Quick Start
-
-```bash
-# Run all tests
-python playground.py
-
-# Run specific test functions (edit playground.py)
-python playground.py
-```
-
-### Available Test Functions
-
-- `test_news()` - Test F1 news with various filters
-- `test_standings()` - Test championship standings
-- `test_session_data()` - Test session details and results
-- `test_laps()` - Test lap data and fastest laps
-- `test_tire_strategy()` - Test tire strategy analysis
-- `test_telemetry()` - Test telemetry data and comparisons
-- `test_weather()` - Test weather data
-- `test_race_control()` - Test race control messages
-
-### Example Output
-
-```
-==================================================
-Testing Championship Standings
-==================================================
-
-1. 2024 Driver Standings (top 5):
-  1. Max Verstappen - 393 pts
-  2. Lando Norris - 331 pts
-  3. Charles Leclerc - 307 pts
-  ...
-```
-
 ## Development
 
 ### Run Locally
@@ -503,28 +462,39 @@ Test the server using the MCP CLI:
 uv run mcp run server.py
 ```
 
-### Test Tools Directly
+## Testing
 
-Use the provided **playground.py** for interactive testing:
+Each tool can be tested individually using its built-in test function. All tools include a `if __name__ == "__main__"` block for standalone testing.
+
+### Test Individual Tools
 
 ```bash
-# Run all tests
-python playground.py
+# Test news tool
+python tools/media/news.py
 
-# Or test individual tools by editing playground.py
+# Test standings
+python tools/standings/standings.py
+
+# Test session results
+python tools/session/results.py
+
+# Test telemetry
+python tools/telemetry/lap_telemetry.py
+
+# Test any other tool by running its Python file directly
 ```
 
-Quick command-line tests:
+### Quick Command-Line Tests
 
 ```bash
 # Test F1 news
-uv run python -c "from tools import get_f1_news; result = get_f1_news(limit=3); print(result.articles[0].title)"
+python -c "from tools.media.news import get_f1_news; news = get_f1_news(limit=3); print(news.articles[0].title)"
 
 # Test standings
-uv run python -c "from tools import get_standings; result = get_standings(2024, type='driver'); print(result.drivers[0].family_name)"
+python -c "from tools.standings.standings import get_standings; result = get_standings(2024, type='driver'); print(f'{result.drivers[0].given_name} {result.drivers[0].family_name}')"
 
 # Test session laps
-uv run python -c "from tools import get_laps; laps = get_laps(2024, 'Monaco', 'R', driver='VER', lap_type='fastest'); print(laps['LapTime'])"
+python -c "from tools.session.laps import get_laps; laps = get_laps(2024, 'Monaco', 'R', driver='VER', lap_type='fastest'); print(laps['LapTime'])"
 ```
 
 ### Cache Management

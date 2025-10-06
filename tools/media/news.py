@@ -48,7 +48,7 @@ def get_f1_news(
     filter_text: Optional[str] = None,
     date_from: Optional[str] = None,
     date_to: Optional[str] = None
-):
+) -> NewsResponse:
     """
     Get Formula 1 news with flexible filtering options.
 
@@ -178,3 +178,29 @@ def get_f1_news(
         article_count=len(filtered_articles),
         articles=filtered_articles
     )
+
+
+if __name__ == "__main__":
+    # Test different news categories
+    print("Testing get_f1_news...")
+
+    # Test 1: General news
+    print("\n1. Getting latest F1 news (5 articles):")
+    news = get_f1_news(source="formula1", limit=5)
+    print(f"   Found {news.article_count} articles")
+    if news.articles:
+        print(f"   Latest: {news.articles[0].title}")
+
+    # Test 2: Transfer news
+    print("\n2. Getting transfer news:")
+    transfer_news = get_f1_news(category="transfers", limit=5)
+    print(f"   Found {transfer_news.article_count} transfer articles")
+    if transfer_news.articles:
+        print(f"   Latest: {transfer_news.articles[0].title}")
+
+    # Test 3: Filtered news
+    print("\n3. Getting news about 'Ferrari':")
+    ferrari_news = get_f1_news(filter_text="Ferrari", limit=3)
+    print(f"   Found {ferrari_news.article_count} articles about Ferrari")
+    if ferrari_news.articles:
+        print(f"   Latest: {ferrari_news.articles[0].title}")

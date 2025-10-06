@@ -138,3 +138,27 @@ def get_session_details(
         total_laps=total_laps,
         session_duration=session_duration
     )
+
+
+if __name__ == "__main__":
+    # Test with 2024 Monaco Grand Prix Race
+    print("Testing get_session_details...")
+
+    print("\n1. Getting session details for 2024 Monaco GP Race:")
+    details = get_session_details(2024, "Monaco", "R")
+    print(f"   Session: {details.session_info.name}")
+    print(f"   Location: {details.session_info.location}, {details.session_info.country}")
+    print(f"   Date: {details.session_info.session_date}")
+    print(f"   Total laps: {details.total_laps}")
+
+    if details.results:
+        print(f"\n   Top 3 finishers:")
+        for i in range(min(3, len(details.results))):
+            result = details.results[i]
+            print(f"   {result.position}. {result.driver_name} ({result.team}) - {result.time}")
+
+    if details.fastest_lap:
+        print(f"\n   Fastest lap: {details.fastest_lap.driver} - {details.fastest_lap.lap_time}")
+
+    if details.weather:
+        print(f"\n   Weather: {details.weather.air_temp}°C, Humidity: {details.weather.humidity}%")

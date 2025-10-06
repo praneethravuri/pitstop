@@ -1,5 +1,7 @@
 from clients.fastf1_client import FastF1Client
 from typing import Union, Optional
+from models.telemetry import TelemetryComparisonResponse, TelemetryPoint
+import pandas as pd
 
 # Initialize FastF1 client
 fastf1_client = FastF1Client()
@@ -13,7 +15,7 @@ def compare_driver_telemetry(
     driver2: Union[str, int],
     lap1: Optional[int] = None,
     lap2: Optional[int] = None
-):
+) -> TelemetryComparisonResponse:
     """
     Compare telemetry data between two drivers.
 
@@ -31,22 +33,19 @@ def compare_driver_telemetry(
         lap2: Lap number for driver2 (uses fastest lap if None)
 
     Returns:
-        tuple: (driver1_telemetry, driver2_telemetry) as pandas DataFrames
-        Each DataFrame contains telemetry data with speed, throttle, brake,
-        gear, RPM, DRS, and position information
+        TelemetryComparisonResponse: Telemetry data for both drivers in JSON-serializable format
 
     Examples:
         >>> # Compare fastest laps between Verstappen and Hamilton
-        >>> ver_tel, ham_tel = compare_driver_telemetry(2024, "Monza", "Q", "VER", "HAM")
+        >>> comparison = compare_driver_telemetry(2024, "Monza", "Q", "VER", "HAM")
 
         >>> # Compare specific laps
-        >>> ver_tel, ham_tel = compare_driver_telemetry(2024, "Monza", "R", "VER", "HAM", lap1=15, lap2=15)
-
-        >>> # Compare drivers using driver numbers
-        >>> tel1, tel2 = compare_driver_telemetry(2024, "Monaco", "Q", 1, 44)
+        >>> comparison = compare_driver_telemetry(2024, "Monza", "R", "VER", "HAM", lap1=15, lap2=15)
     """
     session_obj = fastf1_client.get_session(year, gp, session)
     session_obj.load(laps=True, telemetry=True, weather=False, messages=False)
+
+    event = session_obj.event
 
     # Get driver 1 lap
     driver1_laps = session_obj.laps.pick_drivers(driver1)
@@ -62,4 +61,57 @@ def compare_driver_telemetry(
     else:
         lap2_data = driver2_laps[driver2_laps['LapNumber'] == lap2].iloc[0]
 
-    return lap1_data.get_telemetry(), lap2_data.get_telemetry()
+    # Get telemetry
+    tel1_df = lap1_data.get_telemetry()
+    tel2_df = lap2_data.get_telemetry()
+
+    # Convert to Pydantic models
+    def telemetry_to_points(telemetry_df):
+        points = []
+        for idx, row in telemetry_df.iterrows():
+            point = TelemetryPoint(
+                session_time=str(row['SessionTime']) if pd.notna(row.get('SessionTime')) else None,
+                distance=float(row['Distance']) if pd.notna(row.get('Distance')) else None,
+                speed=float(row['Speed']) if pd.notna(row.get('Speed')) else None,
+                rpm=float(row['RPM']) if pd.notna(row.get('RPM')) else None,
+                n_gear=int(row['nGear']) if pd.notna(row.get('nGear')) else None,
+                throttle=float(row['Throttle']) if pd.notna(row.get('Throttle')) else None,
+                brake=float(row['Brake']) if pd.notna(row.get('Brake')) else None,
+                drs=int(row['DRS']) if pd.notna(row.get('DRS')) else None,
+                x=float(row['X']) if pd.notna(row.get('X')) else None,
+                y=float(row['Y']) if pd.notna(row.get('Y')) else None,
+                z=float(row['Z']) if pd.notna(row.get('Z')) else None,
+            )
+            points.append(point)
+        return points
+
+    driver1_telemetry = telemetry_to_points(tel1_df)
+    driver2_telemetry = telemetry_to_points(tel2_df)
+
+    return TelemetryComparisonResponse(
+        session_name=session_obj.name,
+        event_name=event['EventName'],
+        driver1=str(lap1_data['Driver']),
+        driver1_lap=int(lap1_data['LapNumber']),
+        driver1_telemetry=driver1_telemetry,
+        driver1_lap_time=str(lap1_data['LapTime']) if pd.notna(lap1_data.get('LapTime')) else None,
+        driver2=str(lap2_data['Driver']),
+        driver2_lap=int(lap2_data['LapNumber']),
+        driver2_telemetry=driver2_telemetry,
+        driver2_lap_time=str(lap2_data['LapTime']) if pd.notna(lap2_data.get('LapTime')) else None,
+    )
+
+
+if __name__ == "__main__":
+    # Test with 2024 Monza Grand Prix Qualifying
+    print("Testing compare_driver_telemetry...")
+
+    # Compare Verstappen and Hamilton's fastest laps
+    print("\n1. Comparing VER vs HAM fastest laps in 2024 Monza Qualifying:")
+    comparison = compare_driver_telemetry(2024, "Monza", "Q", "VER", "HAM")
+    print(f"   Session: {comparison.session_name}")
+    print(f"   {comparison.driver1} lap {comparison.driver1_lap}: {comparison.driver1_lap_time} ({len(comparison.driver1_telemetry)} points)")
+    print(f"   {comparison.driver2} lap {comparison.driver2_lap}: {comparison.driver2_lap_time} ({len(comparison.driver2_telemetry)} points)")
+
+    # Test JSON serialization
+    print(f"\n   JSON: {comparison.model_dump_json()[:100]}...")

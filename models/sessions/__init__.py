@@ -10,6 +10,22 @@ from .standings import (
     DriverStanding,
     ConstructorStanding,
 )
+from .results import (
+    SessionResult,
+    SessionResultsResponse,
+)
+from .laps import (
+    LapData,
+    LapsResponse,
+    FastestLapResponse,
+)
+from .drivers import (
+    SessionDriversResponse,
+)
+from .tire_strategy import (
+    TireStint,
+    TireStrategyResponse,
+)
 
 __all__ = [
     "SessionDetailsResponse",
@@ -20,4 +36,12 @@ __all__ = [
     "StandingsResponse",
     "DriverStanding",
     "ConstructorStanding",
+    "SessionResult",
+    "SessionResultsResponse",
+    "LapData",
+    "LapsResponse",
+    "FastestLapResponse",
+    "SessionDriversResponse",
+    "TireStint",
+    "TireStrategyResponse",
 ]
