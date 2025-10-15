@@ -7,6 +7,7 @@ from .session import (
     get_tire_strategy,
     get_advanced_session_data,
     get_qualifying_sessions,
+    get_track_evolution,
 )
 
 # Telemetry
@@ -19,7 +20,7 @@ from .telemetry import (
 from .weather import get_session_weather
 
 # Race control
-from .control import get_race_control_messages, get_penalties, get_investigations
+from .control import get_race_control_messages, get_penalties, get_investigations, get_flag_history
 
 # Standings
 from .standings import get_standings
@@ -40,10 +41,10 @@ from .track import get_circuit
 from .historical import get_analysis
 
 # Live (OpenF1)
-from .live import get_driver_radio, get_live_pit_stops, get_live_intervals
+from .live import get_driver_radio, get_live_pit_stops, get_live_intervals, get_meeting_info, get_stints_live
 
 # Forecast (Weather)
-from .forecast import get_race_weather_forecast
+from .forecast import get_race_weather_forecast, get_session_forecast, get_rain_probability
 
 __all__ = [
     # Session
@@ -54,6 +55,7 @@ __all__ = [
     "get_tire_strategy",
     "get_advanced_session_data",
     "get_qualifying_sessions",
+    "get_track_evolution",
     # Telemetry
     "get_lap_telemetry",
     "compare_driver_telemetry",
@@ -63,6 +65,7 @@ __all__ = [
     "get_race_control_messages",
     "get_penalties",
     "get_investigations",
+    "get_flag_history",
     # Standings
     "get_standings",
     # Media
@@ -79,6 +82,10 @@ __all__ = [
     "get_driver_radio",
     "get_live_pit_stops",
     "get_live_intervals",
+    "get_meeting_info",
+    "get_stints_live",
     # Forecast (Weather)
     "get_race_weather_forecast",
+    "get_session_forecast",
+    "get_rain_probability",
 ]

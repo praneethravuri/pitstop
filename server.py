@@ -8,6 +8,7 @@ from tools import (
     get_tire_strategy,
     get_advanced_session_data,
     get_qualifying_sessions,
+    get_track_evolution,
     # Telemetry
     get_lap_telemetry,
     compare_driver_telemetry,
@@ -17,6 +18,7 @@ from tools import (
     get_race_control_messages,
     get_penalties,
     get_investigations,
+    get_flag_history,
     # Standings
     get_standings,
     # Media
@@ -33,8 +35,12 @@ from tools import (
     get_driver_radio,
     get_live_pit_stops,
     get_live_intervals,
+    get_meeting_info,
+    get_stints_live,
     # Forecast (Weather)
     get_race_weather_forecast,
+    get_session_forecast,
+    get_rain_probability,
 )
 
 mcp = FastMCP(name="Pitstop")
@@ -47,6 +53,7 @@ mcp.tool()(get_session_drivers)
 mcp.tool()(get_tire_strategy)
 mcp.tool()(get_advanced_session_data)
 mcp.tool()(get_qualifying_sessions)
+mcp.tool()(get_track_evolution)
 
 # Telemetry tools
 mcp.tool()(get_lap_telemetry)
@@ -59,6 +66,7 @@ mcp.tool()(get_session_weather)
 mcp.tool()(get_race_control_messages)
 mcp.tool()(get_penalties)
 mcp.tool()(get_investigations)
+mcp.tool()(get_flag_history)
 
 # Standings tools
 mcp.tool()(get_standings)
@@ -82,6 +90,10 @@ mcp.tool()(get_analysis)
 mcp.tool()(get_driver_radio)
 mcp.tool()(get_live_pit_stops)
 mcp.tool()(get_live_intervals)
+mcp.tool()(get_meeting_info)
+mcp.tool()(get_stints_live)
 
 # Forecast tools (Weather)
 mcp.tool()(get_race_weather_forecast)
+mcp.tool()(get_session_forecast)
+mcp.tool()(get_rain_probability)

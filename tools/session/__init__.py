@@ -5,6 +5,7 @@ from .drivers import get_session_drivers
 from .tire_strategy import get_tire_strategy
 from .advanced_data import get_advanced_session_data
 from .qualifying import get_qualifying_sessions
+from .track_evolution import get_track_evolution
 
 __all__ = [
     "get_session_details",
@@ -14,4 +15,5 @@ __all__ = [
     "get_tire_strategy",
     "get_advanced_session_data",
     "get_qualifying_sessions",
+    "get_track_evolution",
 ]

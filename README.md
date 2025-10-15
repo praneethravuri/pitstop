@@ -57,7 +57,7 @@ Restart Claude Desktop to activate.
 
 ---
 
-## 🛠️ Available Tools (23 Implemented)
+## 🛠️ Available Tools (30 Implemented)
 
 | Tool                           | Category      | Description                                                              | Key Parameters                                                                   | Use Cases                                                 |
 | ------------------------------ | ------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------- | --------------------------------------------------------- |
@@ -69,16 +69,20 @@ Restart Claude Desktop to activate.
 | `get_tire_strategy`          | 🏁 Session    | Tire compound usage and stint data per driver                            | `year`, `gp`, `session`, `driver?`                                       | Tire strategy analysis, compound usage                    |
 | `get_advanced_session_data`  | 🏁 Session    | Fastest laps, sector times, pit stops                                    | `year`, `gp`, `session`, `data_type`, `driver?`, `top_n?`            | Sector analysis, pit stop timing, fastest laps per driver |
 | `get_qualifying_sessions`    | 🏁 Session    | Split qualifying into Q1/Q2/Q3 segments                                  | `year`, `gp`, `segment?`                                                   | Q1/Q2/Q3 analysis, qualifying progression                 |
+| `get_track_evolution`        | 🏁 Session    | Track lap time improvement through session                               | `year`, `gp`, `session`, `max_laps?`                                       | Practice evolution, track rubbering in                    |
 | **Telemetry**            |               |                                                                          |                                                                                  |                                                           |
 | `get_lap_telemetry`          | 📊 Telemetry  | High-frequency telemetry (speed, throttle, brake, gear, RPM, DRS)        | `year`, `gp`, `session`, `driver`, `lap_number`                        | Detailed lap analysis, corner speed, braking points       |
 | `compare_driver_telemetry`   | 📊 Telemetry  | Side-by-side telemetry comparison between drivers                        | `year`, `gp`, `session`, `driver1`, `driver2`, `lap1?`, `lap2?`    | Driver comparison, performance delta analysis             |
 | **Weather**              |               |                                                                          |                                                                                  |                                                           |
 | `get_session_weather`        | 🌤️ Weather  | Historical weather data throughout session                               | `year`, `gp`, `session`                                                    | Air/track temp, humidity, wind, rainfall during session   |
 | `get_race_weather_forecast`  | 🌤️ Forecast | 5-day weather forecast for race weekend                                  | `circuit`, `latitude?`, `longitude?`                                       | Race weekend weather prediction, rain probability         |
+| `get_session_forecast`       | 🌤️ Forecast | Hourly forecast for specific session window                              | `circuit`, `session_datetime`, `hours_before?`, `hours_after?`             | Qualifying/race session forecast, 3h windows              |
+| `get_rain_probability`       | 🌤️ Forecast | Rain probability timeline with filtered forecasts                        | `circuit`, `start_datetime?`, `end_datetime?`                              | Rain likelihood, precipitation tracking                   |
 | **Race Control**         |               |                                                                          |                                                                                  |                                                           |
 | `get_race_control_messages`  | 🚦 Control    | All race control messages (flags, safety car, investigations, penalties) | `year`, `gp`, `session`                                                    | Incident timeline, flag periods, safety car               |
 | `get_penalties`              | 🚦 Control    | Filter for penalty decisions only                                        | `year`, `gp`, `session`                                                    | Time penalties, grid drops, warnings                      |
 | `get_investigations`         | 🚦 Control    | Filter for investigation notices                                         | `year`, `gp`, `session`                                                    | Incidents under investigation                             |
+| `get_flag_history`           | 🚦 Control    | All flag periods (yellow, red, safety car, VSC)                          | `year`, `gp`, `session`                                                    | Flag timeline, safety car periods                         |
 | **Standings & Schedule** |               |                                                                          |                                                                                  |                                                           |
 | `get_standings`              | 🏆 Standings  | Driver/constructor championship standings                                | `year`, `round?`, `type?`, `driver_name?`, `team_name?`                | Championship positions, points, wins                      |
 | `get_schedule`               | 📅 Schedule   | F1 calendar with sessions, testing, upcoming races                       | `year`, `include_testing?`, `round?`, `event_name?`, `only_remaining?` | Season calendar, next race, testing sessions              |
@@ -94,6 +98,8 @@ Restart Claude Desktop to activate.
 | `get_driver_radio`           | 📻 Live       | Team radio messages with audio transcripts                               | `year`, `country`, `session_name?`, `driver_number?`                     | Radio communications, team messages                       |
 | `get_live_pit_stops`         | ⚡ Live       | Pit stop analysis with crew timing                                       | `year`, `country`, `session_name?`, `driver_number?`                     | Pit stop duration, fastest/slowest stops                  |
 | `get_live_intervals`         | ⚡ Live       | Real-time gaps and intervals between drivers                             | `year`, `country`, `session_name?`, `driver_number?`                     | Gap to leader, interval to car ahead                      |
+| `get_meeting_info`           | ⚡ Live       | Meeting and session schedule with precise times                          | `year`, `country`                                                          | Race weekend schedule, session keys, start times          |
+| `get_stints_live`            | ⚡ Live       | Real-time tire stint tracking with compounds                             | `year`, `country`, `session_name?`, `driver_number?`, `compound?`       | Tire strategy tracking, stint analysis                    |
 
 **Parameter Conventions:**
 
@@ -148,19 +154,19 @@ pitstop/
 │   ├── rss_client.py     # RSS feed aggregator
 │   ├── openf1_client.py  # OpenF1 API client
 │   └── weather_client.py # Weather API client
-├── tools/                 # Tool implementations (23 tools)
-│   ├── session/          # Session data (7 tools)
+├── tools/                 # Tool implementations (30 tools)
+│   ├── session/          # Session data (8 tools)
 │   ├── telemetry/        # Telemetry (2 tools)
 │   ├── weather/          # Weather (1 tool)
-│   ├── forecast/         # Forecasting (1 tool)
-│   ├── control/          # Race control (3 tools)
+│   ├── forecast/         # Forecasting (3 tools)
+│   ├── control/          # Race control (4 tools)
 │   ├── standings/        # Standings (1 tool)
 │   ├── schedule/         # Schedule (1 tool)
 │   ├── reference/        # Reference (1 tool)
 │   ├── track/            # Track (1 tool)
 │   ├── historical/       # Analysis (1 tool)
 │   ├── media/            # News (1 tool)
-│   └── live/             # OpenF1 (3 tools)
+│   └── live/             # OpenF1 (5 tools)
 ├── models/                # Pydantic response models
 └── cache/                 # FastF1 data cache
 ```
