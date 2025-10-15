@@ -52,44 +52,21 @@ def get_laps(
     lap_type: Optional[Literal["all", "fastest"]] = "all"
 ) -> Union[LapsResponse, FastestLapResponse]:
     """
-    Get lap data from an F1 session with flexible filtering.
-
-    A composable function to retrieve lap data - all laps, specific driver's laps,
-    or fastest laps. Use this single tool for all lap-related queries instead of
-    multiple separate tools.
-
-    Use this tool to:
-    - Get all laps from a session (default behavior)
-    - Get a specific driver's laps (provide driver parameter)
-    - Get the fastest lap overall or for a driver (set lap_type='fastest')
-    - Analyze lap times, sectors, tire compounds, and lap progression
+    Get lap data - all laps, driver-specific, or fastest laps with times and sectors.
 
     Args:
-        year: The season year (2018 onwards for detailed data)
-        gp: The Grand Prix name (e.g., 'Monza', 'Monaco') or round number
-        session: Session type - 'FP1' (Free Practice 1), 'FP2', 'FP3',
-                'Q' (Qualifying), 'S' (Sprint), 'R' (Race)
-        driver: Optional - Driver identifier as 3-letter code (e.g., 'VER', 'HAM')
-                or number (e.g., 1, 44). If None, returns data for all drivers.
-        lap_type: Optional - 'all' returns all laps (default), 'fastest' returns
-                 only the fastest lap(s)
+        year: Season year (2018+)
+        gp: Grand Prix name or round
+        session: 'FP1', 'FP2', 'FP3', 'Q', 'S', 'R'
+        driver: Driver code/number (optional, all if None)
+        lap_type: 'all' or 'fastest' (default: 'all')
 
     Returns:
-        Union[LapsResponse, FastestLapResponse]: Lap data in JSON-serializable format.
-        Returns LapsResponse for multiple laps, FastestLapResponse for single fastest lap.
+        LapsResponse or FastestLapResponse with lap times, sectors, compounds
 
     Examples:
-        >>> # Get all laps from 2024 Monza race (all drivers)
-        >>> all_laps = get_laps(2024, "Monza", "R")
-
-        >>> # Get all laps for Verstappen in 2024 Monza race
-        >>> ver_laps = get_laps(2024, "Monza", "R", driver="VER")
-
-        >>> # Get fastest lap overall from 2024 Monaco qualifying
-        >>> fastest = get_laps(2024, "Monaco", "Q", lap_type="fastest")
-
-        >>> # Get Verstappen's fastest lap from the race
-        >>> ver_fastest = get_laps(2024, "Monza", "R", driver="VER", lap_type="fastest")
+        get_laps(2024, "Monza", "R") → All laps from race
+        get_laps(2024, "Monaco", "Q", lap_type="fastest") → Fastest overall lap
     """
     # Load session with lap data
     session_obj = fastf1_client.get_session(year, gp, session)

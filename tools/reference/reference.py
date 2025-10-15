@@ -20,51 +20,19 @@ def get_reference_data(
     name: Optional[str] = None,
 ) -> ReferenceDataResponse:
     """
-    Get F1 reference data including driver info, team info, circuit details, and tire compounds.
-
-    A comprehensive tool that provides all metadata and reference information. Use this single
-    tool for all reference data queries instead of multiple separate tools.
-
-    Use this tool to:
-    - Get driver details (names, numbers, teams, nationalities)
-    - Get constructor/team information and lineups
-    - Get circuit information (location, coordinates, details)
-    - Get tire compound information and colors
-    - Find driver numbers, team colors, abbreviations
+    Get F1 reference data - driver info, teams, circuits, tire compounds.
 
     Args:
-        reference_type: Type of reference data to retrieve:
-                       - 'driver': Driver information
-                       - 'constructor': Constructor/team information
-                       - 'circuit': Circuit/track information
-                       - 'tire_compounds': Tire compound information
-        year: Optional - Season year for driver/constructor data (defaults to current year)
-        name: Optional - Filter by driver name, team name, or circuit name
+        reference_type: 'driver', 'constructor', 'circuit', 'tire_compounds'
+        year: Season year (optional, defaults to current)
+        name: Filter by name (optional)
 
     Returns:
-        ReferenceDataResponse: Reference data in JSON-serializable format.
+        ReferenceDataResponse with driver/team/circuit details or tire compounds
 
     Examples:
-        >>> # Get all drivers from 2024 season
-        >>> drivers = get_reference_data("driver", year=2024)
-
-        >>> # Get info for a specific driver
-        >>> verstappen = get_reference_data("driver", year=2024, name="Verstappen")
-
-        >>> # Get all constructors from 2024
-        >>> teams = get_reference_data("constructor", year=2024)
-
-        >>> # Get info for a specific team
-        >>> red_bull = get_reference_data("constructor", year=2024, name="Red Bull")
-
-        >>> # Get circuit information for Monaco
-        >>> monaco = get_reference_data("circuit", name="Monaco")
-
-        >>> # Get all circuits
-        >>> circuits = get_reference_data("circuit")
-
-        >>> # Get tire compound information
-        >>> tires = get_reference_data("tire_compounds")
+        get_reference_data("driver", year=2024) → All 2024 drivers
+        get_reference_data("circuit", name="Monaco") → Monaco circuit info
     """
     if year is None:
         year = datetime.now().year

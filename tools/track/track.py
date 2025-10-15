@@ -19,40 +19,20 @@ def get_circuit(
     session: Optional[str] = None,
 ) -> CircuitDataResponse:
     """
-    Get comprehensive circuit and track information.
-
-    A multipurpose tool that provides circuit layout details, corner information,
-    and track status data. Use this single tool for all circuit-related queries.
-
-    Use this tool to:
-    - Get circuit layout and corner information
-    - Get track status changes during a session (flags, safety car, etc.)
-    - Find circuit details like rotation, corners, and coordinates
-    - Track flag periods and safety car deployments
+    Get circuit layout, corners, or track status (flags, safety car).
 
     Args:
-        year: The season year (2018 onwards for detailed data)
-        gp: The Grand Prix name (e.g., 'Monza', 'Monaco') or round number
-        data_type: Type of data to retrieve:
-                  - 'circuit_info': Get circuit layout and corner details
-                  - 'track_status': Get track status changes during session
-        session: Optional - Session type required for track_status ('FP1', 'FP2', 'FP3', 'Q', 'S', 'R')
+        year: Season year (2018+)
+        gp: Grand Prix name or round
+        data_type: 'circuit_info' (layout/corners) or 'track_status' (flags)
+        session: Required for track_status ('FP1', 'FP2', 'FP3', 'Q', 'S', 'R')
 
     Returns:
-        CircuitDataResponse: Circuit and track data in JSON-serializable format.
+        CircuitDataResponse with circuit details or track status changes
 
     Examples:
-        >>> # Get Monaco circuit information
-        >>> monaco_circuit = get_circuit(2024, "Monaco", "circuit_info")
-
-        >>> # Get Monza circuit details
-        >>> monza = get_circuit(2024, "Monza", "circuit_info")
-
-        >>> # Get track status changes during Monaco race
-        >>> track_status = get_circuit(2024, "Monaco", "track_status", session="R")
-
-        >>> # Get track status for qualifying
-        >>> quali_status = get_circuit(2024, "Silverstone", "track_status", session="Q")
+        get_circuit(2024, "Monaco", "circuit_info") → Circuit layout and corners
+        get_circuit(2024, "Monaco", "track_status", session="R") → Flag periods
     """
     # Get event information
     event = fastf1_client.get_event(year, gp)

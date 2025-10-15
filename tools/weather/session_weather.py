@@ -9,26 +9,18 @@ fastf1_client = FastF1Client()
 
 def get_session_weather(year: int, gp: Union[str, int], session: str) -> SessionWeatherDataResponse:
     """
-    Get weather data throughout a session.
-
-    Retrieves time-series weather information recorded during a session, including
-    temperature, humidity, pressure, wind, and rainfall data. Essential for
-    understanding session conditions and their impact on performance.
+    Get time-series weather data - temp, humidity, pressure, wind, rainfall.
 
     Args:
-        year: The season year (2018 onwards)
-        gp: The Grand Prix name (e.g., 'Monza', 'Monaco') or round number
-        session: Session type - 'FP1', 'FP2', 'FP3', 'Q', 'S', 'R'
+        year: Season year (2018+)
+        gp: Grand Prix name or round
+        session: 'FP1', 'FP2', 'FP3', 'Q', 'S', 'R'
 
     Returns:
-        SessionWeatherDataResponse: Weather data throughout session in JSON-serializable format
+        SessionWeatherDataResponse with weather points
 
-    Examples:
-        >>> # Get weather data from 2024 Spa race
-        >>> weather = get_session_weather(2024, "Spa", "R")
-
-        >>> # Check weather conditions during qualifying
-        >>> quali_weather = get_session_weather(2024, "Silverstone", "Q")
+    Example:
+        get_session_weather(2024, "Spa", "R") → Weather throughout race
     """
     session_obj = fastf1_client.get_session(year, gp, session)
     session_obj.load(laps=False, telemetry=False, weather=True, messages=False)

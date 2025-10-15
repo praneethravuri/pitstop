@@ -15,36 +15,20 @@ def get_session_details(
     include_fastest_lap: bool = True
 ) -> SessionDetailsResponse:
     """
-    Get comprehensive details of a specific F1 session.
-
-    Provides complete session information including results, weather conditions,
-    fastest lap, and session statistics for any F1 session from 2018 onwards.
+    Get complete session details - results, weather, fastest lap, statistics.
 
     Args:
-        year: The season year (2018 onwards)
-        gp: The Grand Prix name (e.g., 'Monza', 'Monaco') or round number
-        session: Session type - 'FP1' (Free Practice 1), 'FP2' (Free Practice 2),
-                'FP3' (Free Practice 3), 'Q' (Qualifying), 'S' (Sprint), 'R' (Race)
-        include_weather: Whether to include weather data (default: True)
-        include_fastest_lap: Whether to include fastest lap information (default: True)
+        year: Season year (2018+)
+        gp: Grand Prix name or round
+        session: 'FP1', 'FP2', 'FP3', 'Q', 'S', 'R'
+        include_weather: Include weather data (default: True)
+        include_fastest_lap: Include fastest lap (default: True)
 
     Returns:
-        SessionDetailsResponse: Complete session details including:
-        - Session information (name, location, date, circuit)
-        - Driver results/classification with positions, times, and teams
-        - Weather conditions (temperature, humidity, wind, rainfall)
-        - Fastest lap information (driver, time, compound)
-        - Session statistics (total laps, duration)
+        SessionDetailsResponse with full session info
 
-    Examples:
-        >>> # Get Free Practice 1 details from 2019 Monza GP
-        >>> get_session_details(2019, "Monza", "FP1")
-
-        >>> # Get Race results from 2024 Monaco GP
-        >>> get_session_details(2024, "Monaco", "R")
-
-        >>> # Get Qualifying results without weather data
-        >>> get_session_details(2023, "Silverstone", "Q", include_weather=False)
+    Example:
+        get_session_details(2024, "Monaco", "R") → Complete race details
     """
     # Load session
     session_obj = fastf1_client.get_session(year, gp, session)

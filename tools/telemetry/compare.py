@@ -38,30 +38,20 @@ def compare_driver_telemetry(
     lap2: Optional[int] = None
 ) -> TelemetryComparisonResponse:
     """
-    Compare telemetry data between two drivers.
-
-    Retrieves and returns telemetry data for two drivers side-by-side, enabling
-    detailed performance comparison. Useful for analyzing racing lines, braking
-    points, and overall driving style differences.
+    Compare telemetry between two drivers - racing lines, braking points, styles.
 
     Args:
-        year: The season year (2018 onwards)
-        gp: The Grand Prix name or round number
-        session: Session type - 'FP1', 'FP2', 'FP3', 'Q', 'S', 'R'
-        driver1: First driver identifier (3-letter code or number)
-        driver2: Second driver identifier (3-letter code or number)
-        lap1: Lap number for driver1 (uses fastest lap if None)
-        lap2: Lap number for driver2 (uses fastest lap if None)
+        year: Season year (2018+)
+        gp: Grand Prix name or round
+        session: 'FP1', 'FP2', 'FP3', 'Q', 'S', 'R'
+        driver1, driver2: Driver codes or numbers
+        lap1, lap2: Lap numbers (fastest if None)
 
     Returns:
-        TelemetryComparisonResponse: Telemetry data for both drivers in JSON-serializable format
+        TelemetryComparisonResponse with both drivers' telemetry
 
-    Examples:
-        >>> # Compare fastest laps between Verstappen and Hamilton
-        >>> comparison = compare_driver_telemetry(2024, "Monza", "Q", "VER", "HAM")
-
-        >>> # Compare specific laps
-        >>> comparison = compare_driver_telemetry(2024, "Monza", "R", "VER", "HAM", lap1=15, lap2=15)
+    Example:
+        compare_driver_telemetry(2024, "Monza", "Q", "VER", "HAM") → Fastest laps comparison
     """
     session_obj = fastf1_client.get_session(year, gp, session)
     session_obj.load(laps=True, telemetry=True, weather=False, messages=False)

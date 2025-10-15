@@ -22,51 +22,21 @@ def get_analysis(
     driver: Optional[Union[str, int]] = None,
 ) -> AnalysisResponse:
     """
-    Get advanced race analysis including pace, tire degradation, and consistency.
-
-    A comprehensive tool that provides deep insights into driver and race performance.
-    Use this single tool for all advanced analysis queries.
-
-    Use this tool to:
-    - Calculate race pace excluding pit stops and anomalies
-    - Analyze tire degradation across stints
-    - Get stint summaries with compound usage
-    - Measure driver consistency with statistical analysis
-    - Compare performance across different tire compounds
+    Advanced race analysis - pace, tire degradation, stint summaries, consistency metrics.
 
     Args:
-        year: The season year (2018 onwards for detailed data)
-        gp: The Grand Prix name (e.g., 'Monza', 'Monaco') or round number
-        session: Session type - 'FP1', 'FP2', 'FP3', 'Q', 'S', 'R'
-        analysis_type: Type of analysis to perform:
-                      - 'race_pace': Calculate average race pace (clean laps only)
-                      - 'tire_degradation': Analyze tire performance degradation
-                      - 'stint_summary': Summarize each tire stint
-                      - 'consistency': Measure lap time consistency
-        driver: Optional - Driver identifier (3-letter code or number)
-                If None, returns analysis for all drivers
+        year: Season year (2018+)
+        gp: Grand Prix name or round
+        session: 'FP1', 'FP2', 'FP3', 'Q', 'S', 'R'
+        analysis_type: 'race_pace', 'tire_degradation', 'stint_summary', 'consistency'
+        driver: Driver code/number (optional, all drivers if None)
 
     Returns:
-        AnalysisResponse: Analysis results in JSON-serializable format.
+        AnalysisResponse with pace data, degradation, stints, or consistency stats
 
     Examples:
-        >>> # Get race pace for all drivers in Monaco
-        >>> pace = get_analysis(2024, "Monaco", "R", "race_pace")
-
-        >>> # Get Verstappen's race pace
-        >>> ver_pace = get_analysis(2024, "Monza", "R", "race_pace", driver="VER")
-
-        >>> # Analyze tire degradation for all drivers
-        >>> degradation = get_analysis(2024, "Monza", "R", "tire_degradation")
-
-        >>> # Get Hamilton's tire degradation
-        >>> ham_deg = get_analysis(2024, "Monza", "R", "tire_degradation", driver="HAM")
-
-        >>> # Get stint summaries for the race
-        >>> stints = get_analysis(2024, "Monza", "R", "stint_summary")
-
-        >>> # Analyze consistency in qualifying
-        >>> consistency = get_analysis(2024, "Monaco", "Q", "consistency")
+        get_analysis(2024, "Monaco", "R", "race_pace") → Pace analysis for all drivers
+        get_analysis(2024, "Monza", "R", "tire_degradation", driver="VER") → VER's tire wear
     """
     # Load session with lap data
     session_obj = fastf1_client.get_session(year, gp, session)

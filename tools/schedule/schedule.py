@@ -40,51 +40,21 @@ def get_schedule(
     only_remaining: bool = False,
 ) -> ScheduleResponse:
     """
-    Get comprehensive F1 calendar and schedule information.
-
-    A multipurpose tool that combines event schedules, race calendars, testing sessions,
-    and remaining events. Use this single tool for all schedule-related queries.
-
-    Use this tool to:
-    - Get the full F1 calendar for any season
-    - Find specific events by round number or name
-    - Get only upcoming/remaining races
-    - Include or exclude testing sessions
-    - Get detailed session dates and times for race weekends
+    Get F1 calendar and schedule - full season, specific events, or upcoming races.
 
     Args:
-        year: The season year (e.g., 2024, 2023, 2022)
-        include_testing: Whether to include pre-season and in-season testing events (default: True)
-        round: Optional - Get details for a specific round number
-        event_name: Optional - Filter by event name (e.g., 'Monaco', 'Monza')
-        only_remaining: If True, returns only events that haven't happened yet (default: False)
+        year: Season year (e.g., 2024)
+        include_testing: Include testing sessions (default: True)
+        round: Filter by round number
+        event_name: Filter by event name (e.g., 'Monaco')
+        only_remaining: Only show upcoming events (default: False)
 
     Returns:
-        ScheduleResponse: Complete schedule information including:
-        - year: Season year
-        - total_events: Number of events in the schedule
-        - include_testing: Whether testing is included
-        - events: List of events with full details (dates, locations, sessions)
-        - Applied filters (round, event name, remaining)
+        ScheduleResponse with events list, dates, locations, and session times
 
     Examples:
-        >>> # Get full 2024 F1 calendar including testing
-        >>> schedule = get_schedule(2024)
-
-        >>> # Get only race weekends (no testing) for 2024
-        >>> races = get_schedule(2024, include_testing=False)
-
-        >>> # Get only upcoming races in 2024
-        >>> upcoming = get_schedule(2024, only_remaining=True, include_testing=False)
-
-        >>> # Get details for Monaco GP 2024
-        >>> monaco = get_schedule(2024, event_name='Monaco')
-
-        >>> # Get details for round 5
-        >>> round_5 = get_schedule(2024, round=5)
-
-        >>> # Get remaining events including testing
-        >>> remaining = get_schedule(2024, only_remaining=True, include_testing=True)
+        get_schedule(2024) → Full 2024 calendar
+        get_schedule(2024, only_remaining=True) → Upcoming races
     """
     # Get full event schedule
     if only_remaining:

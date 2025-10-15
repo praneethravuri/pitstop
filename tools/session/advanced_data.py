@@ -21,54 +21,22 @@ def get_advanced_session_data(
     top_n: Optional[int] = None,
 ) -> AdvancedSessionDataResponse:
     """
-    Get advanced session data including fastest laps, sector times, and pit stops.
-
-    A comprehensive tool that provides deep session analysis data. Use this single tool
-    for all advanced session data queries instead of multiple separate tools.
-
-    Use this tool to:
-    - Get fastest lap times for all drivers or specific driver
-    - Analyze sector times to see where drivers gain/lose time
-    - Track pit stops including timing, duration, and tire changes
-    - Compare performance across different parts of the track
+    Get fastest laps, sector times, or pit stops with detailed analysis.
 
     Args:
-        year: The season year (2018 onwards for detailed data)
-        gp: The Grand Prix name (e.g., 'Monza', 'Monaco') or round number
-        session: Session type - 'FP1' (Free Practice 1), 'FP2', 'FP3',
-                'Q' (Qualifying), 'S' (Sprint), 'R' (Race)
-        data_type: Type of data to retrieve:
-                  - 'fastest_laps': Get fastest lap times per driver
-                  - 'sector_times': Get sector time breakdowns
-                  - 'pit_stops': Get pit stop data with timing and tire changes
-        driver: Optional - Driver identifier as 3-letter code (e.g., 'VER', 'HAM')
-                or number (e.g., 1, 44). If None, returns data for all drivers.
-        top_n: Optional - Limit results to top N (useful for fastest_laps)
+        year: Season year (2018+)
+        gp: Grand Prix name or round
+        session: 'FP1', 'FP2', 'FP3', 'Q', 'S', 'R'
+        data_type: 'fastest_laps', 'sector_times', 'pit_stops'
+        driver: Driver code/number (optional)
+        top_n: Limit results (optional)
 
     Returns:
-        AdvancedSessionDataResponse: Advanced session data in JSON-serializable format.
+        AdvancedSessionDataResponse with requested data type
 
     Examples:
-        >>> # Get fastest lap for each driver in Monaco qualifying
-        >>> fastest = get_advanced_session_data(2024, "Monaco", "Q", "fastest_laps")
-
-        >>> # Get Verstappen's fastest lap in the race
-        >>> ver_fastest = get_advanced_session_data(2024, "Monza", "R", "fastest_laps", driver="VER")
-
-        >>> # Get top 3 fastest laps from qualifying
-        >>> top_3 = get_advanced_session_data(2024, "Monaco", "Q", "fastest_laps", top_n=3)
-
-        >>> # Get sector times for all drivers
-        >>> sectors = get_advanced_session_data(2024, "Monza", "Q", "sector_times")
-
-        >>> # Get Hamilton's sector times
-        >>> ham_sectors = get_advanced_session_data(2024, "Monza", "Q", "sector_times", driver="HAM")
-
-        >>> # Get all pit stops from the race
-        >>> pit_stops = get_advanced_session_data(2024, "Monza", "R", "pit_stops")
-
-        >>> # Get Leclerc's pit stops
-        >>> lec_pits = get_advanced_session_data(2024, "Monza", "R", "pit_stops", driver="LEC")
+        get_advanced_session_data(2024, "Monaco", "Q", "fastest_laps") → Fastest per driver
+        get_advanced_session_data(2024, "Monza", "R", "pit_stops", driver="VER") → VER pit stops
     """
     # Load session with lap data
     session_obj = fastf1_client.get_session(year, gp, session)

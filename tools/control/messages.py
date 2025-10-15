@@ -9,26 +9,18 @@ fastf1_client = FastF1Client()
 
 def get_race_control_messages(year: int, gp: Union[str, int], session: str) -> RaceControlMessagesResponse:
     """
-    Get official race control messages for a session.
-
-    Retrieves all race control messages issued during a session, including
-    flags, safety car periods, investigations, penalties, and track status changes.
-    Essential for understanding session events and incidents.
+    Get race control messages - flags, safety cars, investigations, penalties.
 
     Args:
-        year: The season year (2018 onwards)
-        gp: The Grand Prix name (e.g., 'Monza', 'Monaco') or round number
-        session: Session type - 'FP1', 'FP2', 'FP3', 'Q', 'S', 'R'
+        year: Season year (2018+)
+        gp: Grand Prix name or round
+        session: 'FP1', 'FP2', 'FP3', 'Q', 'S', 'R'
 
     Returns:
-        RaceControlMessagesResponse: Race control messages in JSON-serializable format
+        RaceControlMessagesResponse with all messages
 
-    Examples:
-        >>> # Get all race control messages from 2024 Monaco race
-        >>> messages = get_race_control_messages(2024, "Monaco", "R")
-
-        >>> # Check safety car deployments and flags
-        >>> race_msgs = get_race_control_messages(2024, "Spa", "R")
+    Example:
+        get_race_control_messages(2024, "Monaco", "R") → All race control messages
     """
     session_obj = fastf1_client.get_session(year, gp, session)
     session_obj.load(laps=False, telemetry=False, weather=False, messages=True)

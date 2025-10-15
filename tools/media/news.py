@@ -50,54 +50,21 @@ def get_f1_news(
     date_to: Optional[str] = None
 ) -> NewsResponse:
     """
-    Get Formula 1 news with flexible filtering options.
-
-    A unified tool to retrieve all types of F1 news - latest updates, driver transfers,
-    technical developments, calendar changes, regulations, contracts, and more.
-
-    Use this tool to:
-    - Get latest F1 news from various sources
-    - Find driver transfer rumors and confirmed moves
-    - Track technical developments and upgrades
-    - Monitor calendar changes and new races
-    - Follow regulation changes and FIA decisions
-    - Track contract renewals, extensions, and expirations
-    - Monitor team management changes
+    Get F1 news - latest updates, transfers, technical, regulations, contracts.
 
     Args:
-        source: News source - "formula1", "fia", "autosport", "motorsport", "the-race",
-                "racefans", "planetf1", "crash", "gpblog", "f1-insider", "grandprix",
-                "espnf1", "skysportsf1", or "all" (default: "all")
-        limit: Maximum number of articles to return (1-50). Default: 10
-        category: News category to filter by:
-                 - "general": All F1 news (default)
-                 - "transfers": Driver moves, signings, and rumors
-                 - "contracts": Contract renewals, extensions, and negotiations
-                 - "technical": Technical updates, upgrades, and developments
-                 - "calendar": Race calendar changes and new venues
-                 - "regulations": FIA rules, penalties, and investigations
-                 - "management": Team leadership and organizational changes
-        filter_text: Optional text to filter articles (searches in title and summary)
-                     Examples: "Hamilton", "Ferrari", "Red Bull", "2025"
-        date_from: Optional start date to filter articles (format: "YYYY-MM-DD")
-        date_to: Optional end date to filter articles (format: "YYYY-MM-DD")
+        source: "formula1", "fia", "autosport", "motorsport", "the-race", "racefans", or "all" (default)
+        limit: Max articles 1-50 (default: 10)
+        category: "general", "transfers", "contracts", "technical", "calendar", "regulations", "management"
+        filter_text: Search term (driver/team name, keyword)
+        date_from/date_to: Date range "YYYY-MM-DD"
 
     Returns:
-        NewsResponse: News articles with titles, links, publication dates,
-                     summaries, and source information
+        NewsResponse with articles, titles, links, dates, summaries
 
     Examples:
-        >>> # Get latest F1 news from all sources
-        >>> news = get_f1_news()
-
-        >>> # Get news from official F1 website only
-        >>> f1_news = get_f1_news(source="formula1", limit=20)
-
-        >>> # Get driver transfer news
-        >>> transfers = get_f1_news(category="transfers", limit=15)
-
-        >>> # Get transfer news about a specific driver
-        >>> sainz = get_f1_news(category="transfers", filter_text="Sainz")
+        get_f1_news() → Latest news from all sources
+        get_f1_news(category="transfers", filter_text="Hamilton") → Transfer news about Hamilton
 
         >>> # Get technical developments
         >>> tech = get_f1_news(category="technical", limit=20)

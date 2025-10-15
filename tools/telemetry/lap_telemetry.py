@@ -9,25 +9,20 @@ fastf1_client = FastF1Client()
 
 def get_lap_telemetry(year: int, gp: Union[str, int], session: str, driver: Union[str, int], lap_number: int) -> LapTelemetryResponse:
     """
-    Get detailed telemetry data for a specific lap.
-
-    Retrieves high-frequency telemetry data including speed, throttle, brake,
-    gear, RPM, and DRS usage throughout a lap. Essential for detailed performance
-    analysis and driver comparison.
+    Get high-frequency telemetry for a lap - speed, throttle, brake, gear, RPM, DRS.
 
     Args:
-        year: The season year (2018 onwards)
-        gp: The Grand Prix name or round number
-        session: Session type - 'FP1', 'FP2', 'FP3', 'Q', 'S', 'R'
-        driver: Driver identifier - 3-letter code (e.g., 'VER') or number (e.g., 1)
-        lap_number: The specific lap number to analyze
+        year: Season year (2018+)
+        gp: Grand Prix name or round
+        session: 'FP1', 'FP2', 'FP3', 'Q', 'S', 'R'
+        driver: Driver code or number
+        lap_number: Specific lap number
 
     Returns:
-        LapTelemetryResponse: High-frequency telemetry data in JSON-serializable format
+        LapTelemetryResponse with telemetry points
 
-    Examples:
-        >>> # Get telemetry for Verstappen's lap 15 in 2024 Monza race
-        >>> telemetry = get_lap_telemetry(2024, "Monza", "R", "VER", 15)
+    Example:
+        get_lap_telemetry(2024, "Monza", "R", "VER", 15) → VER lap 15 telemetry
     """
     session_obj = fastf1_client.get_session(year, gp, session)
     session_obj.load(laps=True, telemetry=True, weather=False, messages=False)

@@ -14,61 +14,21 @@ def get_standings(
     team_name: Optional[str] = None,
 ) -> StandingsResponse:
     """
-    Get F1 World Championship standings for drivers and constructors.
-
-    Use this tool to:
-    - Find out WHO WON a championship (driver or constructor) in any season
-    - Get championship points standings and positions for any season
-    - See standings at a specific point in the season (after a particular race)
-    - Check a specific driver's or team's championship position
-    - Answer questions like "who is the 2021 champion?", "who won in 2020?", etc.
-
-    This is the PRIMARY tool for all championship-related queries. The position 1
-    driver/constructor in the standings is the champion.
-
-    This is for CHAMPIONSHIP STANDINGS, not race/session results. For race results,
-    use get_session_results() instead.
+    Get F1 championship standings - driver/constructor positions, points, wins.
 
     Args:
-        year: The season year (e.g., 2024, 2023, 2022). Historical data available from 1950.
-        round: Optional - Round number (int) or GP name (str, e.g., 'Austria', 'Monaco').
-               If None, returns final/current season standings.
-        type: Optional - Filter for 'driver' or 'constructor'. If None, returns both.
-        driver_name: Optional - Driver name to filter (e.g., 'Verstappen', 'Hamilton').
-                    Matches first or last name.
-        team_name: Optional - Team name to filter (e.g., 'Red Bull', 'Mercedes', 'Ferrari').
+        year: Season year (1950+)
+        round: Round number or GP name (optional, finals if None)
+        type: 'driver', 'constructor', or both (optional)
+        driver_name: Filter by driver (optional)
+        team_name: Filter by team (optional)
 
     Returns:
-        StandingsResponse: Championship standings including:
-        - year: Season year
-        - round: Round number (if specified)
-        - round_name: Grand Prix name (if round was specified)
-        - drivers: List of driver standings with position, points, wins, nationality, team
-        - constructors: List of constructor standings with position, points, wins, nationality
+        StandingsResponse with positions, points, wins, nationality
 
     Examples:
-        >>> # Find who won the 2021 drivers championship
-        >>> standings = get_standings(2021, type='driver')
-        >>> # Position 1 driver is the champion
-
-        >>> # Find who won the 2020 constructors championship
-        >>> standings = get_standings(2020, type='constructor')
-        >>> # Position 1 constructor is the champion
-
-        >>> # Get current 2024 championship standings (both drivers and constructors)
-        >>> standings = get_standings(2024)
-
-        >>> # Get standings after Monaco GP 2024
-        >>> standings_monaco = get_standings(2024, round='Monaco')
-
-        >>> # Get standings after round 10 of 2023
-        >>> standings_r10 = get_standings(2023, round=10)
-
-        >>> # Find Verstappen's championship position in 2024
-        >>> max_standing = get_standings(2024, driver_name='Verstappen')
-
-        >>> # Get Red Bull's constructor standing after Monaco
-        >>> rb_standing = get_standings(2024, round='Monaco', team_name='Red Bull')
+        get_standings(2024) → Current season standings
+        get_standings(2021, type='driver') → 2021 driver champion (position 1)
     """
     # Convert round name to round number if string provided
     round_num = None
