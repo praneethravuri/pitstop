@@ -16,6 +16,16 @@ cd pitstop
 uv sync
 ```
 
+### Set Up Environment Variables
+
+```bash
+# Copy the example .env file
+cp .env.example .env
+
+# Edit .env and add your API keys (at minimum, add OPENWEATHER_API_KEY for forecast tools)
+# Get free key at: https://openweathermap.org/appid
+```
+
 ### Configure Claude Desktop
 
 **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
@@ -175,14 +185,57 @@ pitstop/
 
 ## ⚙️ Configuration
 
-### Environment Variables (Optional)
+### Environment Variables
+
+Some tools require API keys to function. Set them up using a `.env` file:
+
+#### 1. Create .env file
 
 ```bash
-# Required for weather forecasts (free tier available)
-OPENWEATHER_API_KEY=your_key_here
+# Copy the example file
+cp .env.example .env
 ```
 
-Get free API key at: https://openweathermap.org/appid
+#### 2. Edit .env and add your API keys
+
+```bash
+# Pitstop F1 MCP Server - Environment Variables
+
+# ==========================================
+# WEATHER FORECASTING (Required for forecast tools)
+# ==========================================
+# Get your free API key at: https://openweathermap.org/appid
+# Free tier: 1,000 calls/day, 60 calls/minute
+OPENWEATHER_API_KEY=your_openweathermap_api_key_here
+
+# ==========================================
+# FUTURE API KEYS (Not yet required)
+# ==========================================
+# REDDIT_CLIENT_ID=your_reddit_client_id
+# REDDIT_CLIENT_SECRET=your_reddit_client_secret
+# YOUTUBE_API_KEY=your_youtube_api_key
+# ODDS_API_KEY=your_odds_api_key
+```
+
+#### Required API Keys
+
+| API Key | Required For | Free Tier | Get Key At |
+|---------|--------------|-----------|------------|
+| `OPENWEATHER_API_KEY` | Weather forecast tools (`get_race_weather_forecast`, `get_session_forecast`, `get_rain_probability`) | 1,000 calls/day | [openweathermap.org/appid](https://openweathermap.org/appid) |
+
+#### Optional Future API Keys
+
+| API Key | Future Use | Free Tier | Get Key At |
+|---------|-----------|-----------|------------|
+| `REDDIT_CLIENT_ID` / `REDDIT_CLIENT_SECRET` | Community sentiment tools | Yes | [reddit.com/prefs/apps](https://www.reddit.com/prefs/apps) |
+| `YOUTUBE_API_KEY` | Video content tools | 10,000 units/day | [console.cloud.google.com](https://console.cloud.google.com/apis/credentials) |
+| `ODDS_API_KEY` | Betting odds tools | 500 requests/month | [the-odds-api.com](https://the-odds-api.com/) |
+
+**Notes:**
+- Tools gracefully handle missing API keys by returning empty responses
+- The `.env` file is already in `.gitignore` - never commit it
+- All API keys listed above have free tiers available
+- Only `OPENWEATHER_API_KEY` is currently used by implemented tools
 
 ### Cache Management
 
