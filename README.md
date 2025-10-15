@@ -36,19 +36,6 @@ Pitstop is an MCP server that provides comprehensive Formula 1 data access throu
 - 🚦 Race control messages & incidents
 - ⚡ Fast caching for improved performance
 - 🎯 Type-safe responses with Pydantic models
-- 🚀 **Optimized for low cognitive load** - 72% reduction in token overhead
-
-**16 Comprehensive Tools** covering all aspects of F1 data
-
-### Performance Optimizations
-
-✅ **Phase 1 Complete** (October 2025)
-- **81% reduction** in tool description length
-- **~2,300 tokens saved** (72% reduction in overhead)
-- Faster AI response times and better tool selection
-- All tools remain fully functional with no breaking changes
-
-See [OPTIMIZATION_SUMMARY.md](OPTIMIZATION_SUMMARY.md) for details.
 
 ## Quick Start
 
@@ -91,32 +78,28 @@ uv sync
 
 Restart Claude Desktop to activate the tools.
 
-## Available Tools
-
-**🎯 Composable & Generic Tools** - Each tool is designed to handle multiple use cases with flexible parameters, reducing complexity and improving usability.
-
 ### Tools Reference Table
 
 All tools return Pydantic models in JSON-serializable format for consistent data exchange.
 
-| Tool Name | Category | Description | Key Parameters | Return Type | Usage |
-|-----------|----------|-------------|----------------|-------------|-------|
-| `get_f1_news` | 📰 News & Updates | Get F1 news with flexible filtering options | `source` (str), `limit` (int), `category` (str), `filter_text` (str), `date_from` (str), `date_to` (str) | `NewsResponse` | General news, transfer rumors, contracts, technical updates, regulations |
-| `get_standings` | 🏆 Championships | Get driver/constructor championship standings | `year` (int), `round` (int\|str), `type` (str), `driver_name` (str), `team_name` (str) | `StandingsResponse` | Find champions, get standings, check positions |
-| `get_schedule` | 📅 Schedule | Get F1 calendar and event schedules | `year` (int), `include_testing` (bool), `round` (int), `event_name` (str), `only_remaining` (bool) | `ScheduleResponse` | Full season calendar, upcoming races, testing sessions, event details |
-| `get_session_details` | 🏁 Session Data | Get comprehensive session details | `year` (int), `gp` (str\|int), `session` (str), `include_weather` (bool), `include_fastest_lap` (bool) | `SessionDetailsResponse` | Complete session overview with results and weather |
-| `get_session_results` | 🏁 Session Data | Get session results/classification | `year` (int), `gp` (str\|int), `session` (str) | `SessionResultsResponse` | Race/qualifying/practice results with driver data |
-| `get_laps` | 🏁 Session Data | Get lap data with flexible filtering | `year` (int), `gp` (str\|int), `session` (str), `driver` (str\|int), `lap_type` (str) | `LapsResponse\|FastestLapResponse` | All laps, driver laps, or fastest lap with full data |
-| `get_session_drivers` | 🏁 Session Data | Get list of drivers in a session | `year` (int), `gp` (str\|int), `session` (str) | `SessionDriversResponse` | Driver abbreviations who participated |
-| `get_tire_strategy` | 🏁 Session Data | Get tire strategy and compound usage | `year` (int), `gp` (str\|int), `session` (str), `driver` (str\|int) | `TireStrategyResponse` | Tire compounds, life, and stint data per lap |
-| `get_advanced_session_data` | 🏁 Session Data | Get fastest laps, sector times, pit stops | `year` (int), `gp` (str\|int), `session` (str), `data_type` (str), `driver` (str\|int), `top_n` (int) | `AdvancedSessionDataResponse` | Fastest laps per driver, sector time breakdowns, pit stop analysis |
-| `get_lap_telemetry` | 📊 Telemetry | Get detailed telemetry for a specific lap | `year` (int), `gp` (str\|int), `session` (str), `driver` (str\|int), `lap_number` (int) | `LapTelemetryResponse` | High-frequency speed, throttle, brake, gear, RPM, DRS |
-| `compare_driver_telemetry` | 📊 Telemetry | Compare telemetry between two drivers | `year` (int), `gp` (str\|int), `session` (str), `driver1` (str\|int), `driver2` (str\|int), `lap1` (int), `lap2` (int) | `TelemetryComparisonResponse` | Side-by-side telemetry comparison for two drivers |
-| `get_session_weather` | 🌤️ Weather | Get weather data throughout a session | `year` (int), `gp` (str\|int), `session` (str) | `SessionWeatherDataResponse` | Time-series weather data (temp, humidity, wind, rain) |
-| `get_race_control_messages` | 🚦 Race Control | Get official race control messages | `year` (int), `gp` (str\|int), `session` (str) | `RaceControlMessagesResponse` | Flags, safety cars, penalties, investigations |
-| `get_reference_data` | 📚 Reference | Get driver, team, circuit, tire metadata | `reference_type` (str), `year` (int), `name` (str) | `ReferenceDataResponse` | Driver info, constructor details, circuit data, tire compounds |
-| `get_circuit` | 🏎️ Track & Circuit | Get circuit layout and track status | `year` (int), `gp` (str\|int), `data_type` (str), `session` (str) | `CircuitDataResponse` | Circuit corners, layout, track status changes, flag periods |
-| `get_analysis` | 📈 Analysis | Advanced race analysis and insights | `year` (int), `gp` (str\|int), `session` (str), `analysis_type` (str), `driver` (str\|int) | `AnalysisResponse` | Race pace, tire degradation, stint summaries, consistency metrics |
+| Tool Name                     | Category             | Description                                   | Key Parameters                                                                                                                       | Return Type                         | Usage                                                                    |
+| ----------------------------- | -------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------- | ------------------------------------------------------------------------ |
+| `get_f1_news`               | 📰 News & Updates    | Get F1 news with flexible filtering options   | `source` (str), `limit` (int), `category` (str), `filter_text` (str), `date_from` (str), `date_to` (str)                 | `NewsResponse`                    | General news, transfer rumors, contracts, technical updates, regulations |
+| `get_standings`             | 🏆 Championships     | Get driver/constructor championship standings | `year` (int), `round` (int\|str), `type` (str), `driver_name` (str), `team_name` (str)                                     | `StandingsResponse`               | Find champions, get standings, check positions                           |
+| `get_schedule`              | 📅 Schedule          | Get F1 calendar and event schedules           | `year` (int), `include_testing` (bool), `round` (int), `event_name` (str), `only_remaining` (bool)                         | `ScheduleResponse`                | Full season calendar, upcoming races, testing sessions, event details    |
+| `get_session_details`       | 🏁 Session Data      | Get comprehensive session details             | `year` (int), `gp` (str\|int), `session` (str), `include_weather` (bool), `include_fastest_lap` (bool)                     | `SessionDetailsResponse`          | Complete session overview with results and weather                       |
+| `get_session_results`       | 🏁 Session Data      | Get session results/classification            | `year` (int), `gp` (str\|int), `session` (str)                                                                                 | `SessionResultsResponse`          | Race/qualifying/practice results with driver data                        |
+| `get_laps`                  | 🏁 Session Data      | Get lap data with flexible filtering          | `year` (int), `gp` (str\|int), `session` (str), `driver` (str\|int), `lap_type` (str)                                      | `LapsResponse\|FastestLapResponse` | All laps, driver laps, or fastest lap with full data                     |
+| `get_session_drivers`       | 🏁 Session Data      | Get list of drivers in a session              | `year` (int), `gp` (str\|int), `session` (str)                                                                                 | `SessionDriversResponse`          | Driver abbreviations who participated                                    |
+| `get_tire_strategy`         | 🏁 Session Data      | Get tire strategy and compound usage          | `year` (int), `gp` (str\|int), `session` (str), `driver` (str\|int)                                                          | `TireStrategyResponse`            | Tire compounds, life, and stint data per lap                             |
+| `get_advanced_session_data` | 🏁 Session Data      | Get fastest laps, sector times, pit stops     | `year` (int), `gp` (str\|int), `session` (str), `data_type` (str), `driver` (str\|int), `top_n` (int)                    | `AdvancedSessionDataResponse`     | Fastest laps per driver, sector time breakdowns, pit stop analysis       |
+| `get_lap_telemetry`         | 📊 Telemetry         | Get detailed telemetry for a specific lap     | `year` (int), `gp` (str\|int), `session` (str), `driver` (str\|int), `lap_number` (int)                                    | `LapTelemetryResponse`            | High-frequency speed, throttle, brake, gear, RPM, DRS                    |
+| `compare_driver_telemetry`  | 📊 Telemetry         | Compare telemetry between two drivers         | `year` (int), `gp` (str\|int), `session` (str), `driver1` (str\|int), `driver2` (str\|int), `lap1` (int), `lap2` (int) | `TelemetryComparisonResponse`     | Side-by-side telemetry comparison for two drivers                        |
+| `get_session_weather`       | 🌤️ Weather         | Get weather data throughout a session         | `year` (int), `gp` (str\|int), `session` (str)                                                                                 | `SessionWeatherDataResponse`      | Time-series weather data (temp, humidity, wind, rain)                    |
+| `get_race_control_messages` | 🚦 Race Control      | Get official race control messages            | `year` (int), `gp` (str\|int), `session` (str)                                                                                 | `RaceControlMessagesResponse`     | Flags, safety cars, penalties, investigations                            |
+| `get_reference_data`        | 📚 Reference         | Get driver, team, circuit, tire metadata      | `reference_type` (str), `year` (int), `name` (str)                                                                             | `ReferenceDataResponse`           | Driver info, constructor details, circuit data, tire compounds           |
+| `get_circuit`               | 🏎️ Track & Circuit | Get circuit layout and track status           | `year` (int), `gp` (str\|int), `data_type` (str), `session` (str)                                                            | `CircuitDataResponse`             | Circuit corners, layout, track status changes, flag periods              |
+| `get_analysis`              | 📈 Analysis          | Advanced race analysis and insights           | `year` (int), `gp` (str\|int), `session` (str), `analysis_type` (str), `driver` (str\|int)                                 | `AnalysisResponse`                | Race pace, tire degradation, stint summaries, consistency metrics        |
 
 ### Tool Details
 
