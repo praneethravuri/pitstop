@@ -1,4 +1,3 @@
-# Future: Event schedules, calendars, race weekends
-# See future_implementations.txt for planned tools
+from .schedule import get_schedule
 
-__all__ = []
+__all__ = ["get_schedule"]

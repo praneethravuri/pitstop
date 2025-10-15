@@ -1,4 +1,3 @@
-# Future: Driver info, team info, circuit details, colors
-# See future_implementations.txt for planned tools
+from .reference import get_reference_data
 
-__all__ = []
+__all__ = ["get_reference_data"]

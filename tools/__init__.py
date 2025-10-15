@@ -5,6 +5,7 @@ from .session import (
     get_laps,
     get_session_drivers,
     get_tire_strategy,
+    get_advanced_session_data,
 )
 
 # Telemetry
@@ -25,6 +26,18 @@ from .standings import get_standings
 # Media/News
 from .media import get_f1_news
 
+# Schedule
+from .schedule import get_schedule
+
+# Reference
+from .reference import get_reference_data
+
+# Track
+from .track import get_circuit
+
+# Analysis
+from .historical import get_analysis
+
 __all__ = [
     # Session
     "get_session_details",
@@ -32,6 +45,7 @@ __all__ = [
     "get_laps",
     "get_session_drivers",
     "get_tire_strategy",
+    "get_advanced_session_data",
     # Telemetry
     "get_lap_telemetry",
     "compare_driver_telemetry",
@@ -43,4 +57,12 @@ __all__ = [
     "get_standings",
     # Media
     "get_f1_news",
+    # Schedule
+    "get_schedule",
+    # Reference
+    "get_reference_data",
+    # Track
+    "get_circuit",
+    # Analysis
+    "get_analysis",
 ]

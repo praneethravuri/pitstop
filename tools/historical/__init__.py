@@ -1,4 +1,3 @@
-# Future: Historical data via Ergast API
-# See future_implementations.txt for planned tools
+from .analysis import get_analysis
 
-__all__ = []
+__all__ = ["get_analysis"]

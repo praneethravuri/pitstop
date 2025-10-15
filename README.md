@@ -26,13 +26,18 @@ Pitstop is an MCP server that provides comprehensive Formula 1 data access throu
 ✨ **Features**
 
 - 📰 Latest F1 news from multiple trusted sources
-- 🔄 Silly season & transfer rumors with smart filtering
+- 📅 Full F1 calendar with schedules and upcoming races
 - 🏁 Complete session data (practice, qualifying, race)
 - 📊 Detailed telemetry & lap-by-lap analysis
+- 📈 Advanced race analysis (pace, tire degradation, consistency)
+- 🏎️ Circuit information with corners and track status
+- 📚 Driver, team, and circuit reference data
 - 🌤️ Session weather conditions
 - 🚦 Race control messages & incidents
 - ⚡ Fast caching for improved performance
 - 🎯 Type-safe responses with Pydantic models
+
+**16 Comprehensive Tools** covering all aspects of F1 data
 
 ## Quick Start
 
@@ -87,15 +92,20 @@ All tools return Pydantic models in JSON-serializable format for consistent data
 |-----------|----------|-------------|----------------|-------------|-------|
 | `get_f1_news` | 📰 News & Updates | Get F1 news with flexible filtering options | `source` (str), `limit` (int), `category` (str), `filter_text` (str), `date_from` (str), `date_to` (str) | `NewsResponse` | General news, transfer rumors, contracts, technical updates, regulations |
 | `get_standings` | 🏆 Championships | Get driver/constructor championship standings | `year` (int), `round` (int\|str), `type` (str), `driver_name` (str), `team_name` (str) | `StandingsResponse` | Find champions, get standings, check positions |
+| `get_schedule` | 📅 Schedule | Get F1 calendar and event schedules | `year` (int), `include_testing` (bool), `round` (int), `event_name` (str), `only_remaining` (bool) | `ScheduleResponse` | Full season calendar, upcoming races, testing sessions, event details |
 | `get_session_details` | 🏁 Session Data | Get comprehensive session details | `year` (int), `gp` (str\|int), `session` (str), `include_weather` (bool), `include_fastest_lap` (bool) | `SessionDetailsResponse` | Complete session overview with results and weather |
 | `get_session_results` | 🏁 Session Data | Get session results/classification | `year` (int), `gp` (str\|int), `session` (str) | `SessionResultsResponse` | Race/qualifying/practice results with driver data |
 | `get_laps` | 🏁 Session Data | Get lap data with flexible filtering | `year` (int), `gp` (str\|int), `session` (str), `driver` (str\|int), `lap_type` (str) | `LapsResponse\|FastestLapResponse` | All laps, driver laps, or fastest lap with full data |
 | `get_session_drivers` | 🏁 Session Data | Get list of drivers in a session | `year` (int), `gp` (str\|int), `session` (str) | `SessionDriversResponse` | Driver abbreviations who participated |
 | `get_tire_strategy` | 🏁 Session Data | Get tire strategy and compound usage | `year` (int), `gp` (str\|int), `session` (str), `driver` (str\|int) | `TireStrategyResponse` | Tire compounds, life, and stint data per lap |
+| `get_advanced_session_data` | 🏁 Session Data | Get fastest laps, sector times, pit stops | `year` (int), `gp` (str\|int), `session` (str), `data_type` (str), `driver` (str\|int), `top_n` (int) | `AdvancedSessionDataResponse` | Fastest laps per driver, sector time breakdowns, pit stop analysis |
 | `get_lap_telemetry` | 📊 Telemetry | Get detailed telemetry for a specific lap | `year` (int), `gp` (str\|int), `session` (str), `driver` (str\|int), `lap_number` (int) | `LapTelemetryResponse` | High-frequency speed, throttle, brake, gear, RPM, DRS |
 | `compare_driver_telemetry` | 📊 Telemetry | Compare telemetry between two drivers | `year` (int), `gp` (str\|int), `session` (str), `driver1` (str\|int), `driver2` (str\|int), `lap1` (int), `lap2` (int) | `TelemetryComparisonResponse` | Side-by-side telemetry comparison for two drivers |
 | `get_session_weather` | 🌤️ Weather | Get weather data throughout a session | `year` (int), `gp` (str\|int), `session` (str) | `SessionWeatherDataResponse` | Time-series weather data (temp, humidity, wind, rain) |
 | `get_race_control_messages` | 🚦 Race Control | Get official race control messages | `year` (int), `gp` (str\|int), `session` (str) | `RaceControlMessagesResponse` | Flags, safety cars, penalties, investigations |
+| `get_reference_data` | 📚 Reference | Get driver, team, circuit, tire metadata | `reference_type` (str), `year` (int), `name` (str) | `ReferenceDataResponse` | Driver info, constructor details, circuit data, tire compounds |
+| `get_circuit` | 🏎️ Track & Circuit | Get circuit layout and track status | `year` (int), `gp` (str\|int), `data_type` (str), `session` (str) | `CircuitDataResponse` | Circuit corners, layout, track status changes, flag periods |
+| `get_analysis` | 📈 Analysis | Advanced race analysis and insights | `year` (int), `gp` (str\|int), `session` (str), `analysis_type` (str), `driver` (str\|int) | `AnalysisResponse` | Race pace, tire degradation, stint summaries, consistency metrics |
 
 ### Tool Details
 
@@ -369,6 +379,147 @@ Get official race control messages for a session.
 What race control messages were issued during the 2024 Monaco race?
 Show me all flags and safety car periods from Spa 2024
 Get race control messages from Singapore qualifying 2023
+```
+
+---
+
+### 📅 Schedule
+
+#### `get_schedule`
+
+Get comprehensive F1 calendar and schedule information.
+
+**Parameters:**
+
+- `year` (int): Season year
+- `include_testing` (bool, optional): Include testing events (default: True)
+- `round` (int, optional): Get details for specific round
+- `event_name` (str, optional): Filter by event name
+- `only_remaining` (bool, optional): Only show upcoming events (default: False)
+
+**Returns:** Complete schedule with event details, session dates, and locations.
+
+**Example Prompts:**
+
+```
+What's the 2024 F1 calendar?
+Show me upcoming races this season
+Get details for the Monaco Grand Prix 2024
+When is the next race?
+Show me all testing sessions for 2024
+```
+
+---
+
+### 📚 Reference
+
+#### `get_reference_data`
+
+Get F1 reference data including driver, team, circuit, and tire information.
+
+**Parameters:**
+
+- `reference_type` (str): Type - 'driver', 'constructor', 'circuit', 'tire_compounds'
+- `year` (int, optional): Season year for driver/constructor data
+- `name` (str, optional): Filter by name
+
+**Returns:** Reference metadata in structured format.
+
+**Example Prompts:**
+
+```
+Get all drivers from 2024
+Show me Verstappen's driver information
+What teams competed in 2024?
+Get circuit information for Monaco
+Show me tire compound information
+Get Red Bull team details
+```
+
+---
+
+### 🏎️ Track & Circuit
+
+#### `get_circuit`
+
+Get comprehensive circuit and track information.
+
+**Parameters:**
+
+- `year` (int): Season year (2018+)
+- `gp` (str | int): Grand Prix name or round number
+- `data_type` (str): 'circuit_info' for layout/corners, 'track_status' for flags
+- `session` (str, optional): Session type (required for track_status)
+
+**Returns:** Circuit layout, corners, track status changes, and flag periods.
+
+**Example Prompts:**
+
+```
+Get Monaco circuit information
+Show me the corners at Silverstone
+What was the track status during the Monaco race?
+Get track status changes in qualifying
+Show me all flag periods from the race
+```
+
+---
+
+### 🏁 Advanced Session Data
+
+#### `get_advanced_session_data`
+
+Get advanced session data including fastest laps, sector times, and pit stops.
+
+**Parameters:**
+
+- `year` (int): Season year (2018+)
+- `gp` (str | int): Grand Prix name or round number
+- `session` (str): Session type
+- `data_type` (str): 'fastest_laps', 'sector_times', or 'pit_stops'
+- `driver` (str | int, optional): Driver filter
+- `top_n` (int, optional): Limit results to top N
+
+**Returns:** Advanced session analysis data.
+
+**Example Prompts:**
+
+```
+Get fastest laps from Monaco qualifying
+Show me sector times for all drivers
+Get Verstappen's pit stops in the race
+Show me the top 5 fastest laps
+Get Hamilton's sector times in qualifying
+Analyze pit stop strategy in the race
+```
+
+---
+
+### 📈 Analysis
+
+#### `get_analysis`
+
+Get advanced race analysis including pace, tire degradation, and consistency.
+
+**Parameters:**
+
+- `year` (int): Season year (2018+)
+- `gp` (str | int): Grand Prix name or round number
+- `session` (str): Session type
+- `analysis_type` (str): 'race_pace', 'tire_degradation', 'stint_summary', or 'consistency'
+- `driver` (str | int, optional): Driver filter
+
+**Returns:** Advanced analysis and insights.
+
+**Example Prompts:**
+
+```
+Analyze race pace for Monaco 2024
+Show me tire degradation in the race
+Get stint summaries for all drivers
+Analyze Verstappen's consistency in qualifying
+Compare tire degradation between drivers
+Show me average pace excluding pit stops
 ```
 
 ---
