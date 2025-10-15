@@ -25,10 +25,7 @@ This document provides a complete roadmap of all tools (implemented and planned)
 
 | Tool Name | Category | Status | Requirements | Description |
 |-----------|----------|--------|--------------|-------------|
-| `get_event_schedule` | Schedule | 🔴 Not Implemented | FastF1: `get_event_schedule(year)`, `EventSchedule.is_testing()` | Get F1 calendar/schedule for a specific year with optional testing sessions |
-| `get_event` | Schedule | 🔴 Not Implemented | FastF1: `get_event(year, round)`, `Event.get_session_name()` | Get specific race weekend/event details by year and round/name |
-| `get_remaining_events` | Schedule | 🔴 Not Implemented | FastF1: `get_events_remaining()` | Get upcoming races in current season |
-| `get_testing_schedule` | Schedule | 🔴 Not Implemented | FastF1: `get_testing_event(year, event)`, `Event.is_testing()` | Get pre-season/in-season testing schedule |
+| `get_schedule` | Schedule | ✅ Implemented | FastF1: `get_event_schedule()`, `get_events_remaining()` | **Comprehensive tool** - Get F1 calendar, upcoming races, testing sessions, and event details with flexible filtering |
 
 ---
 
@@ -41,9 +38,7 @@ This document provides a complete roadmap of all tools (implemented and planned)
 | `get_laps` | Session | ✅ Implemented | FastF1: `Session.laps`, `Laps.pick_driver()`, `Laps.pick_fastest()` | Get lap-by-lap data with flexible filtering (all laps, driver-specific, fastest) |
 | `get_session_drivers` | Session | ✅ Implemented | FastF1: `Session.drivers`, `Session.get_driver()` | Get list of drivers participating in a session |
 | `get_tire_strategy` | Session | ✅ Implemented | FastF1: `Laps.pick_driver()`, `Laps.Compound` column | Get tire compound usage and stint data per driver |
-| `get_fastest_laps` | Session | 🔴 Not Implemented | FastF1: `Laps.pick_fastest()`, `Laps.pick_quicklaps()` | Get fastest lap times per driver with optional top N filtering |
-| `get_sector_times` | Session | 🔴 Not Implemented | FastF1: `Session.laps`, Sector columns | Get sector times for drivers/laps for detailed analysis |
-| `get_pit_stops` | Session | 🔴 Not Implemented | FastF1: `Laps.pick_box_laps()`, `PitInTime`, `PitOutTime` | Get pit stop data including times and durations |
+| `get_advanced_session_data` | Session | ✅ Implemented | FastF1: `Laps`, Sector columns, PitInTime/PitOutTime | **Comprehensive tool** - Get fastest laps, sector times, and pit stops with flexible filtering |
 | `get_qualifying_sessions` | Session | 🔴 Not Implemented | FastF1: `Laps.split_qualifying_sessions()` | Split qualifying into Q1, Q2, Q3 segments |
 | `get_track_evolution` | Session | 🔴 Not Implemented | FastF1: `Laps` with `Time`, `LapStartTime` | Track how lap times improved during session |
 
@@ -70,10 +65,8 @@ This document provides a complete roadmap of all tools (implemented and planned)
 
 | Tool Name | Category | Status | Requirements | Description |
 |-----------|----------|--------|--------------|-------------|
-| `get_circuit_info` | Track | 🔴 Not Implemented | FastF1: `Session.get_circuit_info()`, `CircuitInfo` | Get track layout, corners, marshal sectors, and rotation |
-| `get_track_status` | Track | 🔴 Not Implemented | FastF1: `Session.track_status`, `api.track_status_data()` | Get flag status and safety car periods |
+| `get_circuit` | Track | ✅ Implemented | FastF1: `Session.get_circuit_info()`, `Session.track_status` | **Comprehensive tool** - Get circuit layout, corners, track status, and flag periods |
 | `get_session_status` | Track | 🔴 Not Implemented | FastF1: `Session.session_status`, `api.session_status_data()` | Get session start/end/red flag times |
-| `get_corner_analysis` | Track | 🔴 Not Implemented | FastF1: `CircuitInfo.corners`, telemetry slicing by distance | Analyze specific corner performance across drivers |
 
 ---
 
@@ -127,14 +120,7 @@ This document provides a complete roadmap of all tools (implemented and planned)
 
 | Tool Name | Category | Status | Requirements | Description |
 |-----------|----------|--------|--------------|-------------|
-| `get_driver_info` | Reference | 🔴 Not Implemented | FastF1: `api.driver_info()`, Ergast: `get_driver_info()` | Get driver details (name, number, team, nationality) |
-| `get_constructor_info` | Reference | 🔴 Not Implemented | Ergast: `Ergast().get_constructor_info()` | Get team/constructor details and history |
-| `get_circuit_details` | Reference | 🔴 Not Implemented | Ergast: `Ergast().get_circuits()` | Get circuit metadata (name, location, length, lap record) |
-| `get_driver_colors` | Reference | 🔴 Not Implemented | FastF1: `plotting.get_driver_color()`, `get_team_color()` | Get team/driver colors for visualization |
-| `get_driver_abbreviations` | Reference | 🔴 Not Implemented | FastF1: `plotting.get_driver_abbreviation()`, `list_driver_abbreviations()` | Get driver 3-letter abbreviations |
-| `get_team_names` | Reference | 🔴 Not Implemented | FastF1: `plotting.list_team_names()`, `get_team_name()` | Get list of teams in a season |
-| `get_tire_compounds` | Reference | 🔴 Not Implemented | FastF1: `plotting.list_compounds()`, `get_compound_color()` | Get available tire compounds and colors |
-| `get_driver_lineup` | Reference | 🔴 Not Implemented | FastF1: `plotting.get_driver_names_by_team()` | Get team driver lineups for a season |
+| `get_reference_data` | Reference | ✅ Implemented | Ergast: `get_driver_info()`, `get_constructor_info()`, `get_circuits()` | **Comprehensive tool** - Get driver info, team details, circuit metadata, and tire compounds with filtering |
 
 ---
 
@@ -270,41 +256,33 @@ This document provides a complete roadmap of all tools (implemented and planned)
 
 | Tool Name | Category | Status | Requirements | Description |
 |-----------|----------|--------|--------------|-------------|
+| `get_analysis` | Analysis | ✅ Implemented | FastF1: `Laps.pick_wo_box()`, `pick_accurate()`, statistical analysis | **Comprehensive tool** - Race pace, tire degradation, stint summaries, and consistency analysis |
 | `compare_laps` | Analysis | 🔴 Not Implemented | FastF1: Multiple `Lap.get_telemetry()`, `merge_channels()` | Side-by-side comparison of multiple laps |
-| `get_race_pace` | Analysis | 🔴 Not Implemented | FastF1: `Laps.pick_wo_box()`, `pick_accurate()` | Calculate race pace excluding in/out laps |
-| `get_tire_degradation` | Analysis | 🔴 Not Implemented | FastF1: `Laps.pick_wo_box()`, `pick_tyre()` | Analyze lap time degradation per stint |
 | `get_fuel_corrected_pace` | Analysis | 🔴 Not Implemented | FastF1: Laps data with stint analysis | Estimate pace adjusted for fuel load |
 | `get_qualifying_analysis` | Analysis | 🔴 Not Implemented | FastF1: `Laps.split_qualifying_sessions()` | Detailed Q1/Q2/Q3 progression analysis |
-| `get_stint_summary` | Analysis | 🔴 Not Implemented | FastF1: Laps grouping by compound/stint | Summarize each tire stint with averages |
 | `get_position_changes` | Analysis | 🔴 Not Implemented | FastF1: `Laps.Position` column over time | Track position changes throughout race |
 | `get_gap_analysis` | Analysis | 🔴 Not Implemented | FastF1: Laps with `LapTime`, `Position` | Analyze gaps between drivers over race |
 | `get_overtakes` | Analysis | 🔴 Not Implemented | FastF1: `Laps.Position` changes + race control | Detect overtaking maneuvers |
-| `get_consistency_analysis` | Analysis | 🔴 Not Implemented | FastF1: `Laps.pick_wo_box()`, statistical analysis | Calculate driver consistency (lap time std dev) |
 
 ---
 
 ## IMPLEMENTATION PRIORITY
 
 ### 🔥 HIGH PRIORITY (Core Functionality Extensions)
-1. `get_fastest_laps` - Extend session data
-2. `get_sector_times` - Essential for lap analysis
-3. `get_pit_stops` - Critical race strategy data
-4. `get_penalties` - Race control filtering
-5. `get_investigations` - Race control filtering
-6. `get_race_pace` - Advanced analysis
-7. `get_tire_degradation` - Strategy analysis
+1. `get_penalties` - Race control filtering
+2. `get_investigations` - Race control filtering
+3. `get_qualifying_sessions` - Q1/Q2/Q3 split
+4. `get_session_status` - Session timing data
 
 ### 🟡 MEDIUM PRIORITY (Valuable New Features)
-1. `get_event_schedule` - Calendar functionality
-2. `get_remaining_events` - User convenience
-3. `get_car_data` - Telemetry extension
-4. `get_position_data` - Racing line analysis
-5. `get_circuit_info` - Track information
-6. `get_track_status` - Session context
-7. `get_lap_weather` - Conditions analysis
-8. `get_driver_info` - Reference data
-9. `get_circuit_details` - Reference data
-10. All reference/plotting helpers (9.4-9.8)
+1. `get_car_data` - Telemetry extension
+2. `get_position_data` - Racing line analysis
+3. `get_lap_weather` - Conditions analysis
+4. `get_speed_trace` - Speed analysis
+5. `get_gear_usage` - Gear shifting analysis
+6. `get_drs_usage` - DRS tracking
+7. `get_brake_points` - Braking analysis
+8. `get_throttle_trace` - Throttle application
 
 ### 🔵 LOW PRIORITY (Archive & Specialized)
 1. All Historical category (8.x) - Ergast API
@@ -323,17 +301,26 @@ This document provides a complete roadmap of all tools (implemented and planned)
 ## COMPOSABILITY PRINCIPLES
 
 ### Tool Design Guidelines
-1. **Single Responsibility** - Each tool does one thing well
-2. **Flexible Parameters** - Support optional filtering and customization
-3. **Consistent Returns** - All tools return Pydantic models for type safety
-4. **Error Handling** - Graceful degradation with clear error messages
-5. **Generic Patterns** - Tools should adapt to future F1 API changes
+1. **Comprehensive & Multipurpose** - Each tool handles multiple related use cases with flexible parameters
+2. **Single Responsibility with Multiple Modes** - Tools do one category of things well, with modes for different data types
+3. **Flexible Parameters** - Support optional filtering and customization with sensible defaults
+4. **Consistent Returns** - All tools return Pydantic models for type safety
+5. **Error Handling** - Graceful degradation with clear error messages
+6. **Generic Patterns** - Tools should adapt to future F1 API changes
 
 ### Composable Patterns
 - **Session + Driver + Lap** filtering cascade
 - **Time-based** data retrieval (lap, stint, session, race, season)
 - **Comparison** tools (driver vs driver, lap vs lap, stint vs stint)
 - **Aggregation** tools (summaries, statistics, trends)
+- **Mode-based selection** using `data_type` or `analysis_type` parameters
+
+### Multi-Purpose Tool Strategy
+Rather than creating dozens of single-purpose tools, we create comprehensive tools that:
+- Accept a `type` or `mode` parameter to switch behavior
+- Share common parameters (year, gp, session, driver)
+- Return consistent response structures with optional fields
+- Reduce total API surface while expanding functionality
 
 ### Data Flow
 ```
@@ -379,12 +366,21 @@ JSON Response (MCP protocol)
 
 ## TOTAL TOOL COUNT
 
-- ✅ **Implemented**: 17 tools
+- ✅ **Implemented**: 22 tools (16 unique tools, 6 are comprehensive multi-purpose tools)
 - 🟡 **Next Up**: 6 tools
-- 🔴 **Planned**: 101+ tools
-- **Total**: 124+ tools
+- 🔴 **Planned**: 90+ tools
+- **Total**: 118+ tools
+
+### Recently Implemented (2025-10-15)
+- `get_schedule` - Consolidates 4 schedule tools into one comprehensive tool
+- `get_advanced_session_data` - Consolidates 3 session analysis tools
+- `get_reference_data` - Consolidates 8 reference/metadata tools
+- `get_circuit` - Consolidates 3 track/circuit tools
+- `get_analysis` - Consolidates 4 advanced analysis tools
+
+**Note**: The shift to comprehensive, multi-purpose tools reduces total tool count while significantly expanding functionality.
 
 ---
 
-**Last Updated**: 2025-10-05
-**Version**: 1.0
+**Last Updated**: 2025-10-15
+**Version**: 1.1
