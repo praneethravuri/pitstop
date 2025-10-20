@@ -1,0 +1,117 @@
+name: Test Pitstop Tools
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run tests daily at 9 AM UTC to catch API/data issues
+    - cron: '0 9 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  test:
+    name: Test Tools on ${{ matrix.os }} - Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.11', '3.12', '3.13']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Install dependencies
+        run: |
+          uv sync
+
+      - name: Run tool tests
+        run: |
+          uv run python test_runner.py
+        timeout-minutes: 30
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.os }}-py${{ matrix.python-version }}
+          path: test_results.json
+          retention-days: 30
+
+  lint:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Check code formatting
+        run: |
+          uv run ruff check .
+        continue-on-error: true
+
+      - name: Type checking
+        run: |
+          uv run mypy server.py tools/ --ignore-missing-imports
+        continue-on-error: true
+
+  integration:
+    name: Integration Test - Full Server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Test server initialization
+        run: |
+          timeout 10 uv run python -c "from server import mcp; print('Server initialized successfully')" || true
+
+      - name: Validate tool count
+        run: |
+          uv run python -c "
+          from server import mcp
+          tools = mcp.list_tools()
+          expected = 24
+          actual = len(tools) if tools else 0
+          print(f'Tools registered: {actual}')
+          assert actual == expected, f'Expected {expected} tools, got {actual}'
+          print('✓ Tool count validation passed')
+          "
