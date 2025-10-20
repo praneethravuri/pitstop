@@ -80,10 +80,7 @@ from tools import (
 )
 
 # Initialize MCP server
-mcp = FastMCP(
-    name="Pitstop",
-    description="Formula 1 data via MCP - 100% free, no API keys required"
-)
+mcp = FastMCP("Pitstop")
 
 
 # ============================================================================

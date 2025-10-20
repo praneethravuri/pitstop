@@ -40,8 +40,7 @@ def get_reference_data(
     if reference_type == "driver":
         # Get driver information from Ergast
         driver_response = fastf1_client.ergast.get_driver_info(season=year)
-        drivers_df = driver_response.content[0]
-        drivers_data = drivers_df.to_dict('records')
+        drivers_data = driver_response.to_dict('records')
 
         # Filter by name if provided
         if name:
@@ -78,8 +77,7 @@ def get_reference_data(
     elif reference_type == "constructor":
         # Get constructor information from Ergast
         constructor_response = fastf1_client.ergast.get_constructor_info(season=year)
-        constructors_df = constructor_response.content[0]
-        constructors_data = constructors_df.to_dict('records')
+        constructors_data = constructor_response.to_dict('records')
 
         # Filter by name if provided
         if name:
@@ -115,8 +113,7 @@ def get_reference_data(
         else:
             circuits_response = fastf1_client.ergast.get_circuits()
 
-        circuits_df = circuits_response.content[0]
-        circuits_data = circuits_df.to_dict('records')
+        circuits_data = circuits_response.to_dict('records')
 
         # Filter by name if provided
         if name:

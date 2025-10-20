@@ -12,8 +12,8 @@ class StintData(BaseModel):
     stint_number: int = Field(..., description="Stint number")
     driver_number: int = Field(..., description="Driver number (1-99)")
     compound: str = Field(..., description="Tire compound (SOFT, MEDIUM, HARD, etc.)")
-    lap_start: int = Field(..., description="Starting lap number")
-    lap_end: int = Field(..., description="Ending lap number")
+    lap_start: Optional[int] = Field(None, description="Starting lap number")
+    lap_end: Optional[int] = Field(None, description="Ending lap number")
     tyre_age_at_start: int = Field(..., description="Tyre age at start of stint")
 
 

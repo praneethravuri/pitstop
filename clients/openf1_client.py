@@ -19,6 +19,7 @@ Available endpoints:
 """
 
 import httpx
+import time
 from typing import Optional, Any
 from datetime import datetime
 
@@ -38,21 +39,36 @@ class OpenF1Client:
         self.timeout = timeout
         self.client = httpx.Client(timeout=timeout)
 
-    def _get(self, endpoint: str, params: Optional[dict[str, Any]] = None) -> list[dict]:
+    def _get(self, endpoint: str, params: Optional[dict[str, Any]] = None, max_retries: int = 3) -> list[dict]:
         """
-        Make GET request to OpenF1 API.
+        Make GET request to OpenF1 API with retry logic.
 
         Args:
             endpoint: API endpoint (e.g., '/car_data')
             params: Query parameters
+            max_retries: Maximum number of retry attempts for rate limiting (default: 3)
 
         Returns:
             List of dictionaries containing response data
+
+        Raises:
+            httpx.HTTPStatusError: If request fails after all retries
         """
         url = f"{self.BASE_URL}{endpoint}"
-        response = self.client.get(url, params=params)
-        response.raise_for_status()
-        return response.json()
+
+        for attempt in range(max_retries + 1):
+            try:
+                response = self.client.get(url, params=params)
+                response.raise_for_status()
+                return response.json()
+            except httpx.HTTPStatusError as e:
+                # Handle rate limiting (429) with exponential backoff
+                if e.response.status_code == 429 and attempt < max_retries:
+                    wait_time = 2 ** attempt  # Exponential backoff: 1s, 2s, 4s
+                    time.sleep(wait_time)
+                    continue
+                # Re-raise if not a rate limit error or out of retries
+                raise
 
     def get_team_radio(
         self,

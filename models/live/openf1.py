@@ -1,7 +1,7 @@
 """Pydantic models for OpenF1 API responses."""
 
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, Union
 
 
 class TeamRadioMessage(BaseModel):
@@ -48,8 +48,8 @@ class IntervalData(BaseModel):
     """Interval and gap data."""
     date: str = Field(..., description="Timestamp")
     driver_number: int = Field(..., description="Driver number (1-99)")
-    gap_to_leader: Optional[str] = Field(None, description="Gap to race leader")
-    interval: Optional[str] = Field(None, description="Interval to car ahead")
+    gap_to_leader: Optional[Union[str, float]] = Field(None, description="Gap to race leader")
+    interval: Optional[Union[str, float]] = Field(None, description="Interval to car ahead")
     session_key: int = Field(..., description="Session identifier")
     meeting_key: int = Field(..., description="Meeting identifier")
 

@@ -119,7 +119,10 @@ class ToolTester:
 
         print(f"\nRunning tests for {len(tool_files)} tools...\n")
 
-        for tool_path in tool_files:
+        # Add delay between tests to avoid API rate limiting
+        test_delay = float(os.getenv("TEST_DELAY", "0.5"))
+
+        for i, tool_path in enumerate(tool_files):
             result = self.test_tool_module(tool_path)
             self.results["tests"].append(result)
 
@@ -131,6 +134,10 @@ class ToolTester:
                 self.results["summary"]["failed"] += 1
             elif result["status"] == "skipped":
                 self.results["summary"]["skipped"] += 1
+
+            # Add delay between tests (except after last test)
+            if i < len(tool_files) - 1 and test_delay > 0:
+                time.sleep(test_delay)
 
         return self.print_summary()
 

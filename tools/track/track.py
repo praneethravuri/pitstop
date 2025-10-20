@@ -73,23 +73,23 @@ def get_circuit(
 
             circuit_details = CircuitDetails(
                 circuit_key=int(circuit_info.circuit_key) if hasattr(circuit_info, 'circuit_key') and circuit_info.circuit_key else None,
-                circuit_name=str(event['EventName']) if event else None,
-                location=str(event['Location']) if event else None,
-                country=str(event['Country']) if event else None,
+                circuit_name=str(event['EventName']) if event is not None else None,
+                location=str(event['Location']) if event is not None else None,
+                country=str(event['Country']) if event is not None else None,
                 rotation=float(circuit_info.rotation) if hasattr(circuit_info, 'rotation') and circuit_info.rotation else None,
                 corners=corners_list if corners_list else None,
             )
         except Exception as e:
             # If circuit info not available, provide basic event info
             circuit_details = CircuitDetails(
-                circuit_name=str(event['EventName']) if event else None,
-                location=str(event['Location']) if event else None,
-                country=str(event['Country']) if event else None,
+                circuit_name=str(event['EventName']) if event is not None else None,
+                location=str(event['Location']) if event is not None else None,
+                country=str(event['Country']) if event is not None else None,
             )
 
         return CircuitDataResponse(
             year=year,
-            event_name=str(event['EventName']) if event else "",
+            event_name=str(event['EventName']) if event is not None else "",
             session_name=None,
             circuit_details=circuit_details,
             data_type=data_type,
@@ -132,7 +132,7 @@ def get_circuit(
 
         return CircuitDataResponse(
             year=year,
-            event_name=str(event['EventName']) if event else "",
+            event_name=str(event['EventName']) if event is not None else "",
             session_name=session_obj.name if hasattr(session_obj, 'name') else session,
             track_status=track_status_list,
             data_type=data_type,
