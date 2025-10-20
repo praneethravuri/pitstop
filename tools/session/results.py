@@ -9,27 +9,19 @@ fastf1_client = FastF1Client()
 
 def get_session_results(year: int, gp: Union[str, int], session: str) -> SessionResultsResponse:
     """
-    Get results/classification from a specific F1 session.
+    Get F1 race results - who won, podium, finishing positions, times.
 
-    Retrieves the final classification or results for any F1 session, including
-    positions, times, teams, and driver information.
+    Use for: "Who won the [GP]?", race results, qualifying results, podium.
 
     Args:
-        year: The season year (2018 onwards)
-        gp: The Grand Prix name (e.g., 'Monza', 'Monaco') or round number
-        session: Session type - 'FP1' (Free Practice 1), 'FP2' (Free Practice 2),
-                'FP3' (Free Practice 3), 'Q' (Qualifying), 'S' (Sprint), 'R' (Race)
+        year: Season year (2018+)
+        gp: GP name (e.g., 'Monaco', 'Austin') or round number
+        session: 'R' (Race), 'Q' (Qualifying), 'S' (Sprint), 'FP1/FP2/FP3' (Practice)
 
     Returns:
-        SessionResultsResponse: Session results with driver positions, times, teams,
-        and other classification data in JSON-serializable format.
+        All finishing positions with driver names, teams, times, points.
 
-    Examples:
-        >>> # Get race results from 2024 Monaco GP
-        >>> results = get_session_results(2024, "Monaco", "R")
-
-        >>> # Get qualifying results from 2023 Silverstone
-        >>> quali = get_session_results(2023, "Silverstone", "Q")
+    Example: get_session_results(2025, "Austin", "R") → 2025 Austin GP race winner & results
     """
     session_obj = fastf1_client.get_session(year, gp, session)
     session_obj.load(laps=False, telemetry=False, weather=False, messages=False)

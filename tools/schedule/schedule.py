@@ -40,21 +40,21 @@ def get_schedule(
     only_remaining: bool = False,
 ) -> ScheduleResponse:
     """
-    Get F1 calendar and schedule - full season, specific events, or upcoming races.
+    Get F1 race calendar - dates, locations, session times.
+
+    Use for: "When is the next race?", F1 calendar, race schedule.
 
     Args:
-        year: Season year (e.g., 2024)
-        include_testing: Include testing sessions (default: True)
-        round: Filter by round number
-        event_name: Filter by event name (e.g., 'Monaco')
-        only_remaining: Only show upcoming events (default: False)
+        year: Season year
+        include_testing: Include testing (default: True)
+        round: Filter by round number (optional)
+        event_name: Filter by GP name (optional)
+        only_remaining: Show only upcoming races (default: False)
 
     Returns:
-        ScheduleResponse with events list, dates, locations, and session times
+        All events with dates, locations, session times.
 
-    Examples:
-        get_schedule(2024) → Full 2024 calendar
-        get_schedule(2024, only_remaining=True) → Upcoming races
+    Example: get_schedule(2025, only_remaining=True) → Next F1 races
     """
     # Get full event schedule
     if only_remaining:

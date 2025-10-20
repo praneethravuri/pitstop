@@ -16,19 +16,19 @@ def get_standings(
     """
     Get F1 championship standings - driver/constructor positions, points, wins.
 
+    Use for: "Who won the championship?", current standings, points.
+
     Args:
         year: Season year (1950+)
-        round: Round number or GP name (optional, finals if None)
-        type: 'driver', 'constructor', or both (optional)
+        round: GP name or round number (optional, shows final if None)
+        type: 'driver', 'constructor', or both (default: both)
         driver_name: Filter by driver (optional)
         team_name: Filter by team (optional)
 
     Returns:
-        StandingsResponse with positions, points, wins, nationality
+        Championship rankings with positions, points, wins.
 
-    Examples:
-        get_standings(2024) → Current season standings
-        get_standings(2021, type='driver') → 2021 driver champion (position 1)
+    Example: get_standings(2024, type='driver') → 2024 F1 world champion & full standings
     """
     # Convert round name to round number if string provided
     round_num = None
