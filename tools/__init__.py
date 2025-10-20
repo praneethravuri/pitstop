@@ -20,7 +20,7 @@ from .telemetry import (
 from .weather import get_session_weather
 
 # Race control
-from .control import get_race_control_messages, get_penalties, get_investigations, get_flag_history
+from .control import get_race_control_messages
 
 # Standings
 from .standings import get_standings
@@ -43,9 +43,6 @@ from .historical import get_analysis
 # Live (OpenF1)
 from .live import get_driver_radio, get_live_pit_stops, get_live_intervals, get_meeting_info, get_stints_live
 
-# Forecast (Weather)
-from .forecast import get_race_weather_forecast, get_session_forecast, get_rain_probability
-
 __all__ = [
     # Session
     "get_session_details",
@@ -63,9 +60,6 @@ __all__ = [
     "get_session_weather",
     # Control
     "get_race_control_messages",
-    "get_penalties",
-    "get_investigations",
-    "get_flag_history",
     # Standings
     "get_standings",
     # Media
@@ -84,8 +78,4 @@ __all__ = [
     "get_live_intervals",
     "get_meeting_info",
     "get_stints_live",
-    # Forecast (Weather)
-    "get_race_weather_forecast",
-    "get_session_forecast",
-    "get_rain_probability",
 ]

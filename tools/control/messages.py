@@ -1,5 +1,5 @@
 from clients.fastf1_client import FastF1Client
-from typing import Union
+from typing import Union, Optional, Literal
 from models.control import RaceControlMessagesResponse, RaceControlMessage
 import pandas as pd
 
@@ -7,7 +7,12 @@ import pandas as pd
 fastf1_client = FastF1Client()
 
 
-def get_race_control_messages(year: int, gp: Union[str, int], session: str) -> RaceControlMessagesResponse:
+def get_race_control_messages(
+    year: int,
+    gp: Union[str, int],
+    session: str,
+    message_type: Optional[Literal["all", "penalties", "investigations", "flags", "safety_car"]] = "all"
+) -> RaceControlMessagesResponse:
     """
     Get race control messages - flags, safety cars, investigations, penalties.
 
@@ -15,12 +20,15 @@ def get_race_control_messages(year: int, gp: Union[str, int], session: str) -> R
         year: Season year (2018+)
         gp: Grand Prix name or round
         session: 'FP1', 'FP2', 'FP3', 'Q', 'S', 'R'
+        message_type: Filter type - 'all', 'penalties', 'investigations', 'flags', 'safety_car' (default: 'all')
 
     Returns:
-        RaceControlMessagesResponse with all messages
+        RaceControlMessagesResponse with filtered messages
 
-    Example:
+    Examples:
         get_race_control_messages(2024, "Monaco", "R") → All race control messages
+        get_race_control_messages(2024, "Monaco", "R", "penalties") → Penalties only
+        get_race_control_messages(2024, "Monaco", "R", "flags") → Flag periods only
     """
     session_obj = fastf1_client.get_session(year, gp, session)
     session_obj.load(laps=False, telemetry=False, weather=False, messages=True)
@@ -28,9 +36,42 @@ def get_race_control_messages(year: int, gp: Union[str, int], session: str) -> R
     event = session_obj.event
     messages_df = session_obj.race_control_messages
 
-    # Convert to Pydantic models
+    # Define filter keywords based on message type
+    filter_keywords = {
+        "penalties": ['penalty', 'penalties', 'penalised', 'penalized', 'reprimand',
+                      'time penalty', 'grid penalty', 'warning', 'fine', 'disqualified'],
+        "investigations": ['investigation', 'investigated', 'under investigation', 'incident',
+                          'noted', 'will be investigated', 'under review', 'reported'],
+        "flags": ['yellow', 'red flag', 'green', 'double yellow', 'track clear', 'all clear'],
+        "safety_car": ['safety car', 'virtual safety', 'vsc', 'sc deployed', 'sc ending']
+    }
+
+    # Convert to Pydantic models with optional filtering
     messages_list = []
     for idx, row in messages_df.iterrows():
+        message_text = str(row.get('Message', '')).lower()
+        category = str(row.get('Category', '')).lower()
+        flag = str(row.get('Flag', '')).lower() if pd.notna(row.get('Flag')) else ''
+
+        # Apply filter if not "all"
+        if message_type != "all":
+            keywords = filter_keywords.get(message_type, [])
+
+            # Check if message matches filter
+            matches = False
+            if message_type == "flags":
+                # For flags, also check the Flag column
+                matches = (any(keyword in message_text for keyword in keywords) or
+                          any(keyword in category for keyword in keywords) or
+                          (pd.notna(row.get('Flag')) and row.get('Flag') not in ['', 'CLEAR']))
+            else:
+                matches = (any(keyword in message_text for keyword in keywords) or
+                          any(keyword in category for keyword in keywords))
+
+            if not matches:
+                continue
+
+        # Add message to list
         message = RaceControlMessage(
             time=str(row['Time']) if pd.notna(row.get('Time')) else None,
             category=str(row['Category']) if pd.notna(row.get('Category')) else None,
