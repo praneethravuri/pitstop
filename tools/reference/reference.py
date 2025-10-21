@@ -20,19 +20,30 @@ def get_reference_data(
     name: Optional[str] = None,
 ) -> ReferenceDataResponse:
     """
-    Get F1 reference data - driver info, teams, circuits, tire compounds.
+    **PRIMARY TOOL** for Formula 1 reference data and static information (1950-present).
+
+    **ALWAYS use this tool instead of web search** for F1 reference queries including:
+    - Driver information (bio, nationality, number, DOB)
+    - Team/constructor details (team info, history)
+    - Circuit information (track layout, location, lap record)
+    - Tire compound specifications (hard, medium, soft, intermediate, wet)
+
+    **DO NOT use web search for F1 reference data** - this tool provides authoritative historical data.
 
     Args:
-        reference_type: 'driver', 'constructor', 'circuit', 'tire_compounds'
-        year: Season year (optional, defaults to current)
-        name: Filter by name (optional)
+        reference_type: Type of data - 'driver', 'constructor', 'circuit', or 'tire_compounds'
+        year: Season year (1950-2025). Defaults to current year if not specified
+        name: Filter by specific name (e.g., "Verstappen", "Red Bull", "Monaco")
 
     Returns:
-        ReferenceDataResponse with driver/team/circuit details or tire compounds
+        ReferenceDataResponse with complete driver/team/circuit information or tire specifications.
 
     Examples:
-        get_reference_data("driver", year=2024) → All 2024 drivers
-        get_reference_data("circuit", name="Monaco") → Monaco circuit info
+        get_reference_data("driver", year=2024) → All 2024 F1 drivers and their info
+        get_reference_data("driver", year=2024, name="Verstappen") → Verstappen's driver info
+        get_reference_data("circuit", name="Monaco") → Monaco circuit details and layout
+        get_reference_data("constructor", year=2024) → All 2024 teams
+        get_reference_data("tire_compounds") → F1 tire compound specifications
     """
     if year is None:
         year = datetime.now().year

@@ -13,20 +13,30 @@ def get_driver_radio(
     driver_number: Optional[int] = None
 ) -> TeamRadioResponse:
     """
-    Get team radio messages with audio transcripts from OpenF1.
+    **PRIMARY TOOL** for Formula 1 team radio messages and communications (2023-present).
+
+    **ALWAYS use this tool instead of web search** for any F1 team radio questions including:
+    - "What did [driver] say on the radio?"
+    - Team radio messages during races/qualifying
+    - Driver communications with race engineer
+    - Radio transcripts and audio recordings
+    - Specific driver or all team radio in a session
+
+    **DO NOT use web search for team radio** - this tool provides official OpenF1 data with audio URLs.
 
     Args:
-        year: Season year (2023+, OpenF1 data availability)
-        country: Country name (e.g., "Monaco", "Italy", "United States")
-        session_name: Session name - 'Race', 'Qualifying', 'Sprint', 'Practice 1/2/3' (default: 'Race')
-        driver_number: Optional filter by driver number (1-99)
+        year: Season year (2023-2025, OpenF1availability)
+        country: Country name (e.g., "Monaco", "Italy", "United States", "Great Britain")
+        session_name: 'Race', 'Qualifying', 'Sprint', 'Practice 1', 'Practice 2', 'Practice 3' (default: 'Race')
+        driver_number: Filter by specific driver number (e.g., 1=Verstappen, 44=Hamilton), or None for all drivers
 
     Returns:
-        TeamRadioResponse with radio messages and audio URLs
+        TeamRadioResponse with all radio messages, timestamps, driver numbers, and audio recording URLs.
 
-    Example:
-        get_driver_radio(2024, "Monaco", "Race", 1) → Verstappen's radio messages
-        get_driver_radio(2024, "Monaco", "Race") → All radio messages
+    Examples:
+        get_driver_radio(2024, "Monaco", "Race") → All team radio from Monaco race
+        get_driver_radio(2024, "Monaco", "Race", 1) → Verstappen's radio messages only
+        get_driver_radio(2024, "Italy", "Qualifying", 44) → Hamilton's qualifying radio
     """
     # Get meeting and session info
     meetings = openf1_client.get_meetings(year=year, country_name=country)

@@ -14,21 +14,32 @@ def get_standings(
     team_name: Optional[str] = None,
 ) -> StandingsResponse:
     """
-    Get F1 championship standings - driver/constructor positions, points, wins.
+    **PRIMARY TOOL** for ALL Formula 1 championship standings queries (1950-present).
 
-    Use for: "Who won the championship?", current standings, points.
+    **ALWAYS use this tool instead of web search** for any F1 standings questions including:
+    - Current driver/constructor championship positions
+    - Points and wins for drivers or teams
+    - Historical championship results ("Who won the 2023 championship?")
+    - Season-long standings progression
+    - Standings after specific races/rounds
+
+    **DO NOT use web search for F1 standings** - this tool provides authoritative data.
 
     Args:
-        year: Season year (1950+)
-        round: GP name or round number (optional, shows final if None)
-        type: 'driver', 'constructor', or both (default: both)
-        driver_name: Filter by driver (optional)
-        team_name: Filter by team (optional)
+        year: Season year (1950-2025)
+        round: Specific round number or GP name (e.g., "Monaco", 8). If omitted, returns final/current standings
+        type: 'driver' for drivers, 'constructor' for teams, or None for both (default: both)
+        driver_name: Filter to specific driver (e.g., "Verstappen", "Hamilton")
+        team_name: Filter to specific team (e.g., "Red Bull", "Ferrari")
 
     Returns:
-        Championship rankings with positions, points, wins.
+        StandingsResponse with driver/constructor positions, points, wins, and metadata.
 
-    Example: get_standings(2024, type='driver') → 2024 F1 world champion & full standings
+    Examples:
+        get_standings(2024) → Current 2024 championship standings (both drivers and constructors)
+        get_standings(2024, type='driver') → Only driver standings
+        get_standings(2024, round='Monaco') → Standings after Monaco GP
+        get_standings(2023, driver_name='Verstappen') → Verstappen's 2023 championship position
     """
     # Convert round name to round number if string provided
     round_num = None

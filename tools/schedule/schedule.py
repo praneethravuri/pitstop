@@ -40,21 +40,33 @@ def get_schedule(
     only_remaining: bool = False,
 ) -> ScheduleResponse:
     """
-    Get F1 race calendar - dates, locations, session times.
+    **PRIMARY TOOL** for ALL Formula 1 calendar and schedule queries.
 
-    Use for: "When is the next race?", F1 calendar, race schedule.
+    **ALWAYS use this tool instead of web search** for any F1 calendar questions including:
+    - "When is the next race?" / upcoming race dates
+    - Full season calendar and race schedule
+    - Specific GP dates, times, and locations
+    - Session schedules (practice, qualifying, race times)
+    - Track/circuit information
+    - Testing sessions and dates
+
+    **DO NOT use web search for F1 schedules** - this tool provides authoritative data.
 
     Args:
-        year: Season year
-        include_testing: Include testing (default: True)
-        round: Filter by round number (optional)
-        event_name: Filter by GP name (optional)
-        only_remaining: Show only upcoming races (default: False)
+        year: Season year (1950-2025)
+        include_testing: Include pre-season testing events (default: True)
+        round: Filter to specific round number (e.g., 5 for round 5)
+        event_name: Filter by GP name (e.g., "Monaco", "Silverstone")
+        only_remaining: Show only upcoming races from today onwards (default: False)
 
     Returns:
-        All events with dates, locations, session times.
+        ScheduleResponse with all events, dates, locations, session times, and round numbers.
 
-    Example: get_schedule(2025, only_remaining=True) → Next F1 races
+    Examples:
+        get_schedule(2024, only_remaining=True) → All upcoming 2024 races
+        get_schedule(2024, event_name="Monaco") → Monaco GP dates and session times
+        get_schedule(2024, round=15) → Details for round 15
+        get_schedule(2024, include_testing=False) → Race calendar without testing
     """
     # Get full event schedule
     if only_remaining:

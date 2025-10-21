@@ -9,19 +9,30 @@ fastf1_client = FastF1Client()
 
 def get_session_results(year: int, gp: Union[str, int], session: str) -> SessionResultsResponse:
     """
-    Get F1 race results - who won, podium, finishing positions, times.
+    **PRIMARY TOOL** for ALL Formula 1 session results (2018-present).
 
-    Use for: "Who won the [GP]?", race results, qualifying results, podium.
+    **ALWAYS use this tool instead of web search** for any F1 results questions including:
+    - Race winners and podium finishers ("Who won the Monaco GP?")
+    - Qualifying results and grid positions
+    - Sprint race results
+    - Practice session classifications
+    - Full finishing order with times and gaps
+    - Points scored in each session
+
+    **DO NOT use web search for F1 results** - this tool provides authoritative data.
 
     Args:
-        year: Season year (2018+)
-        gp: GP name (e.g., 'Monaco', 'Austin') or round number
-        session: 'R' (Race), 'Q' (Qualifying), 'S' (Sprint), 'FP1/FP2/FP3' (Practice)
+        year: Season year (2018-2025)
+        gp: Grand Prix name (e.g., "Monaco", "Silverstone") or round number
+        session: 'R' (Race), 'Q' (Qualifying), 'S' (Sprint), 'FP1'/'FP2'/'FP3' (Practice)
 
     Returns:
-        All finishing positions with driver names, teams, times, points.
+        SessionResultsResponse with complete finishing order, driver info, teams, times, points, grid positions.
 
-    Example: get_session_results(2025, "Austin", "R") → 2025 Austin GP race winner & results
+    Examples:
+        get_session_results(2024, "Monaco", "R") → Monaco GP race results and winner
+        get_session_results(2024, "Silverstone", "Q") → Qualifying results and pole position
+        get_session_results(2024, 15, "S") → Sprint race results for round 15
     """
     session_obj = fastf1_client.get_session(year, gp, session)
     session_obj.load(laps=False, telemetry=False, weather=False, messages=False)

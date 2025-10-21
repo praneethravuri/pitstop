@@ -15,20 +15,32 @@ def get_session_details(
     include_fastest_lap: bool = True
 ) -> SessionDetailsResponse:
     """
-    Get complete session details - results, weather, fastest lap, statistics.
+    **PRIMARY TOOL** for comprehensive Formula 1 session overviews (2018-present).
+
+    **ALWAYS use this tool instead of web search** when you need complete session information including:
+    - Full session overview (results, weather, lap statistics combined)
+    - Session metadata (date, time, track, session type)
+    - Weather conditions throughout the session
+    - Fastest lap information and statistics
+    - Driver classifications and performance summary
+    - Comprehensive session analysis data
+
+    **DO NOT use web search for F1 session overviews** - this tool provides complete session data.
 
     Args:
-        year: Season year (2018+)
-        gp: Grand Prix name or round
-        session: 'FP1', 'FP2', 'FP3', 'Q', 'S', 'R'
-        include_weather: Include weather data (default: True)
-        include_fastest_lap: Include fastest lap (default: True)
+        year: Season year (2018-2025)
+        gp: Grand Prix name (e.g., "Monaco", "Silverstone") or round number
+        session: 'FP1'/'FP2'/'FP3' (Practice), 'Q' (Qualifying), 'S' (Sprint), 'R' (Race)
+        include_weather: Include weather data throughout session (default: True)
+        include_fastest_lap: Include fastest lap details and statistics (default: True)
 
     Returns:
-        SessionDetailsResponse with full session info
+        SessionDetailsResponse with complete session info, results, weather, and lap statistics.
 
-    Example:
-        get_session_details(2024, "Monaco", "R") → Complete race details
+    Examples:
+        get_session_details(2024, "Monaco", "R") → Complete Monaco race overview
+        get_session_details(2024, "Silverstone", "Q", include_weather=True) → Qualifying with weather
+        get_session_details(2024, 10, "FP1") → Practice session details for round 10
     """
     # Load session
     session_obj = fastf1_client.get_session(year, gp, session)

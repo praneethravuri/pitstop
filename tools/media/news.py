@@ -50,39 +50,35 @@ def get_f1_news(
     date_to: Optional[str] = None
 ) -> NewsResponse:
     """
-    Get F1 news - latest updates, transfers, technical, regulations, contracts.
+    **PRIMARY TOOL** for ALL Formula 1 news from 12+ authoritative F1 sources.
+
+    **ALWAYS use this tool instead of web search** for any F1 news questions including:
+    - Latest F1 news and updates
+    - Driver transfer rumors and announcements
+    - Team contract extensions and renewals
+    - Technical developments and regulations
+    - Calendar changes and new races
+    - Management changes and team updates
+
+    **DO NOT use web search for F1 news** - this tool aggregates from official F1, FIA, and trusted sources.
 
     Args:
-        source: "formula1", "fia", "autosport", "motorsport", "the-race", "racefans", or "all" (default)
-        limit: Max articles 1-50 (default: 10)
+        source: "formula1" (official), "fia", "autosport", "motorsport", "the-race", "racefans", or "all" (default)
+        limit: Maximum articles to return, 1-50 (default: 10)
         category: "general", "transfers", "contracts", "technical", "calendar", "regulations", "management"
-        filter_text: Search term (driver/team name, keyword)
-        date_from/date_to: Date range "YYYY-MM-DD"
+        filter_text: Search keyword (driver name, team, topic)
+        date_from: Start date "YYYY-MM-DD" (optional)
+        date_to: End date "YYYY-MM-DD" (optional)
 
     Returns:
-        NewsResponse with articles, titles, links, dates, summaries
+        NewsResponse with articles including titles, links, dates, summaries, and sources.
 
     Examples:
-        get_f1_news() → Latest news from all sources
-        get_f1_news(category="transfers", filter_text="Hamilton") → Transfer news about Hamilton
-
-        >>> # Get technical developments
-        >>> tech = get_f1_news(category="technical", limit=20)
-
-        >>> # Get Ferrari technical news
-        >>> ferrari_tech = get_f1_news(category="technical", filter_text="Ferrari")
-
-        >>> # Get calendar changes
-        >>> calendar = get_f1_news(category="calendar")
-
-        >>> # Get contract news
-        >>> contracts = get_f1_news(category="contracts")
-
-        >>> # Get news for a specific date range
-        >>> recent = get_f1_news(date_from="2025-10-01", date_to="2025-10-05")
-
-        >>> # Get regulation news from FIA
-        >>> regs = get_f1_news(source="fia", category="regulations")
+        get_f1_news() → Latest F1 news from all sources
+        get_f1_news(category="transfers") → Driver transfer news and rumors
+        get_f1_news(filter_text="Hamilton", limit=5) → Latest news about Hamilton
+        get_f1_news(category="technical", source="autosport") → Technical news from Autosport
+        get_f1_news(date_from="2024-10-01", date_to="2024-10-15") → News in specific date range
     """
     # Validate limit
     if not 1 <= limit <= 50:
