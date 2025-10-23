@@ -8,20 +8,12 @@ class RSSClient:
     """
     RSS client for accessing Formula 1 news feeds.
 
-    Aggregates F1 news from multiple trusted sources including:
-    - Official Formula 1 website
-    - FIA (press releases)
-    - Autosport
-    - The Race
-    - RaceFans
-    - PlanetF1
-    - Motorsport.com
-    - Crash.net
-    - GPBlog
-    - F1i.com
-    - GrandPrix.com
-    - ESPN F1
-    - Sky Sports F1
+    Aggregates F1 news from 25+ trusted sources including:
+    - Official Formula 1 website & FIA
+    - Major outlets: Autosport, Motorsport.com, The Race, RaceFans
+    - Specialist sources: F1Technical, Pitpass, Joe Saward
+    - Regional sources: GPBlog, Formel1.de, F1 Insider
+    - Community sources: WTF1, FormulaNerds, RacingNews365
     """
 
     RSS_FEEDS = {
@@ -35,14 +27,33 @@ class RSSClient:
         "the-race": "https://the-race.com/formula-1/feed/",
         "racefans": "https://www.racefans.net/feed/",
         "planetf1": "https://www.planetf1.com/feed/",
-
-        # Additional specialized sources
         "crash": "https://www.crash.net/rss/f1/news/1",
-        "gpblog": "https://www.gpblog.com/en/rss.xml",
-        "f1-insider": "https://f1i.com/feed",
         "grandprix": "https://www.grandprix.com/feed/",
         "espnf1": "https://www.espn.com/espn/rss/rpm/news",
         "skysportsf1": "https://www.skysports.com/rss/12040",
+
+        # Specialist & Technical sources
+        "f1technical": "https://www.f1technical.net/rss/news.xml",
+        "pitpass": "https://www.pitpass.com/rss",
+        "joe-saward": "https://joesaward.wordpress.com/feed/",
+        "racecar-engineering": "https://www.racecar-engineering.com/feed/",
+
+        # Regional & International sources
+        "gpblog": "https://www.gpblog.com/en/rss.xml",
+        "f1i": "https://f1i.com/feed",
+        "f1-insider-de": "https://www.f1-insider.com/feed/",
+        "formel1-de": "https://www.formel1.de/rss.xml",
+
+        # Community & Fan sources
+        "wtf1": "https://wtf1.com/feed/",
+        "racingnews365": "https://racingnews365.com/rss",
+        "formulanerds": "https://formulanerds.com/feed/",
+        "f1destinations": "https://f1destinations.com/feed/",
+        "gpfans": "https://www.gpfans.com/en/rss.xml",
+
+        # Additional coverage
+        "motorsportweek": "https://www.motorsportweek.com/feed/",
+        "racedepartment": "https://www.racedepartment.com/forums/f1-2021-the-game.214/index.rss",
     }
 
     def __init__(self):
