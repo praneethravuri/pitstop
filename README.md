@@ -53,12 +53,14 @@ Restart Claude Desktop to activate.
 
 ## 📊 Data Sources
 
-| Source               | Coverage     | Data Types                                                    |  |
-| -------------------- | ------------ | ------------------------------------------------------------- | - |
-| **FastF1**     | 2018-present | Session data, telemetry, weather, race control                |  |
-| **Ergast API** | 1950-2024    | Historical results, standings, driver/team info               |  |
-| **RSS Feeds**  | Real-time    | News from 25+ sources (F1.com, FIA, Autosport, Pitpass, etc.) |  |
-| **OpenF1 API** | 2023-present | Real-time radio, pit stops, intervals                         |  |
+| Source               | Coverage       | Data Types                                      |  |
+| -------------------- | -------------- | ----------------------------------------------- | - |
+| **FastF1**     | 2018-present   | Session data, telemetry, weather, race control  |  |
+| **Ergast API** | 1950-2024      | Historical results, standings, driver/team info |  |
+| **RSS Feeds**  | Latest F1 News | Latest news from 25+ sources                    |  |
+| **OpenF1 API** | 2023-present   | Real-time radio, pit stops, intervals           |  |
+
+> **Note:** RSS feeds only contain recent articles. For historical F1 news (e.g., 2013 Indian GP), use web search instead.
 
 ---
 
@@ -113,10 +115,10 @@ Restart Claude Desktop to activate.
 
 ### Reference & Media
 
-| Tool                   | Description                                      | Key Parameters                                                                          |
-| ---------------------- | ------------------------------------------------ | --------------------------------------------------------------------------------------- |
-| `get_reference_data` | Driver info, team details, circuits              | `reference_type`, `year?`, `name?`                                                |
-| `get_f1_news`        | F1 news from 25+ sources with flexible filtering | `source?`, `limit?`, `keywords?`, `driver?`, `team?`, `circuit?`, `year?` |
+| Tool                   | Description                         | Key Parameters                                                 |
+| ---------------------- | ----------------------------------- | -------------------------------------------------------------- |
+| `get_reference_data` | Driver info, team details, circuits | `reference_type`, `year?`, `name?`                       |
+| `get_f1_news`        | Latest F1 news                      | `source?`, `limit?`, `keywords?`, `driver?`, `team?` |
 
 **Parameter Conventions:**
 
@@ -150,10 +152,13 @@ Restart Claude Desktop to activate.
 "Show me pit stop times for all drivers"
 "What was the gap between Verstappen and Hamilton?"
 
-# News & Schedule
+# News & Schedule (Recent only)
 "What's the latest F1 news?"
+"Show me recent news about Ferrari"
+"What are the transfer rumors this week?"
 "When is the next race?"
-"Show me transfer rumors about Hamilton"
+
+# Note: For historical news (e.g., "2013 Indian GP"), use web search
 ```
 
 ---

@@ -19,48 +19,86 @@ def get_f1_news(
     date_to: Optional[str] = None
 ) -> NewsResponse:
     """
-    **PRIMARY TOOL** for ALL Formula 1 news from 25+ authoritative F1 sources.
+    **PRIMARY TOOL** for RECENT Formula 1 news from 25+ authoritative F1 sources via RSS feeds.
 
-    **ALWAYS use this tool instead of web search** for any F1 news questions including:
-    - Latest F1 news and updates from major outlets and niche sources
-    - Driver-specific news (transfers, performance, incidents)
-    - Team-specific news (technical updates, management changes)
-    - Circuit/track-specific news (race weekends, incidents)
-    - Historical news by year or date range
-    - Technical developments, regulations, calendar changes
+    ⚠️ **IMPORTANT LIMITATION**: RSS feeds only contain RECENT articles (past few days/weeks).
+    This tool CANNOT retrieve historical news from months or years ago (e.g., 2013, 2020, etc.).
 
-    **DO NOT use web search for F1 news** - this tool aggregates from official F1, FIA, and 25+ trusted sources.
+    **For historical F1 news (older than ~2 months), use web search instead.**
+
+    **USE THIS TOOL FOR:**
+    - ✅ Latest breaking F1 news and updates
+    - ✅ Current race weekend coverage
+    - ✅ Recent driver/team announcements (within past few weeks)
+    - ✅ Current season news filtering by driver, team, circuit
+    - ✅ Technical developments and regulations from recent weeks
+
+    **DO NOT use this tool for:**
+    - ❌ Historical news from past years (e.g., "2013 Indian GP", "2020 season")
+    - ❌ News older than ~2 months
+    - ❌ Historical race coverage or archived articles
+
+    **Available Sources (25+ RSS Feeds):**
+
+    Official Sources:
+    - "formula1" - Official Formula 1 website
+    - "fia" - FIA press releases
+
+    Major Outlets:
+    - "autosport" - Autosport F1
+    - "motorsport" - Motorsport.com F1
+    - "the-race" - The Race
+    - "racefans" - RaceFans.net
+    - "planetf1" - PlanetF1
+    - "crash" - Crash.net F1
+    - "grandprix" - GrandPrix.com
+    - "espnf1" - ESPN F1
+    - "skysportsf1" - Sky Sports F1
+
+    Specialist & Technical:
+    - "f1technical" - F1Technical.net
+    - "pitpass" - Pitpass
+    - "joe-saward" - Joe Saward's F1 Blog
+    - "racecar-engineering" - Racecar Engineering
+
+    Regional & International:
+    - "gpblog" - GPBlog (Dutch/English)
+    - "f1i" - F1i.com
+    - "f1-insider-de" - F1 Insider (German)
+    - "formel1-de" - Formel1.de (German)
+
+    Community & Fan Sources:
+    - "wtf1" - WTF1
+    - "racingnews365" - RacingNews365
+    - "formulanerds" - Formula Nerds
+    - "f1destinations" - F1 Destinations
+    - "gpfans" - GPFans
+    - "motorsportweek" - Motorsport Week
+    - "racedepartment" - Race Department
 
     Args:
-        source: Specific source or "all" (default). Available sources include:
-            - Official: "formula1", "fia"
-            - Major: "autosport", "motorsport", "the-race", "racefans", "planetf1"
-            - Specialist: "f1technical", "pitpass", "joe-saward", "racecar-engineering"
-            - Regional: "gpblog", "f1i", "f1-insider-de", "formel1-de"
-            - Community: "wtf1", "racingnews365", "formulanerds", "gpfans"
-            - And more... (use "all" to search across all 25+ sources)
+        source: Specific source or "all" (default) - see full list above
         limit: Maximum articles to return, 1-100 (default: 10)
         keywords: General search keywords (searches in title and summary)
         driver: Filter by driver name (e.g., "Verstappen", "Hamilton", "Leclerc")
         team: Filter by team/constructor name (e.g., "Red Bull", "Ferrari", "Mercedes")
         circuit: Filter by circuit/track name (e.g., "Monaco", "Silverstone", "Spa")
-        year: Filter by year (e.g., 2024, 2023) - simpler than date range for historical queries
-        date_from: Start date "YYYY-MM-DD" or "YYYY-MM" (optional, for precise date ranges)
-        date_to: End date "YYYY-MM-DD" or "YYYY-MM" (optional, for precise date ranges)
+        year: Filter by year (e.g., 2024) - NOTE: Only works for current/recent articles in feed
+        date_from: Start date "YYYY-MM-DD" or "YYYY-MM" (optional)
+        date_to: End date "YYYY-MM-DD" or "YYYY-MM" (optional)
 
     Returns:
-        NewsResponse with articles including titles, links, dates, summaries, and sources.
+        NewsResponse with articles including titles, links, publication dates, summaries, and source names.
+        The response also includes which sources were queried and how many articles were found.
 
     Examples:
         get_f1_news() → Latest F1 news from all 25+ sources
-        get_f1_news(driver="Verstappen", limit=5) → Latest news about Verstappen
-        get_f1_news(team="Ferrari", year=2024) → Ferrari news from 2024
-        get_f1_news(circuit="Monaco", year=2024) → Monaco GP 2024 news
-        get_f1_news(keywords="crash OR incident", year=2024) → Crash/incident news from 2024
-        get_f1_news(driver="Hamilton", team="Ferrari") → News about Hamilton and Ferrari
+        get_f1_news(driver="Verstappen", limit=5) → Recent news about Verstappen
+        get_f1_news(team="Ferrari") → Recent Ferrari news
+        get_f1_news(circuit="Monaco") → Recent Monaco-related news
+        get_f1_news(keywords="crash OR incident") → Recent crash/incident news
         get_f1_news(source="autosport", keywords="technical") → Technical news from Autosport
-        get_f1_news(date_from="2024-10", date_to="2024-10") → October 2024 news
-        get_f1_news(circuit="Spa", keywords="weather") → Spa weather-related news
+        get_f1_news(driver="Hamilton", team="Ferrari") → News about Hamilton and Ferrari
     """
     # Validate limit
     if not 1 <= limit <= 100:
