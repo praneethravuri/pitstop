@@ -1,7 +1,7 @@
 [project]
 name = "pitstop"
 version = "0.1.0"
-description = "Add your description here"
+description = "All-in-one F1 MCP Server"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
@@ -10,4 +10,5 @@ dependencies = [
     "httpx>=0.28.1",
     "mcp[cli]>=1.16.0",
     "pydantic>=2.11.10",
+    "python-dotenv>=1.0.0",
 ]

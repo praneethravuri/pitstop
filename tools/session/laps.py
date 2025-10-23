@@ -52,21 +52,35 @@ def get_laps(
     lap_type: Optional[Literal["all", "fastest"]] = "all"
 ) -> Union[LapsResponse, FastestLapResponse]:
     """
-    Get lap data - all laps, driver-specific, or fastest laps with times and sectors.
+    **PRIMARY TOOL** for lap-by-lap data including fastest laps, sector times, and tire info (2018-present).
+
+    **ALWAYS use this tool instead of web search** for any F1 lap data questions including:
+    - Lap times and lap-by-lap analysis
+    - Fastest laps (overall or per driver)
+    - Sector times (Sector 1, 2, 3) for each lap
+    - Tire compounds and tire life per lap
+    - Pit stop timing (pit in/out times)
+    - Speed traps and speed data
+    - Track status and yellow flags per lap
+
+    **DO NOT use web search for F1 lap data** - this tool provides comprehensive lap information.
 
     Args:
-        year: Season year (2018+)
-        gp: Grand Prix name or round
-        session: 'FP1', 'FP2', 'FP3', 'Q', 'S', 'R'
-        driver: Driver code/number (optional, all if None)
-        lap_type: 'all' or 'fastest' (default: 'all')
+        year: Season year (2018-2025)
+        gp: Grand Prix name (e.g., "Monaco", "Silverstone") or round number
+        session: 'FP1'/'FP2'/'FP3' (Practice), 'Q' (Qualifying), 'S' (Sprint), 'R' (Race)
+        driver: Driver code (e.g., "VER", "HAM") or number (optional, returns all drivers if None)
+        lap_type: 'all' for all laps or 'fastest' for fastest lap only (default: 'all')
 
     Returns:
-        LapsResponse or FastestLapResponse with lap times, sectors, compounds
+        LapsResponse with all laps OR FastestLapResponse with single fastest lap.
+        Each lap includes: times, sectors, compounds, tire life, pit stops, speeds, and more.
 
     Examples:
-        get_laps(2024, "Monza", "R") → All laps from race
-        get_laps(2024, "Monaco", "Q", lap_type="fastest") → Fastest overall lap
+        get_laps(2024, "Monza", "R") → All laps from race with full data
+        get_laps(2024, "Monaco", "Q", driver="LEC") → All Leclerc's qualifying laps
+        get_laps(2024, "Monaco", "Q", lap_type="fastest") → Overall fastest lap
+        get_laps(2024, "Silverstone", "R", driver="VER", lap_type="fastest") → Verstappen's fastest race lap
     """
     # Load session with lap data
     session_obj = fastf1_client.get_session(year, gp, session)

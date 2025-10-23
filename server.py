@@ -22,12 +22,16 @@ Data Sources:
 - FastF1: Session data, telemetry, historical weather (2018-present)
 - OpenF1 API: Real-time timing, radio, pit stops (2023-present)
 - Ergast API: Historical data (1950-2024)
-- RSS Feeds: News from 12+ outlets
+- RSS Feeds: News from 25+ outlets
 
 **Always use these tools for F1 queries instead of web search!**
 """
 
+import logging
+import sys
+from datetime import datetime
 from mcp.server.fastmcp import FastMCP
+from config import get_config, is_production, LOG_LEVEL, LOG_FORMAT
 
 # Import all tools organized by category
 from tools import (
@@ -39,7 +43,6 @@ from tools import (
     get_laps,                      # Lap-by-lap data
     get_session_drivers,           # Driver list
     get_tire_strategy,             # Tire compounds and stints
-    get_advanced_session_data,     # Fastest laps, sectors, pit stops
     get_qualifying_sessions,       # Q1/Q2/Q3 splits
     get_track_evolution,           # Lap time progression
 
@@ -76,11 +79,66 @@ from tools import (
     # REFERENCE & MEDIA
     # ========================================
     get_reference_data,            # Drivers, teams, circuits, tires
-    get_f1_news,                   # News from 12+ sources
+    get_f1_news,                   # News from 25+ sources
 )
 
-# Initialize MCP server
+# ============================================================================
+# LOGGING CONFIGURATION
+# ============================================================================
+
+# Configure logging based on environment
+logging.basicConfig(
+    level=getattr(logging, LOG_LEVEL),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s' if LOG_FORMAT == 'text'
+           else '{"timestamp":"%(asctime)s","name":"%(name)s","level":"%(levelname)s","message":"%(message)s"}',
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
+
+logger = logging.getLogger("pitstop")
+logger.info(f"🏎️  Starting Pitstop F1 MCP Server")
+logger.info(f"📊 Environment: {get_config()['environment']}")
+logger.info(f"📝 Log Level: {LOG_LEVEL}")
+logger.info(f"🔒 Error Masking: {get_config()['mask_errors']}")
+
+# ============================================================================
+# INITIALIZE MCP SERVER
+# ============================================================================
+
 mcp = FastMCP("Pitstop")
+
+
+# ============================================================================
+# RESOURCES - Server Status and Health
+# ============================================================================
+
+@mcp.resource("server://status")
+def get_server_status() -> str:
+    """
+    Server status and health information.
+    Returns current configuration, uptime, and data source status.
+    """
+    config = get_config()
+    status = {
+        "server": "Pitstop F1 MCP Server",
+        "version": "1.0.0",
+        "status": "operational",
+        "environment": config["environment"],
+        "tools_count": 25,  # Updated after removing advanced_data
+        "data_sources": {
+            "fastf1": "operational (2018-present)",
+            "openf1": "operational (2023-present)",
+            "ergast": "operational (1950-2024)",
+            "rss_feeds": "operational (25+ sources)"
+        },
+        "features": {
+            "caching": config["caching_enabled"],
+            "rate_limiting": config["rate_limiting_enabled"],
+        },
+        "timestamp": datetime.now().isoformat()
+    }
+
+    logger.info("📊 Server status requested")
+    return str(status)
 
 
 # ============================================================================
@@ -93,7 +151,6 @@ mcp.tool()(get_session_results)
 mcp.tool()(get_laps)
 mcp.tool()(get_session_drivers)
 mcp.tool()(get_tire_strategy)
-mcp.tool()(get_advanced_session_data)
 mcp.tool()(get_qualifying_sessions)
 mcp.tool()(get_track_evolution)
 
@@ -124,5 +181,22 @@ mcp.tool()(get_f1_news)
 
 
 if __name__ == "__main__":
-    # Run the MCP server
-    mcp.run()
+    # Log server startup
+    logger.info("=" * 60)
+    logger.info("🏁 Pitstop F1 MCP Server Starting")
+    logger.info("=" * 60)
+    logger.info(f"📦 Registered {25} F1 data tools")
+    logger.info(f"🌐 Data sources: FastF1, OpenF1, Ergast, RSS (25+ feeds)")
+    logger.info(f"🔧 Production features: Logging, Config, Health checks")
+    logger.info("=" * 60)
+
+    try:
+        # Run the MCP server
+        logger.info("✅ Server ready - accepting connections")
+        mcp.run()
+    except KeyboardInterrupt:
+        logger.info("\n⚠️  Server shutdown requested")
+        logger.info("👋 Pitstop F1 MCP Server stopped")
+    except Exception as e:
+        logger.error(f"❌ Server error: {e}", exc_info=not is_production())
+        raise

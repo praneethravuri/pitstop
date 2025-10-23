@@ -5,7 +5,6 @@ from .session import (
     get_laps,
     get_session_drivers,
     get_tire_strategy,
-    get_advanced_session_data,
     get_qualifying_sessions,
     get_track_evolution,
 )
@@ -50,7 +49,6 @@ __all__ = [
     "get_laps",
     "get_session_drivers",
     "get_tire_strategy",
-    "get_advanced_session_data",
     "get_qualifying_sessions",
     "get_track_evolution",
     # Telemetry

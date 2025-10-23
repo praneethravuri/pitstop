@@ -26,12 +26,6 @@ from .tire_strategy import (
     TireStint,
     TireStrategyResponse,
 )
-from .advanced_data import (
-    FastestLapData,
-    SectorData,
-    PitStopData,
-    AdvancedSessionDataResponse,
-)
 
 __all__ = [
     "SessionDetailsResponse",
@@ -50,8 +44,4 @@ __all__ = [
     "SessionDriversResponse",
     "TireStint",
     "TireStrategyResponse",
-    "FastestLapData",
-    "SectorData",
-    "PitStopData",
-    "AdvancedSessionDataResponse",
 ]
