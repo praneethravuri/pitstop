@@ -6,6 +6,10 @@
 
 **Production-ready MCP server** with 25 optimized F1 data tools, comprehensive logging, health checks, and flexible configuration. Aggregates data from 4 free sources (FastF1, OpenF1, Ergast, 25+ RSS feeds) covering Formula 1 from 1950 to present.
 
+<a href="https://glama.ai/mcp/servers/@praneethravuri/pitstop">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@praneethravuri/pitstop/badge" alt="Pitstop MCP server" />
+</a>
+
 ---
 
 ## 🚀 Quick Start
