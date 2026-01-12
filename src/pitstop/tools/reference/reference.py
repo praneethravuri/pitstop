@@ -9,7 +9,6 @@ from pitstop.models.reference import (
     CornerInfo,
 )
 from datetime import datetime
-import fastf1
 import pandas as pd
 
 # Initialize FastF1 client
@@ -162,10 +161,10 @@ def get_reference_data(
                     # This is heavy, so we only do it if explicitly filtered by name
                     try:
                         session_obj = fastf1_client.get_session(search_year, circuit_info.location, 'R')
-                    except:
+                    except Exception:
                         try:
                             session_obj = fastf1_client.get_session(search_year, circuit_info.circuit_name, 'R')
-                        except:
+                        except Exception:
                             session_obj = None # Skip if not found
 
                     if session_obj:
@@ -187,7 +186,7 @@ def get_reference_data(
                             circuit_info.corners = corners_list
                             if hasattr(detailed_info, 'rotation'):
                                 circuit_info.rotation = float(detailed_info.rotation)
-                except Exception as e:
+                except Exception:
                     # Ignore errors in enrichment, just return basic info
                     pass
 

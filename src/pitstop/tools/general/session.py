@@ -1,12 +1,10 @@
 from typing import List, Optional, Union, Literal
 from pydantic import BaseModel
 from pitstop.clients.fastf1_client import FastF1Client
-from pitstop.models.sessions.session_details import SessionDetailsResponse, SessionInfo, SessionWeather, DriverSessionResult, LapInfo
+from pitstop.models.sessions.session_details import SessionDetailsResponse, SessionInfo, SessionWeather, LapInfo
 from pitstop.models.sessions.results import SessionResultsResponse, SessionResult
 from pitstop.models.sessions.drivers import SessionDriversResponse, DriverInfo
 from pitstop.models.weather.session_weather import SessionWeatherDataResponse, WeatherPoint
-from datetime import datetime
-import pandas as pd
 
 fastf1_client = FastF1Client()
 
@@ -50,7 +48,7 @@ def get_session_data(
              rainfall = session_obj.weather_data['Rainfall'].any()
 
         # Get results for classification
-        results_list = []
+
         if hasattr(session_obj, 'results'):
              for drv in session_obj.results:
                   # Convert FastF1 result to model

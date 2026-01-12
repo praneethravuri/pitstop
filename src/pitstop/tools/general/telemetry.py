@@ -90,7 +90,7 @@ def get_telemetry_data(
                     total_points=len(points),
                     lap_time=str(selected_lap['LapTime'])
                 ))
-            except Exception as e:
+            except Exception:
                 pass
                 
     return TelemetryDataResponse(drivers_telemetry=telemetry_list)

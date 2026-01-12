@@ -60,9 +60,48 @@ uv run pitstop
 
 To run with Docker Compose:
 
-```bash
-docker-compose up -d
+### 5. Client Configuration
+
+To use Pitstop with MCP clients like Antigravity, Claude Desktop, or Claude Code, add the following to your configuration file (e.g., `claude_desktop_config.json` or `mcp.json`).
+
+#### Option A: Docker (Recommended)
+
+```json
+{
+  "mcpServers": {
+    "pitstop": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "pitstop"],
+      "env": {
+        "PITSTOP_ENV": "production"
+      }
+    }
+  }
+}
 ```
+
+#### Option B: Local (`uv`)
+
+```json
+{
+  "mcpServers": {
+    "pitstop": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "/absolute/path/to/pitstop", 
+        "pitstop"
+      ],
+      "env": {
+        "PITSTOP_ENV": "production"
+      }
+    }
+  }
+}
+```
+
+> **Note**: Replace `/absolute/path/to/pitstop` with the actual path to your cloned repository.
 
 Or manually using python:
 

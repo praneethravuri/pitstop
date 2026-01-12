@@ -1,5 +1,5 @@
 from pitstop.clients.fastf1_client import FastF1Client
-from typing import Optional, Union
+from typing import Optional
 from pitstop.models.schedule import ScheduleResponse, EventInfo
 from datetime import datetime
 import pandas as pd

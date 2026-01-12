@@ -5,7 +5,6 @@ Supports development and production environments.
 
 import os
 from pathlib import Path
-from typing import Literal
 from dotenv import load_dotenv
 
 # Load environment variables from .env file

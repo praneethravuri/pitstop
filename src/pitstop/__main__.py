@@ -31,7 +31,7 @@ import logging
 import sys
 from datetime import datetime
 from fastmcp import FastMCP
-from pitstop.config import get_config, is_production, LOG_LEVEL, LOG_FORMAT
+from pitstop.config import get_config, LOG_LEVEL, LOG_FORMAT
 
 # Import all tools organized by category
 from pitstop.tools import (
@@ -72,7 +72,7 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger("pitstop")
-logger.info(f"🏎️  Starting Pitstop F1 MCP Server")
+logger.info("🏎️  Starting Pitstop F1 MCP Server")
 
 # ============================================================================
 # INITIALIZE MCP SERVER

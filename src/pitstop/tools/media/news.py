@@ -1,5 +1,7 @@
 from pitstop.clients.rss_client import RSSClient
-from pitstop.models.news_and_updates import F1NewsResponse, NewsArticle, NewsResponse
+from pitstop.models.news_and_updates import NewsResponse
+from typing import Optional
+from datetime import datetime, timedelta
 
 # Initialize RSS client
 rss_client = RSSClient()

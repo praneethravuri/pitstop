@@ -21,7 +21,6 @@ Available endpoints:
 import httpx
 import time
 from typing import Optional, Any
-from datetime import datetime
 
 
 class OpenF1Client:

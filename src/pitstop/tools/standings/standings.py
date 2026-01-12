@@ -174,7 +174,7 @@ if __name__ == "__main__":
     print("\n1. Getting 2024 Driver Championship standings:")
     standings = get_standings(2024, type='driver')
     if standings.drivers:
-        print(f"   Top 5 drivers:")
+        print("   Top 5 drivers:")
         for i in range(min(5, len(standings.drivers))):
             driver = standings.drivers[i]
             print(f"   {driver.position}. {driver.given_name} {driver.family_name} - {driver.points} pts ({driver.wins} wins)")
@@ -183,7 +183,7 @@ if __name__ == "__main__":
     print("\n2. Getting 2024 Constructor Championship standings:")
     const_standings = get_standings(2024, type='constructor')
     if const_standings.constructors:
-        print(f"   Top 3 constructors:")
+        print("   Top 3 constructors:")
         for i in range(min(3, len(const_standings.constructors))):
             constructor = const_standings.constructors[i]
             print(f"   {constructor.position}. {constructor.constructor_name} - {constructor.points} pts")
