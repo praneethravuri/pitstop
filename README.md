@@ -56,6 +56,14 @@ Run the MCP server directly using `uv`:
 uv run pitstop
 ```
 
+### 4. Docker Deployment
+
+To run with Docker Compose:
+
+```bash
+docker-compose up -d
+```
+
 Or manually using python:
 
 ```bash

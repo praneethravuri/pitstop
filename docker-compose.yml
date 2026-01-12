@@ -1,0 +1,21 @@
+services:
+  pitstop:
+    build: .
+    image: pitstop:latest
+    container_name: pitstop-mcp
+    environment:
+      - PITSTOP_ENV=production
+      - PITSTOP_LOG_LEVEL=INFO
+    # Mount .env if present, but don't fail if missing
+    env_file:
+      - path: .env
+        required: false
+    # MCP runs on stdio by default, but if we add SSE later:
+    # ports:
+    #   - "8000:8000"
+    restart: unless-stopped
+    volumes:
+      - pitstop_cache:/app/cache
+
+volumes:
+  pitstop_cache:
