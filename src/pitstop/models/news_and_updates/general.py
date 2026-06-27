@@ -1,5 +1,7 @@
 from pydantic import BaseModel, ConfigDict, Field
 
+from pitstop.models.common import PageMeta
+
 
 class NewsArticle(BaseModel):
     """Individual news article from RSS feed."""
@@ -26,3 +28,4 @@ class NewsResponse(BaseModel):
     failed_feeds: list[str] = Field(
         default_factory=list, description="Feed names that failed to fetch"
     )
+    pagination: PageMeta | None = Field(None, description="Pagination metadata")
