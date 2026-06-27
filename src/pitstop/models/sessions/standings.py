@@ -2,6 +2,8 @@ from datetime import date
 
 from pydantic import BaseModel, Field
 
+from pitstop.models.common import PageMeta
+
 
 class DriverStanding(BaseModel):
     """Individual driver championship standing."""
@@ -44,3 +46,4 @@ class StandingsResponse(BaseModel):
     constructors: list[ConstructorStanding] | None = Field(
         None, description="Constructor standings"
     )
+    pagination: PageMeta | None = Field(None, description="Pagination metadata")

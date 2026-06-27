@@ -1,5 +1,7 @@
 from pydantic import BaseModel, Field
 
+from pitstop.models.common import PageMeta
+
 
 class EventInfo(BaseModel):
     """Information about an F1 event (race weekend or testing)."""
@@ -46,3 +48,4 @@ class ScheduleResponse(BaseModel):
     only_remaining: bool = Field(
         default=False, description="Whether only remaining events are shown"
     )
+    pagination: PageMeta | None = Field(None, description="Pagination metadata")
