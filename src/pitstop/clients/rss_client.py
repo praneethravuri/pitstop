@@ -1,8 +1,13 @@
+import logging
 from datetime import datetime
 
 import feedparser
-from models import NewsArticle, NewsResponse
-from utils import clean_html
+
+from pitstop.exceptions import DataSourceError
+from pitstop.models.news_and_updates.general import NewsArticle, NewsResponse
+from pitstop.utils.text_cleaner import clean_html
+
+logger = logging.getLogger("pitstop.rss")
 
 
 class RSSClient:
@@ -69,9 +74,8 @@ class RSSClient:
 
         Raises:
             ValueError: If source is invalid
-            RuntimeError: If feed fetch fails
+            DataSourceError: If feed fetch fails
         """
-        # Validate source
         if source != "all" and source not in self.RSS_FEEDS:
             valid_sources = ", ".join(self.RSS_FEEDS.keys())
             raise ValueError(f"Invalid source '{source}'. Must be one of: {valid_sources}, all")
@@ -83,8 +87,10 @@ class RSSClient:
                 return self._fetch_single_source(source, limit)
         except ValueError:
             raise
+        except DataSourceError:
+            raise
         except Exception as e:
-            raise RuntimeError(f"Failed to fetch news from {source}: {str(e)}")
+            raise DataSourceError("rss", f"fetch:{source}", str(e))
 
     def _fetch_single_source(self, source: str, limit: int) -> NewsResponse:
         """Fetch from a single RSS source."""
@@ -118,20 +124,21 @@ class RSSClient:
 
     def _fetch_all_sources(self, limit: int) -> NewsResponse:
         """Fetch from all RSS sources and aggregate."""
-        all_articles = []
+        all_articles: list[NewsArticle] = []
+        failed_feeds: list[str] = []
 
         for source in self.RSS_FEEDS.keys():
             try:
                 result = self._fetch_single_source(source, limit)
                 all_articles.extend(result.articles)
-            except Exception:
-                # Skip failed sources when aggregating
-                continue
+            except Exception as e:
+                logger.warning("RSS feed failed: %s (%s) — %s", source, self.RSS_FEEDS[source], e)
+                failed_feeds.append(source)
 
         if not all_articles:
-            raise RuntimeError("Failed to fetch articles from all sources")
+            reason = f"all {len(failed_feeds)} feeds failed"
+            raise DataSourceError("rss", "fetch", reason)
 
-        # Sort by source and limit total
         all_articles = all_articles[: limit * len(self.RSS_FEEDS)]
 
         return NewsResponse(
@@ -139,4 +146,5 @@ class RSSClient:
             fetched_at=datetime.now().isoformat(),
             article_count=len(all_articles),
             articles=all_articles,
+            failed_feeds=failed_feeds,
         )
