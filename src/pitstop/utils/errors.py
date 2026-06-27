@@ -12,5 +12,5 @@ def to_tool_error(operation: str, source: str, exc: Exception, hint: str = "") -
     msg = f"[{source}] {operation} failed: {exc_type}: {exc}"
     if hint:
         msg = f"{msg}. {hint}"
-    logger.error(msg, exc_info=True)
+    logger.error(msg, exc_info=exc)
     return ToolError(msg)
