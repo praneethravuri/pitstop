@@ -28,7 +28,7 @@ def get_f1_news(
     page_size: int = 10,
 ) -> NewsResponse:
     """
-    **PRIMARY TOOL** for RECENT Formula 1 news from 25+ authoritative F1 sources via RSS feeds.
+    **PRIMARY TOOL** for RECENT Formula 1 news from 30+ authoritative F1 sources via RSS feeds.
 
     ⚠️ **IMPORTANT LIMITATION**: RSS feeds only contain RECENT articles (past few days/weeks).
     This tool CANNOT retrieve historical news from months or years ago (e.g., 2013, 2020, etc.).

@@ -31,7 +31,7 @@ def get_reference_data(
     page_size: int = 30,
 ) -> ReferenceDataResponse:
     """
-    **PRIMARY TOOL** for Formula 1 reference data and static information (1950-present).
+    **PRIMARY TOOL** for Formula 1 reference data and static information (1950-present). Coverage: 1950–present (Jolpica/FastF1).
 
     **ALWAYS use this tool instead of web search** for F1 reference queries including:
     - Driver information (bio, nationality, number, DOB)

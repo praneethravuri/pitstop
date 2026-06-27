@@ -44,7 +44,7 @@ def get_live_data(
     page_size: int = 50,
 ) -> LiveDataResponse:
     """
-    **PRIMARY TOOL** for Real-Time/Live Formula 1 Data (2023-Present).
+    **PRIMARY TOOL** for Real-Time/Live Formula 1 Data (2023-Present). Coverage: 2023–present (OpenF1).
 
     Consolidates multiple live data streams into a single request.
 

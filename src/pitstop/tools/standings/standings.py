@@ -23,7 +23,7 @@ def get_standings(
     page_size: int = 30,
 ) -> StandingsResponse:
     """
-    **PRIMARY TOOL** for ALL Formula 1 championship standings queries (1950-present).
+    **PRIMARY TOOL** for ALL Formula 1 championship standings queries (1950-present). Coverage: 1950–present (Jolpica/FastF1).
 
     **ALWAYS use this tool instead of web search** for any F1 standings questions including:
     - Current driver/constructor championship positions

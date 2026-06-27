@@ -35,7 +35,7 @@ def get_telemetry_data(
     page_size: int = 20,
 ) -> TelemetryDataResponse:
     """
-    Get telemetry data for one or more drivers.
+    Get telemetry data for one or more drivers. Coverage: 2018–present (FastF1).
 
     Args:
         year: Season year

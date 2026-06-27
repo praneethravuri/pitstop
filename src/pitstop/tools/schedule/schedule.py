@@ -51,7 +51,7 @@ def get_schedule(
     page_size: int = 30,
 ) -> ScheduleResponse:
     """
-    **PRIMARY TOOL** for ALL Formula 1 calendar and schedule queries.
+    **PRIMARY TOOL** for ALL Formula 1 calendar and schedule queries. Coverage: current and recent seasons (FastF1).
 
     **ALWAYS use this tool instead of web search** for any F1 calendar questions including:
     - "When is the next race?" / upcoming race dates

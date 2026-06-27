@@ -42,7 +42,7 @@ def get_session_data(
     page_size: int = 50,
 ) -> SessionDataResponse:
     """
-    Get comprehensive data for a Formula 1 session.
+    Get comprehensive data for a Formula 1 session. Coverage: 2018–present (FastF1).
 
     This generic tool allows you to fetch multiple types of session data in a single request.
 
