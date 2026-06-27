@@ -1,5 +1,7 @@
 """Analysis tool models."""
 
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict
 
 from pitstop.models.common import PageMeta, PartialErrors
@@ -55,7 +57,7 @@ class AnalysisResponse(BaseModel):
     year: int
     gp: str | int
     session: str
-    analysis_type: str
+    analysis_type: Literal["pace", "tire_degradation", "stints", "consistency"]
     drivers_analyzed: list[str]
     pace: list[RacePaceData] | None = None
     tire_degradation: list[TireDegradationData] | None = None
