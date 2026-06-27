@@ -1,1 +1,3 @@
-# ponytail: stubs removed; Task 9 will re-add these when the modules exist
+from pitstop.tools.live.live_data import get_live_data
+
+__all__ = ["get_live_data"]
