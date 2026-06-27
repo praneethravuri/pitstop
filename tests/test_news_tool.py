@@ -1,10 +1,10 @@
-"""Tests for tools/media/news.py — TDD-first."""
+"""Tests for tools/news/news.py — TDD-first."""
 
 import logging
 from unittest.mock import patch
 
-from pitstop.models.news_and_updates import NewsArticle, NewsResponse
-from pitstop.tools.media.news import get_f1_news
+from pitstop.tools.news.models import NewsArticle, NewsResponse
+from pitstop.tools.news.news import get_f1_news
 
 
 def _article(title, summary="", published="2024-05-26T12:00:00+00:00", source="autosport"):
@@ -23,7 +23,7 @@ def _make_news_response(*articles):
     )
 
 
-@patch("pitstop.tools.media.news.rss_client")
+@patch("pitstop.tools.news.news.rss_client")
 def test_driver_filter(mock_rss):
     articles = [
         _article("Hamilton wins in Monaco", summary="Lewis Hamilton took victory"),
@@ -37,7 +37,7 @@ def test_driver_filter(mock_rss):
     assert "Hamilton" in result.articles[0].title
 
 
-@patch("pitstop.tools.media.news.rss_client")
+@patch("pitstop.tools.news.news.rss_client")
 def test_team_filter(mock_rss):
     articles = [
         _article("Red Bull strategy pays off", summary="Red Bull Racing claim 1-2"),
@@ -51,7 +51,7 @@ def test_team_filter(mock_rss):
     assert "Red Bull" in result.articles[0].title
 
 
-@patch("pitstop.tools.media.news.rss_client")
+@patch("pitstop.tools.news.news.rss_client")
 def test_bad_date_skipped_with_warning(mock_rss, caplog):
     articles = [
         _article("Good article", published="2024-05-26T12:00:00+00:00"),
@@ -68,7 +68,7 @@ def test_bad_date_skipped_with_warning(mock_rss, caplog):
     assert any("date" in r.message.lower() for r in caplog.records)
 
 
-@patch("pitstop.tools.media.news.rss_client")
+@patch("pitstop.tools.news.news.rss_client")
 def test_pagination(mock_rss):
     articles = [_article(f"Article {i}") for i in range(5)]
     mock_rss.get_news.return_value = _make_news_response(*articles)
@@ -84,7 +84,7 @@ def test_pagination(mock_rss):
     assert result.pagination.has_next is True
 
 
-@patch("pitstop.tools.media.news.rss_client")
+@patch("pitstop.tools.news.news.rss_client")
 def test_limit_legacy_param(mock_rss):
     articles = [_article(f"Article {i}") for i in range(10)]
     mock_rss.get_news.return_value = _make_news_response(*articles)

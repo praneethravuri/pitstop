@@ -6,7 +6,7 @@ from fastmcp.exceptions import ToolError
 
 from pitstop.clients.fastf1_client import FastF1Client
 from pitstop.exceptions import DataSourceError
-from pitstop.models.sessions.standings import ConstructorStanding, DriverStanding, StandingsResponse
+from pitstop.tools.standings.models import ConstructorStanding, DriverStanding, StandingsResponse
 from pitstop.utils import filter_by_name, paginate, to_tool_error
 
 logger = logging.getLogger("pitstop.standings")

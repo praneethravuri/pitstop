@@ -7,7 +7,7 @@ from fastmcp.exceptions import ToolError
 
 from pitstop.clients.fastf1_client import FastF1Client
 from pitstop.exceptions import DataSourceError
-from pitstop.models.reference import (
+from pitstop.tools.reference.models import (
     CircuitInfo,
     ConstructorInfo,
     CornerInfo,

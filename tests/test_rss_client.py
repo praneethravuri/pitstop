@@ -7,7 +7,7 @@ import pytest
 
 from pitstop.clients.rss_client import RSSClient
 from pitstop.exceptions import DataSourceError
-from pitstop.models.news_and_updates.general import NewsArticle, NewsResponse
+from pitstop.tools.news.models import NewsArticle, NewsResponse
 
 # ---------------------------------------------------------------------------
 # Helpers

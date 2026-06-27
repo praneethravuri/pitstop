@@ -4,7 +4,7 @@ from datetime import datetime
 import feedparser
 
 from pitstop.exceptions import DataSourceError
-from pitstop.models.news_and_updates.general import NewsArticle, NewsResponse
+from pitstop.tools.news.models import NewsArticle, NewsResponse
 from pitstop.utils.text_cleaner import clean_html
 
 logger = logging.getLogger("pitstop.rss")

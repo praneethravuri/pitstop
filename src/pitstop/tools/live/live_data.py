@@ -4,7 +4,7 @@ from typing import Literal
 from pitstop.clients import openf1_client
 from pitstop.exceptions import DataSourceError
 from pitstop.models.common import PartialErrors
-from pitstop.models.live.openf1 import (
+from pitstop.tools.live.models import (
     IntervalData,
     IntervalsResponse,
     LiveDataResponse,
