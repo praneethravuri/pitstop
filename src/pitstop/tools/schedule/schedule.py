@@ -6,7 +6,7 @@ from fastmcp.exceptions import ToolError
 
 from pitstop.clients.fastf1_client import FastF1Client
 from pitstop.exceptions import DataSourceError
-from pitstop.models.schedule import EventInfo, ScheduleResponse
+from pitstop.tools.schedule.models import EventInfo, ScheduleResponse
 from pitstop.utils import filter_by_name, paginate, to_tool_error
 
 logger = logging.getLogger("pitstop.schedule")
@@ -35,9 +35,7 @@ def _row_to_event_info(row) -> EventInfo:
         session_3_name=str(row["Session3"]) if pd.notna(row.get("Session3")) else None,
         session_4_name=str(row["Session4"]) if pd.notna(row.get("Session4")) else None,
         session_5_name=str(row["Session5"]) if pd.notna(row.get("Session5")) else None,
-        is_testing=bool(row.get("EventFormat") == "testing")
-        if pd.notna(row.get("EventFormat"))
-        else False,
+        is_testing=row.get("EventFormat") == "testing",
     )
 
 
@@ -51,7 +49,7 @@ def get_schedule(
     page_size: int = 30,
 ) -> ScheduleResponse:
     """
-    **PRIMARY TOOL** for ALL Formula 1 calendar and schedule queries.
+    **PRIMARY TOOL** for ALL Formula 1 calendar and schedule queries. Coverage: current and recent seasons (FastF1).
 
     **ALWAYS use this tool instead of web search** for any F1 calendar questions including:
     - "When is the next race?" / upcoming race dates
@@ -83,6 +81,11 @@ def get_schedule(
     """
     try:
         if only_remaining:
+            if year != datetime.now().year:
+                raise ToolError(
+                    f"only_remaining=True only works for the current season ({datetime.now().year}). "
+                    f"For {year}, use only_remaining=False."
+                )
             schedule_df = fastf1_client.get_events_remaining(
                 dt=datetime.now(), include_testing=include_testing
             )

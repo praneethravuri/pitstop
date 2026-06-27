@@ -4,7 +4,7 @@ from typing import Literal
 from pitstop.clients import openf1_client
 from pitstop.exceptions import DataSourceError
 from pitstop.models.common import PartialErrors
-from pitstop.models.live.openf1 import (
+from pitstop.tools.live.models import (
     IntervalData,
     IntervalsResponse,
     LiveDataResponse,
@@ -44,7 +44,7 @@ def get_live_data(
     page_size: int = 50,
 ) -> LiveDataResponse:
     """
-    **PRIMARY TOOL** for Real-Time/Live Formula 1 Data (2023-Present).
+    **PRIMARY TOOL** for Real-Time/Live Formula 1 Data (2023-Present). Coverage: 2023–present (OpenF1).
 
     Consolidates multiple live data streams into a single request.
 
@@ -97,11 +97,10 @@ def get_live_data(
 
         try:
             raw = openf1_client.query(endpoint, **filters)
-        except DataSourceError as e:
+            all_items = [Model.model_validate(d) for d in raw]
+        except (DataSourceError, Exception) as e:
             partial_errors.add(dtype, "openf1", e)
             continue
-
-        all_items = [Model.model_validate(d) for d in raw]
         items, _ = paginate(all_items, page, page_size)
 
         if dtype == "intervals":

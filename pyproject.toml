@@ -1,6 +1,6 @@
 [project]
 name = "pitstop"
-version = "0.2.0"
+version = "0.3.0"
 description = "All-in-one F1 MCP Server"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -25,9 +25,9 @@ pitstop = "pitstop.server:main"
 
 [dependency-groups]
 dev = [
-    "pytest==8.4.1",
+    "pytest==9.1.1",
     "pytest-asyncio==1.4.0",
-    "pytest-httpx==0.35.0",
+    "pytest-httpx==0.36.2",
     "ruff==0.15.20",
 ]
 

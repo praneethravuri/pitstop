@@ -1,11 +1,11 @@
-"""Tests for tools/general/telemetry.py — written TDD-first."""
+"""Tests for tools/telemetry/telemetry.py — written TDD-first."""
 
 from unittest.mock import MagicMock, patch
 
 import pytest
 from fastmcp.exceptions import ToolError
 
-from pitstop.tools.general.telemetry import TelemetryDataResponse, get_telemetry_data
+from pitstop.tools.telemetry.telemetry import TelemetryDataResponse, get_telemetry_data
 
 
 def _make_lap(driver: str, lap_num: int = 1):
@@ -50,14 +50,14 @@ def _make_session(drivers=("VER", "HAM"), failing_drivers=()):
 # ---------------------------------------------------------------------------
 
 
-@patch("pitstop.tools.general.telemetry.fastf1_client")
+@patch("pitstop.tools.telemetry.telemetry.fastf1_client")
 def test_raises_tool_error_on_get_session_failure(mock_client):
     mock_client.get_session.side_effect = RuntimeError("connection error")
     with pytest.raises(ToolError):
         get_telemetry_data(2024, "Monaco", "Q", ["VER"])
 
 
-@patch("pitstop.tools.general.telemetry.fastf1_client")
+@patch("pitstop.tools.telemetry.telemetry.fastf1_client")
 def test_raises_tool_error_on_load_failure(mock_client):
     session = _make_session()
     session.load.side_effect = RuntimeError("cache miss")
@@ -71,7 +71,7 @@ def test_raises_tool_error_on_load_failure(mock_client):
 # ---------------------------------------------------------------------------
 
 
-@patch("pitstop.tools.general.telemetry.fastf1_client")
+@patch("pitstop.tools.telemetry.telemetry.fastf1_client")
 def test_partial_error_when_one_driver_fails(mock_client):
     session = _make_session(("VER", "HAM"), failing_drivers=("HAM",))
     mock_client.get_session.return_value = session
@@ -85,7 +85,7 @@ def test_partial_error_when_one_driver_fails(mock_client):
     assert any("HAM" in e.item for e in result.partial_errors.errors)
 
 
-@patch("pitstop.tools.general.telemetry.fastf1_client")
+@patch("pitstop.tools.telemetry.telemetry.fastf1_client")
 def test_successful_drivers_returned_despite_partial_failure(mock_client):
     session = _make_session(("VER", "HAM", "LEC"), failing_drivers=("HAM",))
     mock_client.get_session.return_value = session
@@ -103,7 +103,7 @@ def test_successful_drivers_returned_despite_partial_failure(mock_client):
 # ---------------------------------------------------------------------------
 
 
-@patch("pitstop.tools.general.telemetry.fastf1_client")
+@patch("pitstop.tools.telemetry.telemetry.fastf1_client")
 def test_telemetry_pagination_page2(mock_client):
     session = _make_session(("VER", "HAM", "LEC"))
     mock_client.get_session.return_value = session
@@ -119,7 +119,7 @@ def test_telemetry_pagination_page2(mock_client):
     assert result.pagination.has_next is True
 
 
-@patch("pitstop.tools.general.telemetry.fastf1_client")
+@patch("pitstop.tools.telemetry.telemetry.fastf1_client")
 def test_telemetry_returns_response_type(mock_client):
     session = _make_session(("VER",))
     mock_client.get_session.return_value = session
@@ -128,3 +128,42 @@ def test_telemetry_returns_response_type(mock_client):
 
     assert isinstance(result, TelemetryDataResponse)
     assert result.pagination is not None
+
+
+# ---------------------------------------------------------------------------
+# comparison
+# ---------------------------------------------------------------------------
+
+
+@patch("pitstop.tools.telemetry.telemetry.fastf1_client")
+def test_two_drivers_returns_comparison(mock_client):
+    session = _make_session(("VER", "HAM"))
+    mock_client.get_session.return_value = session
+
+    result = get_telemetry_data(2024, "Monaco", "Q", ["VER", "HAM"])
+
+    assert result.comparison is not None
+    assert result.comparison.driver1 == "VER"
+    assert result.comparison.driver2 == "HAM"
+    assert result.comparison.session_name == "Qualifying"
+    assert result.comparison.event_name == "Monaco Grand Prix"
+
+
+@patch("pitstop.tools.telemetry.telemetry.fastf1_client")
+def test_one_driver_no_comparison(mock_client):
+    session = _make_session(("VER",))
+    mock_client.get_session.return_value = session
+
+    result = get_telemetry_data(2024, "Monaco", "Q", ["VER"])
+
+    assert result.comparison is None
+
+
+@patch("pitstop.tools.telemetry.telemetry.fastf1_client")
+def test_three_drivers_no_comparison(mock_client):
+    session = _make_session(("VER", "HAM", "LEC"))
+    mock_client.get_session.return_value = session
+
+    result = get_telemetry_data(2024, "Monaco", "Q", ["VER", "HAM", "LEC"])
+
+    assert result.comparison is None

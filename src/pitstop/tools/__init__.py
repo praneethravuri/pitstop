@@ -1,10 +1,13 @@
-from .general.session import get_session_data
-from .general.telemetry import get_telemetry_data
+from .analysis.analysis import get_race_analysis
 from .live.live_data import get_live_data
-from .media import get_f1_news
-from .reference import get_reference_data
-from .schedule import get_schedule
-from .standings import get_standings
+from .news.news import get_f1_news
+from .reference.reference import get_reference_data
+from .results.results import get_results
+from .schedule.schedule import get_schedule
+from .session.session import get_session_data
+from .standings.standings import get_standings
+from .telemetry.telemetry import get_telemetry_data
+from .wikidata.wikidata import query_wikidata
 
 __all__ = [
     "get_session_data",
@@ -14,4 +17,7 @@ __all__ = [
     "get_reference_data",
     "get_schedule",
     "get_standings",
+    "get_results",
+    "get_race_analysis",
+    "query_wikidata",
 ]

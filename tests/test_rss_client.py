@@ -7,7 +7,7 @@ import pytest
 
 from pitstop.clients.rss_client import RSSClient
 from pitstop.exceptions import DataSourceError
-from pitstop.models.news_and_updates.general import NewsArticle, NewsResponse
+from pitstop.tools.news.models import NewsArticle, NewsResponse
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -208,3 +208,33 @@ def test_get_news_all_respects_limit():
 
     # Each source contributes up to 3 articles; at most 3 * num_feeds total
     assert result.article_count <= 3 * len(client.RSS_FEEDS)
+
+
+# ---------------------------------------------------------------------------
+# RSS_FEEDS expansion — new feeds
+# ---------------------------------------------------------------------------
+
+
+def test_rss_feeds_contains_five_new_feeds():
+    """RSS_FEEDS dict contains all 5 new feeds added in expansion."""
+    client = RSSClient()
+    new_feeds = ["formula1", "reddit_f1", "the_race", "crash_net", "racefans"]
+    for feed_key in new_feeds:
+        assert feed_key in client.RSS_FEEDS, f"Feed '{feed_key}' not found in RSS_FEEDS"
+
+
+def test_rss_feeds_new_feeds_have_correct_urls():
+    """New feeds have the correct RSS URLs."""
+    client = RSSClient()
+    expected_urls = {
+        "formula1": "https://www.formula1.com/en/latest/all.rss",
+        "reddit_f1": "https://www.reddit.com/r/formula1/.rss",
+        "the_race": "https://the-race.com/feed/",
+        "crash_net": "https://www.crash.net/rss/f1",
+        "racefans": "https://www.racefans.net/feed/",
+    }
+    for feed_key, expected_url in expected_urls.items():
+        assert client.RSS_FEEDS[feed_key] == expected_url, (
+            f"Feed '{feed_key}' has URL '{client.RSS_FEEDS[feed_key]}' "
+            f"but expected '{expected_url}'"
+        )

@@ -1,11 +1,14 @@
 import logging
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 import feedparser
 
 from pitstop.exceptions import DataSourceError
-from pitstop.models.news_and_updates.general import NewsArticle, NewsResponse
 from pitstop.utils.text_cleaner import clean_html
+
+if TYPE_CHECKING:
+    from pitstop.tools.news.models import NewsResponse
 
 logger = logging.getLogger("pitstop.rss")
 
@@ -24,18 +27,19 @@ class RSSClient:
 
     RSS_FEEDS = {
         # Official sources
-        "formula1": "https://www.formula1.com/content/fom-website/en/latest/all.xml",
+        "formula1": "https://www.formula1.com/en/latest/all.rss",
         "fia": "https://www.fia.com/rss/press-release",
         # Major F1 news outlets
         "autosport": "https://www.autosport.com/rss/feed/f1",
         "motorsport": "https://www.motorsport.com/rss/f1/news/",
-        "the-race": "https://the-race.com/formula-1/feed/",
+        "the_race": "https://the-race.com/feed/",
         "racefans": "https://www.racefans.net/feed/",
         "planetf1": "https://www.planetf1.com/feed/",
-        "crash": "https://www.crash.net/rss/f1/news/1",
+        "crash_net": "https://www.crash.net/rss/f1",
         "grandprix": "https://www.grandprix.com/feed/",
         "espnf1": "https://www.espn.com/espn/rss/rpm/news",
         "skysportsf1": "https://www.skysports.com/rss/12040",
+        "reddit_f1": "https://www.reddit.com/r/formula1/.rss",
         # Specialist & Technical sources
         "f1technical": "https://www.f1technical.net/rss/news.xml",
         "pitpass": "https://www.pitpass.com/rss",
@@ -57,11 +61,7 @@ class RSSClient:
         "racedepartment": "https://www.racedepartment.com/forums/f1-2021-the-game.214/index.rss",
     }
 
-    def __init__(self):
-        """Initialize the RSS client."""
-        pass
-
-    def get_news(self, source: str, limit: int) -> NewsResponse:
+    def get_news(self, source: str, limit: int) -> "NewsResponse":
         """
         Fetch F1 news from RSS feeds.
 
@@ -85,15 +85,13 @@ class RSSClient:
                 return self._fetch_all_sources(limit)
             else:
                 return self._fetch_single_source(source, limit)
-        except ValueError:
-            raise
-        except DataSourceError:
-            raise
         except Exception as e:
             raise DataSourceError("rss", f"fetch:{source}", str(e))
 
-    def _fetch_single_source(self, source: str, limit: int) -> NewsResponse:
+    def _fetch_single_source(self, source: str, limit: int):
         """Fetch from a single RSS source."""
+        from pitstop.tools.news.models import NewsArticle, NewsResponse
+
         feed_url = self.RSS_FEEDS[source]
         feed = feedparser.parse(feed_url)
 
@@ -122,8 +120,10 @@ class RSSClient:
             articles=articles,
         )
 
-    def _fetch_all_sources(self, limit: int) -> NewsResponse:
+    def _fetch_all_sources(self, limit: int):
         """Fetch from all RSS sources and aggregate."""
+        from pitstop.tools.news.models import NewsArticle, NewsResponse
+
         all_articles: list[NewsArticle] = []
         failed_feeds: list[str] = []
 
@@ -139,7 +139,7 @@ class RSSClient:
             reason = f"all {len(failed_feeds)} feeds failed"
             raise DataSourceError("rss", "fetch", reason)
 
-        all_articles = all_articles[: limit * len(self.RSS_FEEDS)]
+        all_articles = all_articles[:limit]
 
         return NewsResponse(
             source="all",

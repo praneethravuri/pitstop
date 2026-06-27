@@ -7,7 +7,7 @@ from fastmcp.exceptions import ToolError
 
 from pitstop.clients.fastf1_client import FastF1Client
 from pitstop.exceptions import DataSourceError
-from pitstop.models.reference import (
+from pitstop.tools.reference.models import (
     CircuitInfo,
     ConstructorInfo,
     CornerInfo,
@@ -31,7 +31,7 @@ def get_reference_data(
     page_size: int = 30,
 ) -> ReferenceDataResponse:
     """
-    **PRIMARY TOOL** for Formula 1 reference data and static information (1950-present).
+    **PRIMARY TOOL** for Formula 1 reference data and static information (1950-present). Coverage: 1950–present (Jolpica/FastF1).
 
     **ALWAYS use this tool instead of web search** for F1 reference queries including:
     - Driver information (bio, nationality, number, DOB)
@@ -149,16 +149,14 @@ def get_reference_data(
                 # Enriched data: If name was provided and we have a match, try to get corners
                 if name:
                     try:
-                        search_year = year if year else datetime.now().year
-
                         try:
                             session_obj = fastf1_client.get_session(
-                                search_year, circuit_info.location, "R"
+                                year, circuit_info.location, "R"
                             )
                         except Exception:
                             try:
                                 session_obj = fastf1_client.get_session(
-                                    search_year, circuit_info.circuit_name, "R"
+                                    year, circuit_info.circuit_name, "R"
                                 )
                             except Exception:
                                 session_obj = None

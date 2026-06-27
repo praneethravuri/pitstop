@@ -1,5 +1,6 @@
 """Tests for tools/schedule/schedule.py — TDD-first."""
 
+from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -52,7 +53,7 @@ def test_event_name_filter(mock_client):
 def test_only_remaining_calls_get_events_remaining(mock_client):
     rows = [_event_row("Singapore Grand Prix", "Singapore", "Marina Bay", 18)]
     mock_client.get_events_remaining.return_value = _make_df(rows)
-    result = get_schedule(2024, only_remaining=True)
+    result = get_schedule(datetime.now().year, only_remaining=True)
     mock_client.get_events_remaining.assert_called_once()
     assert len(result.events) == 1
     assert result.events[0].event_name == "Singapore Grand Prix"
