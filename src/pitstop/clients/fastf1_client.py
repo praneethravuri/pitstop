@@ -6,6 +6,8 @@ from typing import Literal
 import fastf1
 from fastf1.ergast import Ergast
 
+from pitstop.exceptions import DataSourceError
+
 logger = logging.getLogger("pitstop.fastf1")
 
 
@@ -73,9 +75,7 @@ class FastF1Client:
             return fastf1.get_session(year, gp, identifier, backend=backend)
         except Exception as e:
             logger.error("[pitstop.fastf1] failed: %s", e, exc_info=True)
-            raise RuntimeError(
-                f"Failed to get session '{identifier}' for '{gp}' {year}: {type(e).__name__}: {e}"
-            )
+            raise DataSourceError("fastf1", "get_session", str(e)) from e
 
     def get_testing_session(
         self,
@@ -114,9 +114,7 @@ class FastF1Client:
             return fastf1.get_testing_session(year, test_number, session_number, backend=backend)
         except Exception as e:
             logger.error("[pitstop.fastf1] failed: %s", e, exc_info=True)
-            raise RuntimeError(
-                f"Failed to get testing session {test_number}-{session_number} for {year}: {type(e).__name__}: {e}"
-            )
+            raise DataSourceError("fastf1", "get_testing_session", str(e)) from e
 
     def get_event(
         self,
@@ -150,7 +148,7 @@ class FastF1Client:
             return fastf1.get_event(year, gp, backend=backend, exact_match=exact_match)
         except Exception as e:
             logger.error("[pitstop.fastf1] failed: %s", e, exc_info=True)
-            raise RuntimeError(f"Failed to get event '{gp}' for {year}: {type(e).__name__}: {e}")
+            raise DataSourceError("fastf1", "get_event", str(e)) from e
 
     def get_testing_event(
         self,
@@ -181,9 +179,7 @@ class FastF1Client:
             return fastf1.get_testing_event(year, test_number, backend=backend)
         except Exception as e:
             logger.error("[pitstop.fastf1] failed: %s", e, exc_info=True)
-            raise RuntimeError(
-                f"Failed to get testing event {test_number} for {year}: {type(e).__name__}: {e}"
-            )
+            raise DataSourceError("fastf1", "get_testing_event", str(e)) from e
 
     def get_events_remaining(
         self,
@@ -216,7 +212,7 @@ class FastF1Client:
             return fastf1.get_events_remaining(dt, include_testing=include_testing, backend=backend)
         except Exception as e:
             logger.error("[pitstop.fastf1] failed: %s", e, exc_info=True)
-            raise RuntimeError(f"Failed to get remaining events: {type(e).__name__}: {e}")
+            raise DataSourceError("fastf1", "get_events_remaining", str(e)) from e
 
     def get_event_schedule(
         self,
@@ -248,4 +244,4 @@ class FastF1Client:
             return fastf1.get_event_schedule(year, include_testing=include_testing, backend=backend)
         except Exception as e:
             logger.error("[pitstop.fastf1] failed: %s", e, exc_info=True)
-            raise RuntimeError(f"Failed to get event schedule for {year}: {type(e).__name__}: {e}")
+            raise DataSourceError("fastf1", "get_event_schedule", str(e)) from e
