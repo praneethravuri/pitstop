@@ -4,7 +4,7 @@ version = "0.2.0"
 description = "All-in-one F1 MCP Server"
 readme = "README.md"
 requires-python = ">=3.13"
-authors = [{ name = "Praneeth Ravuri" }]
+authors = [{ name = "Praneeth Ravuri", email = "ravpraneeth@gmail.com" }]
 license = { text = "MIT" }
 dependencies = [
     "fastmcp==3.4.2",

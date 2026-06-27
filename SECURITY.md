@@ -9,7 +9,7 @@
 
 ## Reporting a Vulnerability
 
-To report a security vulnerability, please open a [GitHub Security Advisory](https://github.com/praneethravuri/pitstop/security/advisories/new) with:
+To report a security vulnerability, please email **ravpraneeth@gmail.com** or open a [GitHub Security Advisory](https://github.com/praneethravuri/pitstop/security/advisories/new) with:
 
 - A description of the vulnerability
 - Steps to reproduce
