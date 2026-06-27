@@ -3,16 +3,24 @@ services:
     build: .
     image: pitstop:latest
     container_name: pitstop-mcp
+    ports:
+      - "8000:8000"
     environment:
       - PITSTOP_ENV=production
       - PITSTOP_LOG_LEVEL=INFO
+      - PITSTOP_TRANSPORT=http
+      - PITSTOP_HOST=0.0.0.0
+      - PITSTOP_PORT=8000
     # Mount .env if present, but don't fail if missing
     env_file:
       - path: .env
         required: false
-    # MCP runs on stdio by default, but if we add SSE later:
-    # ports:
-    #   - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     restart: unless-stopped
     volumes:
       - pitstop_cache:/app/cache
