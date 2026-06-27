@@ -1,143 +1,192 @@
-# 🏎️ Pitstop: The All-in-One F1 MCP Server
+# Pitstop — F1 MCP Server
 
-Pitstop is a comprehensive Model Context Protocol (MCP) server for Formula 1 data. It aggregates data from multiple authoritative sources to answer any F1-related question, from historical stats to real-time race telemetry.
+An HTTP-first Model Context Protocol (MCP) server for Formula 1 data. Aggregates real-time, historical, and news data from multiple authoritative sources into 7 tools ready for any MCP client.
 
-<div align="center">
-  <img src="https://media.formula1.com/image/upload/f_auto,c_limit,w_1440,q_auto/f_auto/q_auto/content/dam/fom-website/manual/Misc/2021-Master-Folder/F1%20Logo%202021%20-%20Red" width="200" alt="F1 Logo" />
-</div>
+**v0.2.0** | Author: [Praneeth Ravuri](https://github.com/praneethravuri)
 
-## 🌟 Capabilities
+---
 
-Pitstop consolidates specialized functions into **7 powerful tools**:
+## Overview
 
-1.  **`get_live_data`**: Real-time access to telemetry, pit stops, team radio, race control messages, and intervals.
-2.  **`get_session_data`**: Comprehensive session analysis including results, weather, fastest laps, and driver details.
-3.  **`get_telemetry_data`**: Deep dive into car performance with lap-by-lap telemetry (speed, throttle, brake, gears).
-4.  **`get_reference_data`**: Static encyclopedia for drivers, teams, circuits, and tire compounds.
-5.  **`get_standings`**: Current and historical championship standings.
-6.  **`get_schedule`**: Full calendar awareness including testing and future races.
-7.  **`get_f1_news`**: Latest headlines from 25+ trusted global sources.
+Pitstop exposes F1 data as MCP tools over HTTP (default) or stdio. It pulls from FastF1, Jolpica, OpenF1, and RSS feeds, handles pagination, retries, caching, and rate limiting transparently.
 
-## 🔌 Data Sources
+---
 
--   **OpenF1 API**: Real-time timing & telemetry (2023-Present)
--   **FastF1 / Ergast**: Historical data & deep analysis (1950-Present)
--   **RSS Feeds**: Aggregated news from official and major media outlets.
+## Data Sources
 
-## 🚀 Installation & Usage
+| Source | Coverage | Type |
+|--------|----------|------|
+| [FastF1](https://github.com/theOehrly/Fast-F1) | 2018–present | Historical / timing / telemetry |
+| [Jolpica-F1](https://github.com/jolpica/jolpica-f1) | 1950–present | Historical (Ergast-compatible) |
+| [OpenF1](https://openf1.org/) | 2023–present | Real-time |
+| RSS Feeds (Autosport, BBC, etc.) | Live | News |
 
-### Prerequisites
--   Python 3.13+
--   `uv` (recommended) or `pip`
+---
 
-### 1. Install via Smithery (Recommended)
+## Tools
 
-To install Pitstop for Claude Desktop automatically:
+| Tool | Description | Key Parameters |
+|------|-------------|----------------|
+| `get_session_data` | Race/qualifying results, lap times, weather, driver details | `year`, `event`, `session`, `includes`, `page`, `page_size` |
+| `get_telemetry_data` | Lap-by-lap car telemetry (speed, throttle, brake, gears) | `year`, `event`, `session`, `driver`, `page`, `page_size` |
+| `get_live_data` | Live intervals, pit stops, team radio, stints, race control | `category`, `session_key`, `page`, `page_size` |
+| `get_standings` | Driver and constructor championship standings | `year`, `type`, `page`, `page_size` |
+| `get_schedule` | Race calendar and session schedule | `year`, `event`, `page`, `page_size` |
+| `get_reference_data` | Circuits, drivers, constructors encyclopedia | `category`, `query`, `page`, `page_size` |
+| `get_f1_news` | F1 headlines from 25+ RSS sources | `query`, `page`, `page_size` |
+
+---
+
+## Transport
+
+### HTTP (default)
 
 ```bash
-npx -y @smithery/cli install pitstop --client claude
-```
-
-### 2. Manual Installation
-
-Clone the repository and install dependencies:
-
-```bash
-git clone https://github.com/praneethravuri/pitstop.git
-cd pitstop
 uv sync
-```
-
-### 3. Running the Server
-
-Run the MCP server directly using `uv`:
-
-```bash
 uv run pitstop
+# → http://localhost:8000
 ```
 
-### 4. Docker Deployment
-
-To run with Docker Compose:
-
-### 5. Client Configuration
-
-To use Pitstop with MCP clients like Antigravity, Claude Desktop, or Claude Code, add the following to your configuration file (e.g., `claude_desktop_config.json` or `mcp.json`).
-
-#### Option A: Docker (Recommended)
+MCP client config:
 
 ```json
 {
   "mcpServers": {
     "pitstop": {
-      "command": "docker",
-      "args": ["run", "-i", "--rm", "pitstop"],
-      "env": {
-        "PITSTOP_ENV": "production"
-      }
+      "type": "http",
+      "url": "http://localhost:8000/mcp"
     }
   }
 }
 ```
 
-#### Option B: Local (`uv`)
+### stdio (opt-in)
+
+```bash
+PITSTOP_TRANSPORT=stdio uv run pitstop
+```
+
+MCP client config:
 
 ```json
 {
   "mcpServers": {
     "pitstop": {
       "command": "uv",
-      "args": [
-        "run",
-        "--directory",
-        "/absolute/path/to/pitstop", 
-        "pitstop"
-      ],
-      "env": {
-        "PITSTOP_ENV": "production"
-      }
+      "args": ["run", "--directory", "/path/to/pitstop", "pitstop"],
+      "env": { "PITSTOP_TRANSPORT": "stdio" }
     }
   }
 }
 ```
 
-> **Note**: Replace `/absolute/path/to/pitstop` with the actual path to your cloned repository.
+---
 
-Or manually using python:
+## Health API
+
+| Endpoint | Purpose |
+|----------|---------|
+| `GET /health` | Per-source status (FastF1, Jolpica, OpenF1, RSS) |
+| `GET /live` | Liveness probe |
+| `GET /ready` | Readiness probe |
+
+Example `/health` response:
+
+```json
+{
+  "version": "0.2.0",
+  "overall": "ok",
+  "sources": [
+    { "name": "fastf1",  "status": "ok", "latency_ms": 2,   "detail": "cache writable" },
+    { "name": "jolpica", "status": "ok", "latency_ms": 134, "detail": "" },
+    { "name": "openf1",  "status": "ok", "latency_ms": 98,  "detail": "" },
+    { "name": "rss",     "status": "ok", "latency_ms": 210, "detail": "" }
+  ]
+}
+```
+
+`overall` is `"ok"` / `"degraded"` / `"down"`. HTTP 200 / 207 / 503.
+
+---
+
+## Pagination
+
+All list-returning tools accept `page` (1-based, default 1) and `page_size` (default 20). Responses include a `pagination` block:
+
+```json
+{
+  "data": [...],
+  "pagination": {
+    "page": 1,
+    "page_size": 20,
+    "total_items": 47,
+    "total_pages": 3,
+    "has_next": true,
+    "has_prev": false
+  }
+}
+```
+
+---
+
+## Configuration
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PITSTOP_TRANSPORT` | `http` | `http` or `stdio` |
+| `PITSTOP_HOST` | `0.0.0.0` | Bind address (HTTP only) |
+| `PITSTOP_PORT` | `8000` | Listen port (HTTP only) |
+| `PITSTOP_LOG_LEVEL` | `INFO` | `DEBUG` / `INFO` / `WARNING` / `ERROR` |
+| `PITSTOP_LOG_FORMAT` | `json` | `json` or `text` |
+| `PITSTOP_ENV` | `development` | `development` or `production` |
+| `PITSTOP_RATE_LIMIT_ENABLED` | `false` | Enable rate limiting |
+| `PITSTOP_RATE_LIMIT_PER_HOUR` | `3600` | Requests allowed per hour |
+| `PITSTOP_CACHE_TTL_SECONDS` | `300` | HTTP response cache TTL |
+| `FASTF1_CACHE` | `cache` | FastF1 cache directory path |
+
+---
+
+## Docker
 
 ```bash
-# Add src to PYTHONPATH if running manually
-export PYTHONPATH=$PYTHONPATH:$(pwd)/src
-python -m pitstop
+docker compose up
 ```
 
-## 🛠️ Tool Usage Guide
+Server starts on port 8000 with health check at `/health`.
 
-| Tool | Purpose | Example Query |
-| :--- | :--- | :--- |
-| **`get_live_data`** | Live race monitoring | "Check the gap between VER and HAM", "Any specialized pit stops?" |
-| **`get_session_data`** | Post-session analysis | "Get full results for Monaco 2024", "What was the weather during Q3?" |
-| **`get_standings`** | Championship tracker | "Who is leading the constructor standings?", "2021 driver points" |
-| **`get_schedule`** | Calendar & Events | "When is the next race?", "Monaco GP start times" |
-| **`get_reference_data`** | Encyclopedia | "How many corners does Spa have?", "Max Verstappen stats" |
-| **`get_f1_news`** | News Aggregator | "Latest Ferrari news", "Updates on Newey" |
-| **`get_telemetry_data`** | Deep Tech Analysis | "Compare telemetry for VER and LEC in Q3" |
+---
 
-## 📦 Project Structure
+## Development
 
-```
-src/
-  pitstop/
-    __main__.py       # Entry point
-    clients/          # API Clients (OpenF1, FastF1, RSS)
-    models/           # Pydantic Data Models
-    tools/            # Tool Implementations
-      live/           # Live Data Tools
-      general/        # Session & Telemetry
-      reference/      # Static Data
-      ...
+```bash
+uv sync --dev
+uv run pytest
+uv run ruff check src/
 ```
 
-## 📜 License
+---
 
-MIT License. Data provided by FastF1, OpenF1, and Ergast. Not affiliated with Formula 1 or FIA.
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+---
+
+## Credits / Acknowledgements
+
+| Library | Description | License |
+|---------|-------------|---------|
+| [FastF1](https://github.com/theOehrly/Fast-F1) | Timing data, telemetry, session info | MIT |
+| [Jolpica-F1](https://github.com/jolpica/jolpica-f1) | Ergast-compatible API, F1 data since 1950 | — |
+| [OpenF1](https://openf1.org/) | Real-time F1 data API | MIT |
+| [Ergast Motor Racing API](https://ergast.com/mrd/) | Historical data 1950–2024 (now via Jolpica) | — |
+| [FastMCP](https://gofastmcp.com) | MCP server framework | MIT |
+| [Pydantic](https://docs.pydantic.dev) | Data validation | MIT |
+| [httpx](https://www.python-httpx.org) | Async HTTP client | BSD |
+| [feedparser](https://feedparser.readthedocs.io) | RSS parsing | BSD |
+| [hishel](https://hishel.com) | HTTP caching for httpx | MIT |
+| [tenacity](https://tenacity.readthedocs.io) | Retry logic | Apache 2.0 |
+| [uvloop](https://uvloop.readthedocs.io) | Fast async event loop | MIT / Apache 2.0 |
+| [orjson](https://github.com/ijl/orjson) | Fast JSON serialization | Apache 2.0 / MIT |
+
+Not affiliated with Formula 1 or the FIA. Data provided by third-party sources under their respective terms.
