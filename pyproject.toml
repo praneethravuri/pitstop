@@ -7,8 +7,8 @@ requires-python = ">=3.13"
 authors = [{ name = "Praneeth Ravuri", email = "praneeth@tuskira.ai" }]
 license = { text = "MIT" }
 dependencies = [
-    "fastmcp==2.12.5",
-    "fastf1==3.7.0",
+    "fastmcp==3.4.2",
+    "fastf1==3.8.3",
     "pydantic==2.11.10",
     "httpx[http2]==0.28.1",
     "feedparser==6.0.12",
