@@ -27,6 +27,7 @@ from pitstop.utils import to_tool_error
 logger = logging.getLogger("pitstop.results")
 
 
+# ponytail: returns None for strict Pydantic optional fields; safe_int/safe_float exist but default to 0
 def _int(v) -> int | None:
     try:
         return int(v)
@@ -76,14 +77,22 @@ def get_results(
     """
     try:
         offset = (page - 1) * page_size
-        path = f"{year}/{round}/{result_type}"
-
         extra: dict = {"limit": page_size, "offset": offset}
+
         if driver:
-            if result_type in ("race", "qualifying", "sprint"):
-                extra["driverId"] = driver
-            else:
-                extra["driverRef"] = driver
+            if result_type == "status":
+                raise ToolError("driver filter is not supported for result_type='status'")
+            # Jolpica filters by driver via URL path, not query params
+            _endpoint = {
+                "race": "results",
+                "qualifying": "qualifying",
+                "sprint": "sprint",
+                "laps": "laps",
+                "pitstops": "pitstops",
+            }[result_type]
+            path = f"{year}/{round}/drivers/{driver}/{_endpoint}"
+        else:
+            path = f"{year}/{round}/{result_type}"
 
         data = jolpica_client.query(path, **extra)
         mr = data["MRData"]

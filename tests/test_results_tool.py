@@ -157,3 +157,16 @@ def test_data_source_error_raises_tool_error(mock_jc):
     mock_jc.query.side_effect = DataSourceError("jolpica", "query", "timeout")
     with pytest.raises(ToolError):
         get_results(2023, 1, result_type="race")
+
+
+@patch("pitstop.tools.results.results.jolpica_client")
+def test_driver_filter_uses_path_segment(mock_jc):
+    mock_jc.query.return_value = _race_response(n=1)
+    get_results(2023, 1, result_type="race", driver="hamilton")
+    mock_jc.query.assert_called_with("2023/1/drivers/hamilton/results", limit=30, offset=0)
+
+
+@patch("pitstop.tools.results.results.jolpica_client")
+def test_driver_filter_status_raises_tool_error(mock_jc):
+    with pytest.raises(ToolError, match="not supported"):
+        get_results(2023, 1, result_type="status", driver="hamilton")
