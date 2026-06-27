@@ -1,6 +1,7 @@
 """Tests for src/pitstop/utils/utils.py — written first (TDD)."""
 
 import pytest
+from pitstop.models.common import PageMeta
 from pitstop.utils.utils import drop_none, filter_by_name, paginate, safe_int, safe_str, safe_float
 
 
@@ -81,55 +82,76 @@ ITEMS = list(range(1, 11))  # [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 def test_paginate_page_1():
     page_slice, meta = paginate(ITEMS, 1, 3)
     assert page_slice == [1, 2, 3]
-    assert meta["page"] == 1
-    assert meta["page_size"] == 3
-    assert meta["total_items"] == 10
-    assert meta["total_pages"] == 4
-    assert meta["has_prev"] is False
-    assert meta["has_next"] is True
+    assert meta.page == 1
+    assert meta.page_size == 3
+    assert meta.total_items == 10
+    assert meta.total_pages == 4
+    assert meta.has_prev is False
+    assert meta.has_next is True
 
 
 def test_paginate_middle_page():
     page_slice, meta = paginate(ITEMS, 2, 3)
     assert page_slice == [4, 5, 6]
-    assert meta["has_prev"] is True
-    assert meta["has_next"] is True
+    assert meta.has_prev is True
+    assert meta.has_next is True
 
 
 def test_paginate_last_page():
     page_slice, meta = paginate(ITEMS, 4, 3)
     assert page_slice == [10]
-    assert meta["has_next"] is False
-    assert meta["has_prev"] is True
+    assert meta.has_next is False
+    assert meta.has_prev is True
 
 
 def test_paginate_beyond_range_clamps():
     page_slice, meta = paginate(ITEMS, 99, 3)
-    assert meta["page"] == 4  # clamped to last valid page
+    assert meta.page == 4  # clamped to last valid page
     assert page_slice == [10]
 
 
 def test_paginate_page_size_greater_than_total():
     page_slice, meta = paginate(ITEMS, 1, 50)
     assert page_slice == ITEMS
-    assert meta["total_pages"] == 1
-    assert meta["has_next"] is False
-    assert meta["has_prev"] is False
+    assert meta.total_pages == 1
+    assert meta.has_next is False
+    assert meta.has_prev is False
 
 
 def test_paginate_page_zero_clamps_to_1():
     page_slice, meta = paginate(ITEMS, 0, 3)
-    assert meta["page"] == 1
+    assert meta.page == 1
     assert page_slice == [1, 2, 3]
 
 
 def test_paginate_empty_list():
     page_slice, meta = paginate([], 1, 10)
     assert page_slice == []
-    assert meta["total_items"] == 0
-    assert meta["total_pages"] == 0
-    assert meta["has_next"] is False
-    assert meta["has_prev"] is False
+    assert meta.page == 0
+    assert meta.total_items == 0
+    assert meta.total_pages == 0
+    assert meta.has_next is False
+    assert meta.has_prev is False
+
+
+def test_paginate_returns_page_meta():
+    _, meta = paginate(ITEMS, 1, 3)
+    assert isinstance(meta, PageMeta)
+
+
+def test_paginate_empty_returns_page_meta():
+    _, meta = paginate([], 1, 10)
+    assert isinstance(meta, PageMeta)
+
+
+def test_paginate_negative_page_size_raises():
+    with pytest.raises(ValueError, match="page_size must be >= 1"):
+        paginate([1, 2, 3], 1, -1)
+
+
+def test_paginate_zero_page_size_raises():
+    with pytest.raises(ValueError, match="page_size must be >= 1"):
+        paginate([1, 2, 3], 1, 0)
 
 
 # ---------------------------------------------------------------------------

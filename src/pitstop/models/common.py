@@ -1,9 +1,11 @@
 """Shared response primitives."""
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class PageMeta(BaseModel):
+    model_config = ConfigDict(strict=True)
+
     page: int
     page_size: int
     total_items: int
@@ -13,12 +15,16 @@ class PageMeta(BaseModel):
 
 
 class PartialError(BaseModel):
+    model_config = ConfigDict(strict=True)
+
     item: str
     source: str
     reason: str
 
 
 class PartialErrors(BaseModel):
+    model_config = ConfigDict(strict=True)
+
     errors: list[PartialError] = []
 
     def add(self, item: str, source: str, exc: Exception) -> None:
