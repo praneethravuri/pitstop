@@ -5,7 +5,11 @@ from pydantic import BaseModel
 
 from pitstop.clients.fastf1_client import FastF1Client
 from pitstop.models.common import PageMeta, PartialErrors
-from pitstop.tools.telemetry.models import LapTelemetryResponse, TelemetryPoint
+from pitstop.tools.telemetry.models import (
+    LapTelemetryResponse,
+    TelemetryComparisonResponse,
+    TelemetryPoint,
+)
 from pitstop.utils import paginate, to_tool_error
 
 logger = logging.getLogger("pitstop.telemetry")
@@ -16,6 +20,7 @@ fastf1_client = FastF1Client()
 
 class TelemetryDataResponse(BaseModel):
     drivers_telemetry: list[LapTelemetryResponse]
+    comparison: TelemetryComparisonResponse | None = None
     pagination: PageMeta | None = None
     partial_errors: PartialErrors | None = None
 
@@ -103,9 +108,26 @@ def get_telemetry_data(
             logger.warning("Driver %s telemetry failed: %s", driver, exc)
             partial.add(str(driver), "fastf1", exc)
 
+    comparison = None
+    if len(telemetry_list) == 2:
+        d1, d2 = telemetry_list[0], telemetry_list[1]
+        comparison = TelemetryComparisonResponse(
+            session_name=d1.session_name,
+            event_name=d1.event_name,
+            driver1=d1.driver,
+            driver1_lap=d1.lap_number,
+            driver1_telemetry=d1.telemetry,
+            driver1_lap_time=d1.lap_time,
+            driver2=d2.driver,
+            driver2_lap=d2.lap_number,
+            driver2_telemetry=d2.telemetry,
+            driver2_lap_time=d2.lap_time,
+        )
+
     paged, meta = paginate(telemetry_list, page, page_size)
     return TelemetryDataResponse(
         drivers_telemetry=paged,
+        comparison=comparison,
         pagination=meta,
         partial_errors=partial if partial.has_errors else None,
     )

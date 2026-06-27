@@ -128,3 +128,42 @@ def test_telemetry_returns_response_type(mock_client):
 
     assert isinstance(result, TelemetryDataResponse)
     assert result.pagination is not None
+
+
+# ---------------------------------------------------------------------------
+# comparison
+# ---------------------------------------------------------------------------
+
+
+@patch("pitstop.tools.telemetry.telemetry.fastf1_client")
+def test_two_drivers_returns_comparison(mock_client):
+    session = _make_session(("VER", "HAM"))
+    mock_client.get_session.return_value = session
+
+    result = get_telemetry_data(2024, "Monaco", "Q", ["VER", "HAM"])
+
+    assert result.comparison is not None
+    assert result.comparison.driver1 == "VER"
+    assert result.comparison.driver2 == "HAM"
+    assert result.comparison.session_name == "Qualifying"
+    assert result.comparison.event_name == "Monaco Grand Prix"
+
+
+@patch("pitstop.tools.telemetry.telemetry.fastf1_client")
+def test_one_driver_no_comparison(mock_client):
+    session = _make_session(("VER",))
+    mock_client.get_session.return_value = session
+
+    result = get_telemetry_data(2024, "Monaco", "Q", ["VER"])
+
+    assert result.comparison is None
+
+
+@patch("pitstop.tools.telemetry.telemetry.fastf1_client")
+def test_three_drivers_no_comparison(mock_client):
+    session = _make_session(("VER", "HAM", "LEC"))
+    mock_client.get_session.return_value = session
+
+    result = get_telemetry_data(2024, "Monaco", "Q", ["VER", "HAM", "LEC"])
+
+    assert result.comparison is None
