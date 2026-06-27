@@ -23,11 +23,14 @@ from pitstop.logging_setup import configure_logging
 from pitstop.tools import (
     get_f1_news,
     get_live_data,
+    get_race_analysis,
     get_reference_data,
+    get_results,
     get_schedule,
     get_session_data,
     get_standings,
     get_telemetry_data,
+    query_wikidata,
 )
 
 logger = logging.getLogger("pitstop.server")
@@ -40,6 +43,9 @@ _TOOLS = [
     get_schedule,
     get_reference_data,
     get_f1_news,
+    get_results,
+    get_race_analysis,
+    query_wikidata,
 ]
 
 
@@ -84,8 +90,12 @@ def build_server() -> FastMCP:
     mcp = FastMCP(
         "Pitstop F1",
         instructions=(
-            "Formula 1 data server. Available tools: get_schedule, get_standings, "
-            "get_live_data, get_session_data, get_telemetry_data, get_reference_data, get_f1_news."
+            "Formula 1 data server with 10 tools. "
+            "Historical data (1950–present): get_results, get_standings, get_reference_data. "
+            "FastF1 timing/telemetry (2018–present): get_session_data, get_telemetry_data, get_race_analysis. "
+            "Live/real-time (2023–present): get_live_data. "
+            "Schedule and news: get_schedule, get_f1_news. "
+            "Wikidata SPARQL (all eras): query_wikidata."
         ),
     )
 
