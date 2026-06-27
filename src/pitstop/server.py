@@ -65,11 +65,11 @@ class TimingLoggingMiddleware(Middleware):
             raise
 
 
-class RateLimitMiddleware(Middleware):
-    """Simple per-server token bucket — one semaphore for all clients."""
+class ConcurrencyLimitMiddleware(Middleware):
+    """Limits concurrent tool calls, not per-second rate."""
 
-    def __init__(self, max_per_second: int) -> None:
-        self._sem = asyncio.Semaphore(max_per_second)
+    def __init__(self, max_concurrent: int) -> None:
+        self._sem = asyncio.Semaphore(max_concurrent)
 
     async def on_call_tool(
         self,
@@ -92,7 +92,7 @@ def build_server() -> FastMCP:
     mcp.add_middleware(TimingLoggingMiddleware())
     if RATE_LIMIT_ENABLED:
         rps = max(1, RATE_LIMIT_PER_HOUR // 3600)
-        mcp.add_middleware(RateLimitMiddleware(max_per_second=rps))
+        mcp.add_middleware(ConcurrencyLimitMiddleware(max_concurrent=rps))
 
     for tool_fn in _TOOLS:
         mcp.tool(tool_fn)
