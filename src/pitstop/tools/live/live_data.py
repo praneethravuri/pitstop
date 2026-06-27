@@ -1,13 +1,9 @@
+import logging
 from typing import Literal
 
-from pitstop.clients.openf1_client import (
-    get_intervals,
-    get_pit_stops,
-    get_race_control,
-    get_sessions,
-    get_stints,
-    get_team_radio,
-)
+from pitstop.clients import openf1_client
+from pitstop.exceptions import DataSourceError
+from pitstop.models.common import PartialErrors
 from pitstop.models.live.openf1 import (
     IntervalData,
     IntervalsResponse,
@@ -21,6 +17,18 @@ from pitstop.models.live.openf1 import (
     TeamRadioMessage,
     TeamRadioResponse,
 )
+from pitstop.utils import paginate, to_tool_error
+
+logger = logging.getLogger("pitstop.live")
+
+# ponytail: dispatch eliminates 5 near-identical fetch+map blocks
+DISPATCH: dict[str, tuple[str, type]] = {
+    "intervals": ("/intervals", IntervalData),
+    "pit_stops": ("/pit", PitStopData),
+    "radio": ("/team_radio", TeamRadioMessage),
+    "stints": ("/stints", StintData),
+    "race_control": ("/race_control", RaceControlMessage),
+}
 
 
 def get_live_data(
@@ -29,10 +37,11 @@ def get_live_data(
     country: str,
     session_name: str = "Race",
     driver_number: int | None = None,
-    # Specific filters
-    compound: str | None = None,  # For stints
-    flag: str | None = None,  # For race control
-    category: str | None = None,  # For race control
+    compound: str | None = None,  # stints only
+    flag: str | None = None,  # race_control only
+    category: str | None = None,  # race_control only
+    page: int = 1,
+    page_size: int = 50,
 ) -> LiveDataResponse:
     """
     **PRIMARY TOOL** for Real-Time/Live Formula 1 Data (2023-Present).
@@ -53,147 +62,96 @@ def get_live_data(
         compound: (Stints only) Filter by tire compound (e.g., 'SOFT')
         flag: (Race Control only) Filter by flag type
         category: (Race Control only) Filter by message category
+        page: Page number for paginated results (default: 1)
+        page_size: Items per page (default: 50)
 
     Returns:
         LiveDataResponse containing requested data.
     """
+    try:
+        sessions = openf1_client.query(
+            "/sessions", year=year, country_name=country, session_name=session_name
+        )
+    except DataSourceError as e:
+        raise to_tool_error("get_live_data", "openf1", e)
 
-    # 1. Resolve Session Key
-    # We always need to resolve the session unless we want to support passing session_key directly,
-    # but for simplicity/consistency with other tools, we stick to year/country/session_name lookup.
-
-    sessions = get_sessions(year=year, country_name=country, session_name=session_name)
     if not sessions:
-        # Return empty response with metadata we have
         return LiveDataResponse(year=year, country=country, session_name=session_name)
 
-    session = sessions[0]
-    session_key = session["session_key"]
-
+    session_key = sessions[0]["session_key"]
     response = LiveDataResponse(year=year, country=country, session_name=session_name)
+    partial_errors = PartialErrors()
 
-    # 2. Fetch Requested Data Types
+    for dtype in data_types:
+        if dtype not in DISPATCH:
+            logger.warning("Unknown data_type %r — skipped", dtype)
+            continue
 
-    # Intervals
-    if "intervals" in data_types:
-        data = get_intervals(session_key=session_key, driver_number=driver_number)
-        response.intervals = IntervalsResponse(
-            year=year,
-            country=country,
-            session_name=session_name,
-            intervals=[
-                IntervalData(
-                    date=d["date"],
-                    driver_number=d["driver_number"],
-                    gap_to_leader=d.get("gap_to_leader"),
-                    interval=d.get("interval"),
-                    session_key=d["session_key"],
-                    meeting_key=d["meeting_key"],
-                )
-                for d in data
-            ],
-            total_data_points=len(data),
-        )
+        endpoint, Model = DISPATCH[dtype]
+        filters: dict = {"session_key": session_key, "driver_number": driver_number}
+        if dtype == "stints":
+            filters["compound"] = compound
+        if dtype == "race_control":
+            filters["flag"] = flag
+            filters["category"] = category
 
-    # Pit Stops
-    if "pit_stops" in data_types:
-        data = get_pit_stops(session_key=session_key, driver_number=driver_number)
+        try:
+            raw = openf1_client.query(endpoint, **filters)
+        except DataSourceError as e:
+            partial_errors.add(dtype, "openf1", e)
+            continue
 
-        pit_stops = [
-            PitStopData(
-                date=d["date"],
-                driver_number=d["driver_number"],
-                lap_number=d["lap_number"],
-                pit_duration=d["pit_duration"],
-                session_key=d["session_key"],
-                meeting_key=d["meeting_key"],
+        all_items = [Model.model_validate(d) for d in raw]
+        items, _ = paginate(all_items, page, page_size)
+
+        if dtype == "intervals":
+            response.intervals = IntervalsResponse(
+                year=year,
+                country=country,
+                session_name=session_name,
+                intervals=items,
+                total_data_points=len(all_items),
             )
-            for d in data
-        ]
+        elif dtype == "pit_stops":
+            fastest = min(p.pit_duration for p in all_items) if all_items else None
+            slowest = max(p.pit_duration for p in all_items) if all_items else None
+            avg = sum(p.pit_duration for p in all_items) / len(all_items) if all_items else None
+            response.pit_stops = PitStopsResponse(
+                year=year,
+                country=country,
+                session_name=session_name,
+                pit_stops=items,
+                total_pit_stops=len(all_items),
+                fastest_stop=fastest,
+                slowest_stop=slowest,
+                average_duration=avg,
+            )
+        elif dtype == "radio":
+            response.radio = TeamRadioResponse(
+                year=year,
+                country=country,
+                session_name=session_name,
+                messages=items,
+                total_messages=len(all_items),
+            )
+        elif dtype == "stints":
+            response.stints = StintsResponse(
+                year=year,
+                country=country,
+                session_name=session_name,
+                stints=items,
+                total_stints=len(all_items),
+            )
+        elif dtype == "race_control":
+            response.race_control = RaceControlResponse(
+                year=year,
+                country=country,
+                session_name=session_name,
+                messages=items,
+                total_messages=len(all_items),
+            )
 
-        # Calculate stats
-        fastest = min([p.pit_duration for p in pit_stops]) if pit_stops else None
-        slowest = max([p.pit_duration for p in pit_stops]) if pit_stops else None
-        avg = sum([p.pit_duration for p in pit_stops]) / len(pit_stops) if pit_stops else None
-
-        response.pit_stops = PitStopsResponse(
-            year=year,
-            country=country,
-            session_name=session_name,
-            pit_stops=pit_stops,
-            total_pit_stops=len(pit_stops),
-            fastest_stop=fastest,
-            slowest_stop=slowest,
-            average_duration=avg,
-        )
-
-    # Radio
-    if "radio" in data_types:
-        data = get_team_radio(session_key=session_key, driver_number=driver_number)
-        response.radio = TeamRadioResponse(
-            year=year,
-            country=country,
-            session_name=session_name,
-            messages=[
-                TeamRadioMessage(
-                    date=d["date"],
-                    driver_number=d["driver_number"],
-                    session_key=d["session_key"],
-                    meeting_key=d["meeting_key"],
-                    recording_url=d.get("recording_url"),
-                )
-                for d in data
-            ],
-            total_messages=len(data),
-        )
-
-    # Stints
-    if "stints" in data_types:
-        data = get_stints(session_key=session_key, driver_number=driver_number, compound=compound)
-        response.stints = StintsResponse(
-            year=year,
-            country=country,
-            session_name=session_name,
-            stints=[
-                StintData(
-                    stint_number=d["stint_number"],
-                    driver_number=d["driver_number"],
-                    compound=d["compound"],
-                    lap_start=d.get("lap_start"),
-                    lap_end=d.get("lap_end"),
-                    tyre_age_at_start=d.get("tyre_age_at_start"),
-                )
-                for d in data
-            ],
-            total_stints=len(data),
-        )
-
-    # Race Control
-    if "race_control" in data_types:
-        data = get_race_control(
-            session_key=session_key,
-            driver_number=driver_number,
-            flag=flag,
-            category=category,
-        )
-        response.race_control = RaceControlResponse(
-            year=year,
-            country=country,
-            session_name=session_name,
-            messages=[
-                RaceControlMessage(
-                    date=d["date"],
-                    category=d["category"],
-                    message=d["message"],
-                    driver_number=d.get("driver_number"),
-                    flag=d.get("flag"),
-                    lap_number=d.get("lap_number"),
-                    scope=d.get("scope"),
-                    sector=d.get("sector"),
-                )
-                for d in data
-            ],
-            total_messages=len(data),
-        )
+    if partial_errors.has_errors:
+        response.partial_errors = partial_errors
 
     return response

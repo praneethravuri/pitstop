@@ -2,6 +2,8 @@
 
 from pydantic import BaseModel, Field
 
+from pitstop.models.common import PartialErrors
+
 
 class TeamRadioMessage(BaseModel):
     """Team radio message data."""
@@ -125,3 +127,6 @@ class LiveDataResponse(BaseModel):
     radio: TeamRadioResponse | None = Field(None, description="Team radio messages")
     stints: StintsResponse | None = Field(None, description="Tire stint history")
     race_control: RaceControlResponse | None = Field(None, description="Race control messages")
+    partial_errors: PartialErrors | None = Field(
+        None, description="Partial fetch errors per data type"
+    )
