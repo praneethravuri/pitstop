@@ -11,6 +11,8 @@ import logging
 import httpx
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
+from pitstop import __version__
+
 logger = logging.getLogger("pitstop.http")
 
 
@@ -29,7 +31,7 @@ def make_client(base_url: str = "", timeout: float = 30.0) -> httpx.Client:
         base_url=base_url,
         timeout=timeout,
         http2=True,
-        headers={"User-Agent": "pitstop-mcp/0.2.0"},
+        headers={"User-Agent": f"pitstop-mcp/{__version__}"},
     )
 
 
