@@ -219,6 +219,7 @@ Thumbs.db
 *.swp
 *.swo
 .idea/
+.vscode/
 
 # FastF1 cache
 /cache/
