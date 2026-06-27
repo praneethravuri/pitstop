@@ -210,3 +210,32 @@ __marimo__/
 
 /cache/
 .claude/
+.superpowers/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+*.swp
+*.swo
+.idea/
+
+# FastF1 cache
+cache/
+
+# Test artifacts
+.pytest_cache/
+htmlcov/
+*.lcov
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Secrets
+*.pem
+*.key
+.env.local
+.env.*.local
