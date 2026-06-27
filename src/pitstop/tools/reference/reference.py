@@ -125,10 +125,7 @@ def get_reference_data(
             )
 
         elif reference_type == "circuit":
-            if year:
-                circuits_response = fastf1_client.ergast.get_circuits(season=year)
-            else:
-                circuits_response = fastf1_client.ergast.get_circuits()
+            circuits_response = fastf1_client.ergast.get_circuits(season=year)
 
             circuits_data = circuits_response.to_dict("records")
 
@@ -171,7 +168,7 @@ def get_reference_data(
                                 "Circuit enrichment failed for %s: session not found; returning basic info",
                                 circuit_info.circuit_name,
                             )
-                        elif session_obj:
+                        else:
                             session_obj.load(
                                 laps=False, telemetry=False, weather=False, messages=False
                             )
