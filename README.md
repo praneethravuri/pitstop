@@ -97,7 +97,7 @@ Example `/health` response:
 
 ```json
 {
-  "version": "0.2.0",
+  "version": "0.3.0",
   "overall": "ok",
   "sources": [
     { "name": "fastf1",  "status": "ok", "latency_ms": 2,   "detail": "cache writable" },
@@ -118,14 +118,15 @@ Example `/health` response:
 
 Only `SELECT` and `ASK` queries are accepted (read-only). Always include `LIMIT` in your query.
 
-Example — find all F1 World Champions:
+Example — find F1 drivers with their birthdate:
 
 ```sparql
-SELECT ?driver ?driverLabel WHERE {
-  ?driver wdt:P31 wd:Q5 .
-  ?driver wdt:P166 wd:Q10454720 .
+SELECT ?driver ?driverLabel ?birthDate WHERE {
+  ?driver wdt:P31 wd:Q5 ;
+          wdt:P641 wd:Q1968 ;
+          wdt:P569 ?birthDate .
   SERVICE wikibase:label { bd:serviceParam wikibase:language "en" }
-} LIMIT 30
+} ORDER BY DESC(?birthDate) LIMIT 10
 ```
 
 ---

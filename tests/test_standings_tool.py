@@ -45,7 +45,7 @@ def test_driver_name_filter(mock_client):
         _driver_row("Hamilton", "Lewis", position=1),
         _driver_row("Verstappen", "Max", team="Red Bull", position=2),
     ]
-    mock_client.ergast.get_driver_standings.return_value.to_dict.return_value = rows
+    mock_client.ergast.get_driver_standings.return_value.content[0].to_dict.return_value = rows
     result = get_standings(2024, type="driver", driver_name="Hamilton")
     assert result.drivers is not None
     assert len(result.drivers) == 1
@@ -58,7 +58,7 @@ def test_team_name_filter_constructor(mock_client):
         _constructor_row("Red Bull", position=1),
         _constructor_row("Mercedes", position=2),
     ]
-    mock_client.ergast.get_constructor_standings.return_value.to_dict.return_value = rows
+    mock_client.ergast.get_constructor_standings.return_value.content[0].to_dict.return_value = rows
     result = get_standings(2024, type="constructor", team_name="Red Bull")
     assert result.constructors is not None
     assert len(result.constructors) == 1
@@ -88,7 +88,7 @@ def test_pagination(mock_client):
         _driver_row("Verstappen", "Max", team="Red Bull", position=2),
         _driver_row("Leclerc", "Charles", team="Ferrari", position=3),
     ]
-    mock_client.ergast.get_driver_standings.return_value.to_dict.return_value = rows
+    mock_client.ergast.get_driver_standings.return_value.content[0].to_dict.return_value = rows
     result = get_standings(2024, type="driver", page=2, page_size=1)
     assert result.drivers is not None
     assert len(result.drivers) == 1

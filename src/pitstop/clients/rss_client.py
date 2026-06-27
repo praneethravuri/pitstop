@@ -127,9 +127,11 @@ class RSSClient:
         all_articles: list[NewsArticle] = []
         failed_feeds: list[str] = []
 
+        # Ceiling division so each source contributes proportionally; ensures diversity
+        per_source = max(1, -(-limit // len(self.RSS_FEEDS)))  # ceil(limit/n)
         for source in self.RSS_FEEDS.keys():
             try:
-                result = self._fetch_single_source(source, limit)
+                result = self._fetch_single_source(source, per_source)
                 all_articles.extend(result.articles)
             except Exception as e:
                 logger.warning("RSS feed failed: %s (%s) — %s", source, self.RSS_FEEDS[source], e)

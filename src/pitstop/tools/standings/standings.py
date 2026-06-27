@@ -92,7 +92,7 @@ def get_standings(
             else:
                 driver_standings_response = fastf1_client.ergast.get_driver_standings(season=year)
 
-            driver_standings_data = driver_standings_response.to_dict("records")
+            driver_standings_data = driver_standings_response.content[0].to_dict("records")
 
             if driver_name:
                 driver_standings_data = filter_by_name(
@@ -138,7 +138,9 @@ def get_standings(
                     season=year
                 )
 
-            constructor_standings_data = constructor_standings_response.to_dict("records")
+            constructor_standings_data = constructor_standings_response.content[0].to_dict(
+                "records"
+            )
 
             if team_name:
                 constructor_standings_data = filter_by_name(
