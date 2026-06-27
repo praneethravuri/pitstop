@@ -79,20 +79,24 @@ def get_results(
         offset = (page - 1) * page_size
         extra: dict = {"limit": page_size, "offset": offset}
 
+        # Jolpica endpoint names differ from result_type for "race" → "results"
+        _ENDPOINT_MAP = {
+            "race": "results",
+            "qualifying": "qualifying",
+            "sprint": "sprint",
+            "laps": "laps",
+            "pitstops": "pitstops",
+            "status": "status",
+        }
+        _endpoint = _ENDPOINT_MAP[result_type]
+
         if driver:
             if result_type == "status":
                 raise ToolError("driver filter is not supported for result_type='status'")
             # Jolpica filters by driver via URL path, not query params
-            _endpoint = {
-                "race": "results",
-                "qualifying": "qualifying",
-                "sprint": "sprint",
-                "laps": "laps",
-                "pitstops": "pitstops",
-            }[result_type]
             path = f"{year}/{round}/drivers/{driver}/{_endpoint}"
         else:
-            path = f"{year}/{round}/{result_type}"
+            path = f"{year}/{round}/{_endpoint}"
 
         data = jolpica_client.query(path, **extra)
         mr = data.get("MRData") or {}
