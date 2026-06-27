@@ -1,27 +1,38 @@
-from pitstop.clients.openf1_client import OpenF1Client
-from typing import Optional, List, Literal
+from typing import Literal
+
+from pitstop.clients.openf1_client import (
+    get_intervals,
+    get_pit_stops,
+    get_race_control,
+    get_sessions,
+    get_stints,
+    get_team_radio,
+)
 from pitstop.models.live.openf1 import (
+    IntervalData,
+    IntervalsResponse,
     LiveDataResponse,
-    IntervalsResponse, IntervalData,
-    PitStopsResponse, PitStopData,
-    TeamRadioResponse, TeamRadioMessage,
-    StintsResponse, StintData,
-    RaceControlResponse, RaceControlMessage
+    PitStopData,
+    PitStopsResponse,
+    RaceControlMessage,
+    RaceControlResponse,
+    StintData,
+    StintsResponse,
+    TeamRadioMessage,
+    TeamRadioResponse,
 )
 
-# Initialize OpenF1 client
-openf1_client = OpenF1Client()
 
 def get_live_data(
-    data_types: List[Literal["intervals", "pit_stops", "radio", "stints", "race_control"]],
+    data_types: list[Literal["intervals", "pit_stops", "radio", "stints", "race_control"]],
     year: int,
     country: str,
     session_name: str = "Race",
-    driver_number: Optional[int] = None,
+    driver_number: int | None = None,
     # Specific filters
-    compound: Optional[str] = None, # For stints
-    flag: Optional[str] = None, # For race control
-    category: Optional[str] = None, # For race control
+    compound: str | None = None, # For stints
+    flag: str | None = None, # For race control
+    category: str | None = None, # For race control
 ) -> LiveDataResponse:
     """
     **PRIMARY TOOL** for Real-Time/Live Formula 1 Data (2023-Present).
@@ -51,7 +62,7 @@ def get_live_data(
     # We always need to resolve the session unless we want to support passing session_key directly,
     # but for simplicity/consistency with other tools, we stick to year/country/session_name lookup.
     
-    sessions = openf1_client.get_sessions(year=year, country_name=country, session_name=session_name)
+    sessions = get_sessions(year=year, country_name=country, session_name=session_name)
     if not sessions:
         # Return empty response with metadata we have
         return LiveDataResponse(
@@ -73,7 +84,7 @@ def get_live_data(
     
     # Intervals
     if "intervals" in data_types:
-        data = openf1_client.get_intervals(session_key=session_key, driver_number=driver_number)
+        data = get_intervals(session_key=session_key, driver_number=driver_number)
         response.intervals = IntervalsResponse(
             year=year,
             country=country,
@@ -93,7 +104,7 @@ def get_live_data(
         
     # Pit Stops
     if "pit_stops" in data_types:
-        data = openf1_client.get_pit_stops(session_key=session_key, driver_number=driver_number)
+        data = get_pit_stops(session_key=session_key, driver_number=driver_number)
         
         pit_stops = [
             PitStopData(
@@ -124,7 +135,7 @@ def get_live_data(
 
     # Radio
     if "radio" in data_types:
-        data = openf1_client.get_team_radio(session_key=session_key, driver_number=driver_number)
+        data = get_team_radio(session_key=session_key, driver_number=driver_number)
         response.radio = TeamRadioResponse(
             year=year,
             country=country,
@@ -143,7 +154,7 @@ def get_live_data(
         
     # Stints
     if "stints" in data_types:
-        data = openf1_client.get_stints(session_key=session_key, driver_number=driver_number, compound=compound)
+        data = get_stints(session_key=session_key, driver_number=driver_number, compound=compound)
         response.stints = StintsResponse(
             year=year,
             country=country,
@@ -164,11 +175,11 @@ def get_live_data(
     # Race Control
     if "race_control" in data_types:
         # Calls the method we verified/added to OpenF1Client
-        data = openf1_client.get_race_control(
-            session_key=session_key, 
-            driver_number=driver_number, 
-            flag=flag, 
-            category=category
+        data = get_race_control(
+            session_key=session_key,
+            driver_number=driver_number,
+            flag=flag,
+            category=category,
         )
         response.race_control = RaceControlResponse(
             year=year,
@@ -190,15 +201,3 @@ def get_live_data(
         )
         
     return response
-
-if __name__ == "__main__":
-    # Test
-    print("Testing get_live_data...")
-    res = get_live_data(
-        data_types=["pit_stops", "race_control"], 
-        year=2024, 
-        country="Monaco",
-        session_name="Race"
-    )
-    print(f"Pit Stops: {res.pit_stops.total_pit_stops if res.pit_stops else 'N/A'}")
-    print(f"Race Control Msgs: {res.race_control.total_messages if res.race_control else 'N/A'}")
