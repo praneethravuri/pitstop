@@ -1,11 +1,15 @@
+import logging
 from datetime import datetime
 
 import pandas as pd
+from fastmcp.exceptions import ToolError
 
 from pitstop.clients.fastf1_client import FastF1Client
+from pitstop.exceptions import DataSourceError
 from pitstop.models.schedule import EventInfo, ScheduleResponse
+from pitstop.utils import filter_by_name, paginate, to_tool_error
 
-# Initialize FastF1 client
+logger = logging.getLogger("pitstop.schedule")
 fastf1_client = FastF1Client()
 
 
@@ -43,6 +47,8 @@ def get_schedule(
     round: int | None = None,
     event_name: str | None = None,
     only_remaining: bool = False,
+    page: int = 1,
+    page_size: int = 30,
 ) -> ScheduleResponse:
     """
     **PRIMARY TOOL** for ALL Formula 1 calendar and schedule queries.
@@ -63,6 +69,8 @@ def get_schedule(
         round: Filter to specific round number (e.g., 5 for round 5)
         event_name: Filter by GP name (e.g., "Monaco", "Silverstone")
         only_remaining: Show only upcoming races from today onwards (default: False)
+        page: Page number (1-indexed, default: 1)
+        page_size: Items per page (default: 30)
 
     Returns:
         ScheduleResponse with all events, dates, locations, session times, and round numbers.
@@ -73,72 +81,43 @@ def get_schedule(
         get_schedule(2024, round=15) → Details for round 15
         get_schedule(2024, include_testing=False) → Race calendar without testing
     """
-    # Get full event schedule
-    if only_remaining:
-        schedule_df = fastf1_client.get_events_remaining(
-            dt=datetime.now(), include_testing=include_testing
-        )
-    else:
-        schedule_df = fastf1_client.get_event_schedule(year=year, include_testing=include_testing)
+    try:
+        if only_remaining:
+            schedule_df = fastf1_client.get_events_remaining(
+                dt=datetime.now(), include_testing=include_testing
+            )
+        else:
+            schedule_df = fastf1_client.get_event_schedule(
+                year=year, include_testing=include_testing
+            )
 
-    # Convert to list of dicts
-    events_data = schedule_df.to_dict("records")
+        events_data = schedule_df.to_dict("records")
 
-    # Apply round filter if specified
-    if round is not None:
-        events_data = [e for e in events_data if e.get("RoundNumber") == round]
+        if round is not None:
+            events_data = [e for e in events_data if e.get("RoundNumber") == round]
 
-    # Apply event name filter if specified
-    if event_name is not None:
-        events_data = [
-            e
-            for e in events_data
-            if event_name.lower() in e.get("EventName", "").lower()
-            or event_name.lower() in e.get("Country", "").lower()
-            or event_name.lower() in e.get("Location", "").lower()
-        ]
+        if event_name is not None:
+            events_data = filter_by_name(
+                events_data, event_name, ["EventName", "Country", "Location"]
+            )
 
-    # Convert to Pydantic models
-    events_list = [_row_to_event_info(row) for row in events_data]
+        events_list = [_row_to_event_info(row) for row in events_data]
+        paged, meta = paginate(events_list, page, page_size)
 
-    return ScheduleResponse(
-        year=year,
-        total_events=len(events_list),
-        include_testing=include_testing,
-        events=events_list,
-        round_filter=round,
-        event_name_filter=event_name,
-        only_remaining=only_remaining,
-    )
-
-
-if __name__ == "__main__":
-    # Test schedule functionality
-    print("Testing get_schedule with different scenarios...")
-
-    # Test 1: Get full 2024 calendar
-    print("\n1. Getting full 2024 F1 calendar:")
-    schedule = get_schedule(2024, include_testing=False)
-    print(f"   Total events: {schedule.total_events}")
-    if schedule.events:
-        print(f"   First event: {schedule.events[0].event_name} in {schedule.events[0].country}")
-
-    # Test 2: Get Monaco GP details
-    print("\n2. Getting Monaco GP 2024 details:")
-    monaco = get_schedule(2024, event_name="Monaco")
-    if monaco.events:
-        event = monaco.events[0]
-        print(f"   Event: {event.event_name}")
-        print(f"   Location: {event.location}, {event.country}")
-        print(f"   Round: {event.round_number}")
-        print(
-            f"   Sessions: {event.session_1_name}, {event.session_2_name}, {event.session_3_name}"
+        return ScheduleResponse(
+            year=year,
+            total_events=meta.total_items,
+            include_testing=include_testing,
+            events=paged,
+            round_filter=round,
+            event_name_filter=event_name,
+            only_remaining=only_remaining,
+            pagination=meta,
         )
 
-    # Test 3: Get remaining events
-    print("\n3. Getting remaining 2024 events:")
-    remaining = get_schedule(2024, only_remaining=True, include_testing=False)
-    print(f"   Remaining events: {remaining.total_events}")
-
-    # Test JSON serialization
-    print(f"\n   JSON: {schedule.model_dump_json()[:150]}...")
+    except ToolError:
+        raise
+    except DataSourceError as exc:
+        raise to_tool_error("get_schedule", exc.source, exc)
+    except Exception as exc:
+        raise to_tool_error("get_schedule", "fastf1", exc)
