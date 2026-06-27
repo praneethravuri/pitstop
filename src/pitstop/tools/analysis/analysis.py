@@ -1,6 +1,7 @@
 """Race analysis tool — pace, tire degradation, stints, consistency."""
 
 import logging
+from typing import Literal
 
 import numpy as np
 
@@ -26,9 +27,9 @@ def get_race_analysis(
     gp: str | int,
     session: str,
     drivers: list[str],
-    analysis_type: str = "pace",
+    analysis_type: Literal["pace", "tire_degradation", "stints", "consistency"] = "pace",
     page: int = 1,
-    page_size: int = 50,
+    page_size: int = 30,
 ) -> AnalysisResponse:
     """
     PRIMARY tool for race performance analytics (2018–present via FastF1).
