@@ -1,14 +1,14 @@
 # Pitstop — F1 MCP Server
 
-An HTTP-first Model Context Protocol (MCP) server for Formula 1 data. Aggregates real-time, historical, and news data from multiple authoritative sources into 7 tools ready for any MCP client.
+An HTTP-first Model Context Protocol (MCP) server for Formula 1 data. Aggregates real-time, historical, and news data from multiple authoritative sources into 10 tools ready for any MCP client.
 
-**v0.2.0** | Author: [Praneeth Ravuri](https://github.com/praneethravuri)
+**v0.3.0** | Author: [Praneeth Ravuri](https://github.com/praneethravuri)
 
 ---
 
 ## Overview
 
-Pitstop exposes F1 data as MCP tools over HTTP (default) or stdio. It pulls from FastF1, Jolpica, OpenF1, and RSS feeds, handles pagination, retries, caching, and rate limiting transparently.
+Pitstop exposes F1 data as 10 MCP tools over HTTP (default) or stdio. It pulls from FastF1, Jolpica, OpenF1, Wikidata, and RSS feeds, handles pagination, retries, caching, and rate limiting transparently.
 
 ---
 
@@ -27,13 +27,16 @@ Pitstop exposes F1 data as MCP tools over HTTP (default) or stdio. It pulls from
 
 | Tool | Description | Key Parameters |
 |------|-------------|----------------|
-| `get_session_data` | Race/qualifying results, lap times, weather, driver details | `year`, `event`, `session`, `includes`, `page`, `page_size` |
-| `get_telemetry_data` | Lap-by-lap car telemetry (speed, throttle, brake, gears) | `year`, `event`, `session`, `driver`, `page`, `page_size` |
-| `get_live_data` | Live intervals, pit stops, team radio, stints, race control | `category`, `session_key`, `page`, `page_size` |
-| `get_standings` | Driver and constructor championship standings | `year`, `type`, `page`, `page_size` |
+| `get_session_data` | Race/qualifying results, lap times, weather, driver details (2018–present) | `year`, `event`, `session`, `includes`, `page`, `page_size` |
+| `get_telemetry_data` | Lap-by-lap car telemetry (speed, throttle, brake, gears) (2018–present) | `year`, `event`, `session`, `driver`, `page`, `page_size` |
+| `get_live_data` | Live intervals, pit stops, team radio, stints, race control (2023–present) | `category`, `session_key`, `page`, `page_size` |
+| `get_standings` | Driver and constructor championship standings (1950–present) | `year`, `type`, `page`, `page_size` |
 | `get_schedule` | Race calendar and session schedule | `year`, `event`, `page`, `page_size` |
-| `get_reference_data` | Circuits, drivers, constructors encyclopedia | `category`, `query`, `page`, `page_size` |
-| `get_f1_news` | F1 headlines from 25+ RSS sources | `query`, `page`, `page_size` |
+| `get_reference_data` | Circuits, drivers, constructors encyclopedia (1950–present) | `category`, `query`, `page`, `page_size` |
+| `get_f1_news` | F1 headlines from 30+ RSS sources | `query`, `page`, `page_size` |
+| `get_results` | Race/qualifying/sprint results, lap times, pit stops (1950–present) | `year`, `round`, `result_type`, `driver`, `page` |
+| `get_race_analysis` | Pace, tire degradation, stint summaries, consistency (2018–present) | `year`, `gp`, `session`, `drivers`, `analysis_type`, `page` |
+| `query_wikidata` | SPARQL queries to Wikidata for F1 biography, career records, history | `sparql`, `page`, `page_size` |
 
 ---
 
@@ -109,6 +112,24 @@ Example `/health` response:
 
 ---
 
+## Wikidata SPARQL
+
+`query_wikidata` runs SPARQL queries against [Wikidata](https://query.wikidata.org/) for biographical and historical F1 facts not covered by race APIs.
+
+Only `SELECT` and `ASK` queries are accepted (read-only). Always include `LIMIT` in your query.
+
+Example — find all F1 World Champions:
+
+```sparql
+SELECT ?driver ?driverLabel WHERE {
+  ?driver wdt:P31 wd:Q5 .
+  ?driver wdt:P166 wd:Q10454720 .
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en" }
+} LIMIT 30
+```
+
+---
+
 ## Pagination
 
 All list-returning tools accept `page` (1-based, default 1) and `page_size` (default 20). Responses include a `pagination` block:
@@ -174,19 +195,12 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Credits / Acknowledgements
 
-| Library | Description | License |
-|---------|-------------|---------|
-| [FastF1](https://github.com/theOehrly/Fast-F1) | Timing data, telemetry, session info | MIT |
-| [Jolpica-F1](https://github.com/jolpica/jolpica-f1) | Ergast-compatible API, F1 data since 1950 | — |
-| [OpenF1](https://openf1.org/) | Real-time F1 data API | MIT |
-| [Ergast Motor Racing API](https://ergast.com/mrd/) | Historical data 1950–2024 (now via Jolpica) | — |
-| [FastMCP](https://gofastmcp.com) | MCP server framework | MIT |
-| [Pydantic](https://docs.pydantic.dev) | Data validation | MIT |
-| [httpx](https://www.python-httpx.org) | Async HTTP client | BSD |
-| [feedparser](https://feedparser.readthedocs.io) | RSS parsing | BSD |
-| [hishel](https://hishel.com) | HTTP caching for httpx | MIT |
-| [tenacity](https://tenacity.readthedocs.io) | Retry logic | Apache 2.0 |
-| [uvloop](https://uvloop.readthedocs.io) | Fast async event loop | MIT / Apache 2.0 |
-| [orjson](https://github.com/ijl/orjson) | Fast JSON serialization | Apache 2.0 / MIT |
+| Source | Description | License |
+|--------|-------------|---------|
+| [FastF1](https://github.com/theOehrly/Fast-F1) | Python library for F1 timing, telemetry, and session data | MIT |
+| [Jolpica-F1](https://github.com/jolpica/jolpica-f1) | Ergast-compatible F1 data API, 1950–present | — |
+| [OpenF1](https://openf1.org/) | Free open-source API for real-time F1 data | MIT |
+| [Wikidata](https://www.wikidata.org/) | Open knowledge graph with SPARQL query service | CC0 |
+| [Ergast Motor Racing API](https://ergast.com/mrd/) | Historical F1 data 1950–2024 (now served via Jolpica) | — |
 
 Not affiliated with Formula 1 or the FIA. Data provided by third-party sources under their respective terms.
