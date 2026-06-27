@@ -1,8 +1,9 @@
+from datetime import datetime
+from pathlib import Path
+from typing import Literal
+
 import fastf1
 from fastf1.ergast import Ergast
-from pathlib import Path
-from datetime import datetime
-from typing import Optional, Union, Literal
 
 
 class FastF1Client:
@@ -37,10 +38,10 @@ class FastF1Client:
     def get_session(
         self,
         year: int,
-        gp: Union[str, int],
-        identifier: Optional[Union[int, str]] = None,
+        gp: str | int,
+        identifier: int | str | None = None,
         *,
-        backend: Optional[Literal['fastf1', 'f1timing', 'ergast']] = None
+        backend: Literal["fastf1", "f1timing", "ergast"] | None = None,
     ):
         """
         Get a session object for a specific event.
@@ -65,9 +66,7 @@ class FastF1Client:
         try:
             return fastf1.get_session(year, gp, identifier, backend=backend)
         except Exception as e:
-            raise RuntimeError(
-                f"Failed to get session {identifier} for {gp} {year}: {str(e)}"
-            )
+            raise RuntimeError(f"Failed to get session {identifier} for {gp} {year}: {str(e)}")
 
     def get_testing_session(
         self,
@@ -75,7 +74,7 @@ class FastF1Client:
         test_number: int,
         session_number: int,
         *,
-        backend: Optional[Literal['fastf1', 'f1timing']] = None
+        backend: Literal["fastf1", "f1timing"] | None = None,
     ):
         """
         Get a testing session object.
@@ -97,9 +96,7 @@ class FastF1Client:
             >>> session.load()
         """
         try:
-            return fastf1.get_testing_session(
-                year, test_number, session_number, backend=backend
-            )
+            return fastf1.get_testing_session(year, test_number, session_number, backend=backend)
         except Exception as e:
             raise RuntimeError(
                 f"Failed to get testing session {test_number}-{session_number} for {year}: {str(e)}"
@@ -108,10 +105,10 @@ class FastF1Client:
     def get_event(
         self,
         year: int,
-        gp: Union[int, str],
+        gp: int | str,
         *,
-        backend: Optional[Literal['fastf1', 'f1timing', 'ergast']] = None,
-        exact_match: bool = False
+        backend: Literal["fastf1", "f1timing", "ergast"] | None = None,
+        exact_match: bool = False,
     ):
         """
         Get an event (Grand Prix) object.
@@ -135,16 +132,14 @@ class FastF1Client:
         try:
             return fastf1.get_event(year, gp, backend=backend, exact_match=exact_match)
         except Exception as e:
-            raise RuntimeError(
-                f"Failed to get event {gp} for {year}: {str(e)}"
-            )
+            raise RuntimeError(f"Failed to get event {gp} for {year}: {str(e)}")
 
     def get_testing_event(
         self,
         year: int,
         test_number: int,
         *,
-        backend: Optional[Literal['fastf1', 'f1timing']] = None
+        backend: Literal["fastf1", "f1timing"] | None = None,
     ):
         """
         Get a testing event object.
@@ -166,16 +161,14 @@ class FastF1Client:
         try:
             return fastf1.get_testing_event(year, test_number, backend=backend)
         except Exception as e:
-            raise RuntimeError(
-                f"Failed to get testing event {test_number} for {year}: {str(e)}"
-            )
+            raise RuntimeError(f"Failed to get testing event {test_number} for {year}: {str(e)}")
 
     def get_events_remaining(
         self,
-        dt: Optional[datetime] = None,
+        dt: datetime | None = None,
         *,
         include_testing: bool = True,
-        backend: Optional[Literal['fastf1', 'f1timing', 'ergast']] = None
+        backend: Literal["fastf1", "f1timing", "ergast"] | None = None,
     ):
         """
         Get remaining events from a given date.
@@ -197,20 +190,16 @@ class FastF1Client:
             >>> remaining = client.get_events_remaining(datetime(2024, 6, 1))
         """
         try:
-            return fastf1.get_events_remaining(
-                dt, include_testing=include_testing, backend=backend
-            )
+            return fastf1.get_events_remaining(dt, include_testing=include_testing, backend=backend)
         except Exception as e:
-            raise RuntimeError(
-                f"Failed to get remaining events: {str(e)}"
-            )
+            raise RuntimeError(f"Failed to get remaining events: {str(e)}")
 
     def get_event_schedule(
         self,
         year: int,
         *,
         include_testing: bool = True,
-        backend: Optional[Literal['fastf1', 'f1timing', 'ergast']] = None
+        backend: Literal["fastf1", "f1timing", "ergast"] | None = None,
     ):
         """
         Get the full event schedule for a season.
@@ -231,10 +220,6 @@ class FastF1Client:
             >>> schedule = client.get_event_schedule(2024, include_testing=False)
         """
         try:
-            return fastf1.get_event_schedule(
-                year, include_testing=include_testing, backend=backend
-            )
+            return fastf1.get_event_schedule(year, include_testing=include_testing, backend=backend)
         except Exception as e:
-            raise RuntimeError(
-                f"Failed to get event schedule for {year}: {str(e)}"
-            )
+            raise RuntimeError(f"Failed to get event schedule for {year}: {str(e)}")

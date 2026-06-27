@@ -1,9 +1,9 @@
 from .reference import (
-    DriverInfo,
-    ConstructorInfo,
     CircuitInfo,
-    TireCompoundInfo,
+    ConstructorInfo,
+    DriverInfo,
     ReferenceDataResponse,
+    TireCompoundInfo,
 )
 
 __all__ = [

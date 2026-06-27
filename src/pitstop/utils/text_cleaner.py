@@ -1,5 +1,5 @@
-import re
 import html
+import re
 
 
 def clean_html(text: str) -> str:

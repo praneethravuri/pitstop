@@ -1,8 +1,8 @@
 from .track import (
-    CornerInfo,
-    CircuitDetails,
-    TrackStatusInfo,
     CircuitDataResponse,
+    CircuitDetails,
+    CornerInfo,
+    TrackStatusInfo,
 )
 
 __all__ = [

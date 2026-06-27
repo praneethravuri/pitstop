@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+
 from .general import NewsArticle
 
 
@@ -6,7 +7,9 @@ class SillySeasonArticle(NewsArticle):
     """Silly season news article with categorization."""
 
     category: str = Field(..., description="News category (transfer, management, contract, etc.)")
-    relevance_score: float | None = Field(None, description="Relevance score based on keywords (0-1)")
+    relevance_score: float | None = Field(
+        None, description="Relevance score based on keywords (0-1)"
+    )
 
 
 class SillySeasonResponse(BaseModel):

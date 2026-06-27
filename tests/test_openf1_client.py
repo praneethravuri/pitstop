@@ -1,5 +1,5 @@
 """Tests for src/pitstop/clients/openf1_client.py (TDD — written before implementation)."""
-import httpx
+
 import pytest
 
 import pitstop.clients as clients_mod
@@ -15,6 +15,7 @@ from pitstop.clients.openf1_client import (
     get_team_radio,
     query,
 )
+from pitstop.exceptions import DataSourceError
 
 
 @pytest.fixture(autouse=True)
@@ -59,16 +60,18 @@ def test_query_all_none_params_gives_no_query_string(httpx_mock):
     assert "?" not in str(req.url)
 
 
-def test_query_raises_on_4xx(httpx_mock):
+def test_query_raises_data_source_error_on_4xx(httpx_mock):
     httpx_mock.add_response(status_code=404)
-    with pytest.raises(httpx.HTTPStatusError):
+    with pytest.raises(DataSourceError) as exc_info:
         query("/intervals")
+    assert "openf1" in str(exc_info.value)
 
 
-def test_query_raises_on_5xx(httpx_mock):
+def test_query_raises_data_source_error_on_5xx(httpx_mock):
     httpx_mock.add_response(status_code=500)
-    with pytest.raises(httpx.HTTPStatusError):
+    with pytest.raises(DataSourceError) as exc_info:
         query("/sessions")
+    assert "openf1" in str(exc_info.value)
 
 
 # ---------------------------------------------------------------------------

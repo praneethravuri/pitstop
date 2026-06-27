@@ -1,5 +1,4 @@
 from pydantic import BaseModel, Field
-from typing import Optional
 
 
 class TireStint(BaseModel):
@@ -7,9 +6,11 @@ class TireStint(BaseModel):
 
     driver: str = Field(description="Driver abbreviation")
     lap_number: int = Field(description="Lap number")
-    compound: Optional[str] = Field(None, description="Tire compound (SOFT, MEDIUM, HARD, INTERMEDIATE, WET)")
-    tyre_life: Optional[float] = Field(None, description="Age of tire in laps")
-    fresh_tyre: Optional[bool] = Field(None, description="Whether it's a new tire")
+    compound: str | None = Field(
+        None, description="Tire compound (SOFT, MEDIUM, HARD, INTERMEDIATE, WET)"
+    )
+    tyre_life: float | None = Field(None, description="Age of tire in laps")
+    fresh_tyre: bool | None = Field(None, description="Whether it's a new tire")
 
 
 class TireStrategyResponse(BaseModel):
@@ -17,6 +18,6 @@ class TireStrategyResponse(BaseModel):
 
     session_name: str = Field(description="Session name")
     event_name: str = Field(description="Grand Prix name")
-    driver: Optional[str] = Field(None, description="Driver filter (if applied)")
+    driver: str | None = Field(None, description="Driver filter (if applied)")
     tire_data: list[TireStint] = Field(description="Tire data per lap")
     total_laps: int = Field(description="Total number of laps")

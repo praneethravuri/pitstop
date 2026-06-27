@@ -1,7 +1,7 @@
+from datetime import datetime, timedelta
+
 from pitstop.clients.rss_client import RSSClient
 from pitstop.models.news_and_updates import NewsResponse
-from typing import Optional
-from datetime import datetime, timedelta
 
 # Initialize RSS client
 rss_client = RSSClient()
@@ -10,13 +10,13 @@ rss_client = RSSClient()
 def get_f1_news(
     source: str = "all",
     limit: int = 10,
-    keywords: Optional[str] = None,
-    driver: Optional[str] = None,
-    team: Optional[str] = None,
-    circuit: Optional[str] = None,
-    year: Optional[int] = None,
-    date_from: Optional[str] = None,
-    date_to: Optional[str] = None
+    keywords: str | None = None,
+    driver: str | None = None,
+    team: str | None = None,
+    circuit: str | None = None,
+    year: int | None = None,
+    date_from: str | None = None,
+    date_to: str | None = None,
 ) -> NewsResponse:
     """
     **PRIMARY TOOL** for RECENT Formula 1 news from 25+ authoritative F1 sources via RSS feeds.
@@ -116,18 +116,18 @@ def get_f1_news(
     if driver:
         driver_lower = driver.lower()
         filtered_articles = [
-            article for article in filtered_articles
-            if driver_lower in article.title.lower() or
-               driver_lower in article.summary.lower()
+            article
+            for article in filtered_articles
+            if driver_lower in article.title.lower() or driver_lower in article.summary.lower()
         ]
 
     # Apply team filtering
     if team:
         team_lower = team.lower()
         filtered_articles = [
-            article for article in filtered_articles
-            if team_lower in article.title.lower() or
-               team_lower in article.summary.lower()
+            article
+            for article in filtered_articles
+            if team_lower in article.title.lower() or team_lower in article.summary.lower()
         ]
 
     # Apply circuit filtering
@@ -135,9 +135,9 @@ def get_f1_news(
         circuit_lower = circuit.lower()
         # Also check for common variations (e.g., "Monaco" matches "Monaco GP", "Circuit de Monaco")
         filtered_articles = [
-            article for article in filtered_articles
-            if circuit_lower in article.title.lower() or
-               circuit_lower in article.summary.lower()
+            article
+            for article in filtered_articles
+            if circuit_lower in article.title.lower() or circuit_lower in article.summary.lower()
         ]
 
     # Apply keyword filtering
@@ -147,16 +147,20 @@ def get_f1_news(
         if " or " in keywords_lower:
             keyword_list = [kw.strip() for kw in keywords_lower.split(" or ")]
             filtered_articles = [
-                article for article in filtered_articles
-                if any(kw in article.title.lower() or kw in article.summary.lower()
-                       for kw in keyword_list)
+                article
+                for article in filtered_articles
+                if any(
+                    kw in article.title.lower() or kw in article.summary.lower()
+                    for kw in keyword_list
+                )
             ]
         else:
             # Single keyword or phrase
             filtered_articles = [
-                article for article in filtered_articles
-                if keywords_lower in article.title.lower() or
-                   keywords_lower in article.summary.lower()
+                article
+                for article in filtered_articles
+                if keywords_lower in article.title.lower()
+                or keywords_lower in article.summary.lower()
             ]
 
     # Apply date filtering
@@ -172,7 +176,7 @@ def get_f1_news(
         for article in filtered_articles:
             try:
                 # Parse article date (handling various formats)
-                article_date = datetime.fromisoformat(article.published.replace('Z', '+00:00'))
+                article_date = datetime.fromisoformat(article.published.replace("Z", "+00:00"))
                 article_date_str = article_date.strftime("%Y-%m-%d")
 
                 # Support month-only filtering (YYYY-MM format)
@@ -184,8 +188,8 @@ def get_f1_news(
                 if date_to:
                     # If month format, get last day of month
                     if len(date_to) == 7:  # YYYY-MM format
-                        year_val = int(date_to.split('-')[0])
-                        month_val = int(date_to.split('-')[1])
+                        year_val = int(date_to.split("-")[0])
+                        month_val = int(date_to.split("-")[1])
                         # Get last day of month
                         if month_val == 12:
                             compare_to = f"{year_val}-12-31"
@@ -214,7 +218,7 @@ def get_f1_news(
         source=source,
         fetched_at=datetime.now().isoformat(),
         article_count=len(filtered_articles),
-        articles=filtered_articles
+        articles=filtered_articles,
     )
 
 

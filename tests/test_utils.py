@@ -1,13 +1,14 @@
 """Tests for src/pitstop/utils/utils.py — written first (TDD)."""
 
 import pytest
-from pitstop.models.common import PageMeta
-from pitstop.utils.utils import drop_none, filter_by_name, paginate, safe_int, safe_str, safe_float
 
+from pitstop.models.common import PageMeta
+from pitstop.utils.utils import drop_none, filter_by_name, paginate, safe_float, safe_int, safe_str
 
 # ---------------------------------------------------------------------------
 # drop_none
 # ---------------------------------------------------------------------------
+
 
 def test_drop_none_empty():
     assert drop_none({}) == {}
@@ -158,6 +159,7 @@ def test_paginate_zero_page_size_raises():
 # safe_int
 # ---------------------------------------------------------------------------
 
+
 def test_safe_int_happy():
     assert safe_int(42) == 42
     assert safe_int("7") == 7
@@ -177,6 +179,7 @@ def test_safe_int_bad_string():
 # safe_str
 # ---------------------------------------------------------------------------
 
+
 def test_safe_str_happy():
     assert safe_str("hello") == "hello"
     assert safe_str(123) == "123"
@@ -194,6 +197,7 @@ def test_safe_str_empty():
 # ---------------------------------------------------------------------------
 # safe_float
 # ---------------------------------------------------------------------------
+
 
 def test_safe_float_happy():
     assert safe_float(3.14) == pytest.approx(3.14)

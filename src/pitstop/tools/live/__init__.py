@@ -1,8 +1,8 @@
 # Live timing tools (OpenF1 API)
-from .radio import get_driver_radio
-from .pit_stops import get_live_pit_stops
 from .intervals import get_live_intervals
 from .meetings import get_meeting_info
+from .pit_stops import get_live_pit_stops
+from .radio import get_driver_radio
 from .stints import get_stints_live
 
 __all__ = [

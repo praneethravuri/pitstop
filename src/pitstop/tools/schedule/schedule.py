@@ -1,8 +1,9 @@
-from pitstop.clients.fastf1_client import FastF1Client
-from typing import Optional
-from pitstop.models.schedule import ScheduleResponse, EventInfo
 from datetime import datetime
+
 import pandas as pd
+
+from pitstop.clients.fastf1_client import FastF1Client
+from pitstop.models.schedule import EventInfo, ScheduleResponse
 
 # Initialize FastF1 client
 fastf1_client = FastF1Client()
@@ -11,32 +12,36 @@ fastf1_client = FastF1Client()
 def _row_to_event_info(row) -> EventInfo:
     """Convert a DataFrame row to EventInfo pydantic model."""
     return EventInfo(
-        round_number=int(row['RoundNumber']) if pd.notna(row.get('RoundNumber')) else None,
-        event_name=str(row['EventName']) if pd.notna(row.get('EventName')) else "",
-        country=str(row['Country']) if pd.notna(row.get('Country')) else "",
-        location=str(row['Location']) if pd.notna(row.get('Location')) else "",
-        official_event_name=str(row['OfficialEventName']) if pd.notna(row.get('OfficialEventName')) else None,
-        event_date=str(row['EventDate']) if pd.notna(row.get('EventDate')) else None,
-        event_format=str(row['EventFormat']) if pd.notna(row.get('EventFormat')) else None,
-        session_1_date=str(row['Session1Date']) if pd.notna(row.get('Session1Date')) else None,
-        session_2_date=str(row['Session2Date']) if pd.notna(row.get('Session2Date')) else None,
-        session_3_date=str(row['Session3Date']) if pd.notna(row.get('Session3Date')) else None,
-        session_4_date=str(row['Session4Date']) if pd.notna(row.get('Session4Date')) else None,
-        session_5_date=str(row['Session5Date']) if pd.notna(row.get('Session5Date')) else None,
-        session_1_name=str(row['Session1']) if pd.notna(row.get('Session1')) else None,
-        session_2_name=str(row['Session2']) if pd.notna(row.get('Session2')) else None,
-        session_3_name=str(row['Session3']) if pd.notna(row.get('Session3')) else None,
-        session_4_name=str(row['Session4']) if pd.notna(row.get('Session4')) else None,
-        session_5_name=str(row['Session5']) if pd.notna(row.get('Session5')) else None,
-        is_testing=bool(row.get('EventFormat') == 'testing') if pd.notna(row.get('EventFormat')) else False,
+        round_number=int(row["RoundNumber"]) if pd.notna(row.get("RoundNumber")) else None,
+        event_name=str(row["EventName"]) if pd.notna(row.get("EventName")) else "",
+        country=str(row["Country"]) if pd.notna(row.get("Country")) else "",
+        location=str(row["Location"]) if pd.notna(row.get("Location")) else "",
+        official_event_name=str(row["OfficialEventName"])
+        if pd.notna(row.get("OfficialEventName"))
+        else None,
+        event_date=str(row["EventDate"]) if pd.notna(row.get("EventDate")) else None,
+        event_format=str(row["EventFormat"]) if pd.notna(row.get("EventFormat")) else None,
+        session_1_date=str(row["Session1Date"]) if pd.notna(row.get("Session1Date")) else None,
+        session_2_date=str(row["Session2Date"]) if pd.notna(row.get("Session2Date")) else None,
+        session_3_date=str(row["Session3Date"]) if pd.notna(row.get("Session3Date")) else None,
+        session_4_date=str(row["Session4Date"]) if pd.notna(row.get("Session4Date")) else None,
+        session_5_date=str(row["Session5Date"]) if pd.notna(row.get("Session5Date")) else None,
+        session_1_name=str(row["Session1"]) if pd.notna(row.get("Session1")) else None,
+        session_2_name=str(row["Session2"]) if pd.notna(row.get("Session2")) else None,
+        session_3_name=str(row["Session3"]) if pd.notna(row.get("Session3")) else None,
+        session_4_name=str(row["Session4"]) if pd.notna(row.get("Session4")) else None,
+        session_5_name=str(row["Session5"]) if pd.notna(row.get("Session5")) else None,
+        is_testing=bool(row.get("EventFormat") == "testing")
+        if pd.notna(row.get("EventFormat"))
+        else False,
     )
 
 
 def get_schedule(
     year: int,
     include_testing: bool = True,
-    round: Optional[int] = None,
-    event_name: Optional[str] = None,
+    round: int | None = None,
+    event_name: str | None = None,
     only_remaining: bool = False,
 ) -> ScheduleResponse:
     """
@@ -71,29 +76,26 @@ def get_schedule(
     # Get full event schedule
     if only_remaining:
         schedule_df = fastf1_client.get_events_remaining(
-            dt=datetime.now(),
-            include_testing=include_testing
+            dt=datetime.now(), include_testing=include_testing
         )
     else:
-        schedule_df = fastf1_client.get_event_schedule(
-            year=year,
-            include_testing=include_testing
-        )
+        schedule_df = fastf1_client.get_event_schedule(year=year, include_testing=include_testing)
 
     # Convert to list of dicts
-    events_data = schedule_df.to_dict('records')
+    events_data = schedule_df.to_dict("records")
 
     # Apply round filter if specified
     if round is not None:
-        events_data = [e for e in events_data if e.get('RoundNumber') == round]
+        events_data = [e for e in events_data if e.get("RoundNumber") == round]
 
     # Apply event name filter if specified
     if event_name is not None:
         events_data = [
-            e for e in events_data
-            if event_name.lower() in e.get('EventName', '').lower()
-            or event_name.lower() in e.get('Country', '').lower()
-            or event_name.lower() in e.get('Location', '').lower()
+            e
+            for e in events_data
+            if event_name.lower() in e.get("EventName", "").lower()
+            or event_name.lower() in e.get("Country", "").lower()
+            or event_name.lower() in e.get("Location", "").lower()
         ]
 
     # Convert to Pydantic models
@@ -123,13 +125,15 @@ if __name__ == "__main__":
 
     # Test 2: Get Monaco GP details
     print("\n2. Getting Monaco GP 2024 details:")
-    monaco = get_schedule(2024, event_name='Monaco')
+    monaco = get_schedule(2024, event_name="Monaco")
     if monaco.events:
         event = monaco.events[0]
         print(f"   Event: {event.event_name}")
         print(f"   Location: {event.location}, {event.country}")
         print(f"   Round: {event.round_number}")
-        print(f"   Sessions: {event.session_1_name}, {event.session_2_name}, {event.session_3_name}")
+        print(
+            f"   Sessions: {event.session_1_name}, {event.session_2_name}, {event.session_3_name}"
+        )
 
     # Test 3: Get remaining events
     print("\n3. Getting remaining 2024 events:")

@@ -1,6 +1,7 @@
 """Error helpers for converting exceptions into ToolError."""
 
 import logging
+
 from fastmcp.exceptions import ToolError
 
 logger = logging.getLogger("pitstop.errors")

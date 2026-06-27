@@ -1,6 +1,7 @@
-import feedparser
 from datetime import datetime
-from models import NewsResponse, NewsArticle
+
+import feedparser
+from models import NewsArticle, NewsResponse
 from utils import clean_html
 
 
@@ -20,7 +21,6 @@ class RSSClient:
         # Official sources
         "formula1": "https://www.formula1.com/content/fom-website/en/latest/all.xml",
         "fia": "https://www.fia.com/rss/press-release",
-
         # Major F1 news outlets
         "autosport": "https://www.autosport.com/rss/feed/f1",
         "motorsport": "https://www.motorsport.com/rss/f1/news/",
@@ -31,26 +31,22 @@ class RSSClient:
         "grandprix": "https://www.grandprix.com/feed/",
         "espnf1": "https://www.espn.com/espn/rss/rpm/news",
         "skysportsf1": "https://www.skysports.com/rss/12040",
-
         # Specialist & Technical sources
         "f1technical": "https://www.f1technical.net/rss/news.xml",
         "pitpass": "https://www.pitpass.com/rss",
         "joe-saward": "https://joesaward.wordpress.com/feed/",
         "racecar-engineering": "https://www.racecar-engineering.com/feed/",
-
         # Regional & International sources
         "gpblog": "https://www.gpblog.com/en/rss.xml",
         "f1i": "https://f1i.com/feed",
         "f1-insider-de": "https://www.f1-insider.com/feed/",
         "formel1-de": "https://www.formel1.de/rss.xml",
-
         # Community & Fan sources
         "wtf1": "https://wtf1.com/feed/",
         "racingnews365": "https://racingnews365.com/rss",
         "formulanerds": "https://formulanerds.com/feed/",
         "f1destinations": "https://f1destinations.com/feed/",
         "gpfans": "https://www.gpfans.com/en/rss.xml",
-
         # Additional coverage
         "motorsportweek": "https://www.motorsportweek.com/feed/",
         "racedepartment": "https://www.racedepartment.com/forums/f1-2021-the-game.214/index.rss",
@@ -78,9 +74,7 @@ class RSSClient:
         # Validate source
         if source != "all" and source not in self.RSS_FEEDS:
             valid_sources = ", ".join(self.RSS_FEEDS.keys())
-            raise ValueError(
-                f"Invalid source '{source}'. Must be one of: {valid_sources}, all"
-            )
+            raise ValueError(f"Invalid source '{source}'. Must be one of: {valid_sources}, all")
 
         try:
             if source == "all":

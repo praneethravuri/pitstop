@@ -3,20 +3,20 @@
 from .general.session import get_session_data
 from .general.telemetry import get_telemetry_data
 
-# Standings
-from .standings import get_standings
+# Live (Consolidated OpenF1)
+from .live.live_data import get_live_data
 
 # Media/News
 from .media import get_f1_news
 
-# Schedule
-from .schedule import get_schedule
-
 # Reference (Consolidated with Track/Circuit)
 from .reference import get_reference_data
 
-# Live (Consolidated OpenF1)
-from .live.live_data import get_live_data
+# Schedule
+from .schedule import get_schedule
+
+# Standings
+from .standings import get_standings
 
 __all__ = [
     # Generic

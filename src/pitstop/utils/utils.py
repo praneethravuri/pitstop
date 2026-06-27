@@ -15,10 +15,7 @@ def filter_by_name(records: list[dict], query: str, fields: list[str]) -> list[d
     if not query:
         return records
     q = query.lower()
-    return [
-        r for r in records
-        if any(q in str(r.get(f, "")).lower() for f in fields)
-    ]
+    return [r for r in records if any(q in str(r.get(f, "")).lower() for f in fields)]
 
 
 def paginate(items: list, page: int, page_size: int) -> tuple[list, PageMeta]:

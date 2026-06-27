@@ -1,6 +1,6 @@
 from .weather import (
-    WeatherDataPoint,
     SessionWeatherDataResponse,
+    WeatherDataPoint,
 )
 
 __all__ = [

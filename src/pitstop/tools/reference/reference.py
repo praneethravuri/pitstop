@@ -1,15 +1,17 @@
-from pitstop.clients.fastf1_client import FastF1Client
-from typing import Optional, Literal
-from pitstop.models.reference import (
-    ReferenceDataResponse,
-    DriverInfo,
-    ConstructorInfo,
-    CircuitInfo,
-    TireCompoundInfo,
-    CornerInfo,
-)
 from datetime import datetime
+from typing import Literal
+
 import pandas as pd
+
+from pitstop.clients.fastf1_client import FastF1Client
+from pitstop.models.reference import (
+    CircuitInfo,
+    ConstructorInfo,
+    CornerInfo,
+    DriverInfo,
+    ReferenceDataResponse,
+    TireCompoundInfo,
+)
 
 # Initialize FastF1 client
 fastf1_client = FastF1Client()
@@ -17,8 +19,8 @@ fastf1_client = FastF1Client()
 
 def get_reference_data(
     reference_type: Literal["driver", "constructor", "circuit", "tire_compounds"],
-    year: Optional[int] = None,
-    name: Optional[str] = None,
+    year: int | None = None,
+    name: str | None = None,
 ) -> ReferenceDataResponse:
     """
     **PRIMARY TOOL** for Formula 1 reference data and static information (1950-present).
@@ -52,28 +54,31 @@ def get_reference_data(
     if reference_type == "driver":
         # Get driver information from Ergast
         driver_response = fastf1_client.ergast.get_driver_info(season=year)
-        drivers_data = driver_response.to_dict('records')
+        drivers_data = driver_response.to_dict("records")
 
         # Filter by name if provided
         if name:
             drivers_data = [
-                d for d in drivers_data
-                if name.lower() in d.get('givenName', '').lower()
-                or name.lower() in d.get('familyName', '').lower()
-                or name.lower() in d.get('driverId', '').lower()
-                or name.lower() in d.get('driverCode', '').lower()
+                d
+                for d in drivers_data
+                if name.lower() in d.get("givenName", "").lower()
+                or name.lower() in d.get("familyName", "").lower()
+                or name.lower() in d.get("driverId", "").lower()
+                or name.lower() in d.get("driverCode", "").lower()
             ]
 
         # Convert to Pydantic models
         drivers_list = [
             DriverInfo(
-                driver_id=str(d['driverId']),
-                driver_number=int(d['driverNumber']) if d.get('driverNumber') else None,
-                driver_code=str(d['driverCode']) if d.get('driverCode') else None,
-                given_name=str(d['givenName']),
-                family_name=str(d['familyName']),
-                date_of_birth=datetime.fromisoformat(d['dateOfBirth']).date() if d.get('dateOfBirth') and isinstance(d['dateOfBirth'], str) else None,
-                nationality=str(d['nationality']),
+                driver_id=str(d["driverId"]),
+                driver_number=int(d["driverNumber"]) if d.get("driverNumber") else None,
+                driver_code=str(d["driverCode"]) if d.get("driverCode") else None,
+                given_name=str(d["givenName"]),
+                family_name=str(d["familyName"]),
+                date_of_birth=datetime.fromisoformat(d["dateOfBirth"]).date()
+                if d.get("dateOfBirth") and isinstance(d["dateOfBirth"], str)
+                else None,
+                nationality=str(d["nationality"]),
             )
             for d in drivers_data
         ]
@@ -89,22 +94,23 @@ def get_reference_data(
     elif reference_type == "constructor":
         # Get constructor information from Ergast
         constructor_response = fastf1_client.ergast.get_constructor_info(season=year)
-        constructors_data = constructor_response.to_dict('records')
+        constructors_data = constructor_response.to_dict("records")
 
         # Filter by name if provided
         if name:
             constructors_data = [
-                c for c in constructors_data
-                if name.lower() in c.get('constructorName', '').lower()
-                or name.lower() in c.get('constructorId', '').lower()
+                c
+                for c in constructors_data
+                if name.lower() in c.get("constructorName", "").lower()
+                or name.lower() in c.get("constructorId", "").lower()
             ]
 
         # Convert to Pydantic models
         constructors_list = [
             ConstructorInfo(
-                constructor_id=str(c['constructorId']),
-                constructor_name=str(c['constructorName']),
-                nationality=str(c['nationality']),
+                constructor_id=str(c["constructorId"]),
+                constructor_name=str(c["constructorName"]),
+                nationality=str(c["nationality"]),
             )
             for c in constructors_data
         ]
@@ -125,29 +131,30 @@ def get_reference_data(
         else:
             circuits_response = fastf1_client.ergast.get_circuits()
 
-        circuits_data = circuits_response.to_dict('records')
+        circuits_data = circuits_response.to_dict("records")
 
         # Filter by name if provided
         if name:
             circuits_data = [
-                c for c in circuits_data
-                if name.lower() in c.get('circuitName', '').lower()
-                or name.lower() in c.get('location', '').lower()
-                or name.lower() in c.get('country', '').lower()
-                or name.lower() in c.get('circuitId', '').lower()
+                c
+                for c in circuits_data
+                if name.lower() in c.get("circuitName", "").lower()
+                or name.lower() in c.get("location", "").lower()
+                or name.lower() in c.get("country", "").lower()
+                or name.lower() in c.get("circuitId", "").lower()
             ]
 
         # Convert to Pydantic models
         circuits_list = []
         for c in circuits_data:
             circuit_info = CircuitInfo(
-                circuit_id=str(c['circuitId']),
-                circuit_name=str(c['circuitName']),
-                location=str(c['location']),
-                country=str(c['country']),
-                lat=float(c['lat']) if c.get('lat') else None,
-                lng=float(c['lng']) if c.get('lng') else None,
-                url=str(c['url']) if c.get('url') else None,
+                circuit_id=str(c["circuitId"]),
+                circuit_name=str(c["circuitName"]),
+                location=str(c["location"]),
+                country=str(c["country"]),
+                lat=float(c["lat"]) if c.get("lat") else None,
+                lng=float(c["lng"]) if c.get("lng") else None,
+                url=str(c["url"]) if c.get("url") else None,
             )
 
             # Enriched data: If name was provided and we have a match, try to get corners
@@ -156,35 +163,45 @@ def get_reference_data(
                     # Use year or default to current (if not provided) or 2024 to ensure data exists
                     # FastF1 needs a session to get circuit info.
                     search_year = year if year else datetime.now().year
-                    
+
                     # Fuzzy match event by circuit name/location
                     # This is heavy, so we only do it if explicitly filtered by name
                     try:
-                        session_obj = fastf1_client.get_session(search_year, circuit_info.location, 'R')
+                        session_obj = fastf1_client.get_session(
+                            search_year, circuit_info.location, "R"
+                        )
                     except Exception:
                         try:
-                            session_obj = fastf1_client.get_session(search_year, circuit_info.circuit_name, 'R')
+                            session_obj = fastf1_client.get_session(
+                                search_year, circuit_info.circuit_name, "R"
+                            )
                         except Exception:
-                            session_obj = None # Skip if not found
+                            session_obj = None  # Skip if not found
 
                     if session_obj:
                         session_obj.load(laps=False, telemetry=False, weather=False, messages=False)
                         detailed_info = session_obj.get_circuit_info()
-                        
+
                         if detailed_info and detailed_info.corners is not None:
                             corners_list = []
                             for _, corner in detailed_info.corners.iterrows():
                                 corners_list.append(
                                     CornerInfo(
-                                        number=int(corner['Number']) if pd.notna(corner.get('Number')) else 0,
-                                        letter=str(corner['Letter']) if pd.notna(corner.get('Letter')) else None,
-                                        distance=float(corner['Distance']) if pd.notna(corner.get('Distance')) else None,
-                                        x=float(corner['X']) if pd.notna(corner.get('X')) else None,
-                                        y=float(corner['Y']) if pd.notna(corner.get('Y')) else None,
+                                        number=int(corner["Number"])
+                                        if pd.notna(corner.get("Number"))
+                                        else 0,
+                                        letter=str(corner["Letter"])
+                                        if pd.notna(corner.get("Letter"))
+                                        else None,
+                                        distance=float(corner["Distance"])
+                                        if pd.notna(corner.get("Distance"))
+                                        else None,
+                                        x=float(corner["X"]) if pd.notna(corner.get("X")) else None,
+                                        y=float(corner["Y"]) if pd.notna(corner.get("Y")) else None,
                                     )
                                 )
                             circuit_info.corners = corners_list
-                            if hasattr(detailed_info, 'rotation'):
+                            if hasattr(detailed_info, "rotation"):
                                 circuit_info.rotation = float(detailed_info.rotation)
                 except Exception:
                     # Ignore errors in enrichment, just return basic info
@@ -207,36 +224,31 @@ def get_reference_data(
             TireCompoundInfo(
                 compound_name="SOFT",
                 color="red",
-                description="Softest compound with highest grip but fastest degradation"
+                description="Softest compound with highest grip but fastest degradation",
             ),
             TireCompoundInfo(
                 compound_name="MEDIUM",
                 color="yellow",
-                description="Middle compound balancing grip and durability"
+                description="Middle compound balancing grip and durability",
             ),
             TireCompoundInfo(
                 compound_name="HARD",
                 color="white",
-                description="Hardest compound with lowest grip but slowest degradation"
+                description="Hardest compound with lowest grip but slowest degradation",
             ),
             TireCompoundInfo(
                 compound_name="INTERMEDIATE",
                 color="green",
-                description="For damp or drying track conditions"
+                description="For damp or drying track conditions",
             ),
             TireCompoundInfo(
-                compound_name="WET",
-                color="blue",
-                description="For heavy rain conditions"
+                compound_name="WET", color="blue", description="For heavy rain conditions"
             ),
         ]
 
         # Filter by name if provided
         if name:
-            compounds = [
-                c for c in compounds
-                if name.lower() in c.compound_name.lower()
-            ]
+            compounds = [c for c in compounds if name.lower() in c.compound_name.lower()]
 
         return ReferenceDataResponse(
             reference_type=reference_type,
@@ -256,7 +268,9 @@ if __name__ == "__main__":
     drivers = get_reference_data("driver", year=2024)
     print(f"   Total drivers: {drivers.total_records}")
     if drivers.drivers:
-        print(f"   Sample: {drivers.drivers[0].given_name} {drivers.drivers[0].family_name} ({drivers.drivers[0].driver_code})")
+        print(
+            f"   Sample: {drivers.drivers[0].given_name} {drivers.drivers[0].family_name} ({drivers.drivers[0].driver_code})"
+        )
 
     # Test 2: Get specific driver
     print("\n2. Getting Verstappen's info:")

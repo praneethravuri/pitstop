@@ -1,0 +1,4 @@
+#!/bin/sh
+# Pre-commit: format check + lint. Run `git config core.hooksPath .githooks` after cloning.
+uv run ruff format --check src/ tests/ || { echo "ruff format: run 'uv run ruff format src/ tests/' to fix"; exit 1; }
+uv run ruff check src/ tests/ || { echo "ruff check: run 'uv run ruff check --fix src/ tests/' to fix"; exit 1; }

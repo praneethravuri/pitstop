@@ -1,7 +1,7 @@
 from .telemetry import (
-    TelemetryPoint,
     LapTelemetryResponse,
     TelemetryComparisonResponse,
+    TelemetryPoint,
 )
 
 __all__ = [

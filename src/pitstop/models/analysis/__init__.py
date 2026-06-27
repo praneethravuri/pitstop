@@ -1,9 +1,9 @@
 from .analysis import (
-    RacePaceData,
-    TireDegradationData,
-    StintSummary,
-    ConsistencyData,
     AnalysisResponse,
+    ConsistencyData,
+    RacePaceData,
+    StintSummary,
+    TireDegradationData,
 )
 
 __all__ = [

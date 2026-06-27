@@ -50,6 +50,7 @@ def test_http_retry_wraps_function():
 
 def test_get_openf1_client_returns_nonnone():
     import pitstop.clients as clients_mod
+
     clients_mod._openf1_client = None
 
     client = get_openf1_client()
@@ -58,6 +59,7 @@ def test_get_openf1_client_returns_nonnone():
 
 def test_get_openf1_client_singleton():
     import pitstop.clients as clients_mod
+
     clients_mod._openf1_client = None
 
     c1 = get_openf1_client()
@@ -67,6 +69,7 @@ def test_get_openf1_client_singleton():
 
 def test_get_openf1_client_base_url():
     import pitstop.clients as clients_mod
+
     clients_mod._openf1_client = None
 
     client = get_openf1_client()
@@ -75,6 +78,7 @@ def test_get_openf1_client_base_url():
 
 def test_get_jolpica_client_returns_nonnone():
     import pitstop.clients as clients_mod
+
     clients_mod._jolpica_client = None
 
     client = get_jolpica_client()
@@ -83,6 +87,7 @@ def test_get_jolpica_client_returns_nonnone():
 
 def test_get_jolpica_client_singleton():
     import pitstop.clients as clients_mod
+
     clients_mod._jolpica_client = None
 
     c1 = get_jolpica_client()
@@ -92,6 +97,7 @@ def test_get_jolpica_client_singleton():
 
 def test_get_jolpica_client_base_url():
     import pitstop.clients as clients_mod
+
     clients_mod._jolpica_client = None
 
     client = get_jolpica_client()
