@@ -1,18 +1,25 @@
+import logging
 from typing import Literal
 
 from pydantic import BaseModel
 
 from pitstop.clients.fastf1_client import FastF1Client
-from pitstop.models.sessions.drivers import DriverInfo, SessionDriversResponse
-from pitstop.models.sessions.results import SessionResult, SessionResultsResponse
-from pitstop.models.sessions.session_details import (
+from pitstop.models.common import PageMeta, PartialErrors
+from pitstop.models.sessions import (
     LapInfo,
     SessionDetailsResponse,
+    SessionDriversResponse,
     SessionInfo,
+    SessionResult,
+    SessionResultsResponse,
     SessionWeather,
 )
-from pitstop.models.weather.session_weather import SessionWeatherDataResponse, WeatherPoint
+from pitstop.models.weather import SessionWeatherDataResponse, WeatherDataPoint
+from pitstop.utils import paginate, to_tool_error
 
+logger = logging.getLogger("pitstop.session")
+
+# ponytail: module-level singleton; swap for shared factory when clients/__init__ ships it
 fastf1_client = FastF1Client()
 
 
@@ -21,6 +28,8 @@ class SessionDataResponse(BaseModel):
     results: SessionResultsResponse | None = None
     drivers: SessionDriversResponse | None = None
     weather: SessionWeatherDataResponse | None = None
+    pagination: PageMeta | None = None
+    partial_errors: PartialErrors | None = None
 
 
 def get_session_data(
@@ -28,6 +37,8 @@ def get_session_data(
     gp: str | int,
     session: str,
     includes: list[Literal["details", "results", "drivers", "weather"]] = ["details", "results"],
+    page: int = 1,
+    page_size: int = 50,
 ) -> SessionDataResponse:
     """
     Get comprehensive data for a Formula 1 session.
@@ -40,29 +51,23 @@ def get_session_data(
         session: Session identifier (e.g., "R", "Q", "FP1")
         includes: List of data to include. Options: "details", "results", "drivers", "weather".
                  Default: ["details", "results"]
+        page: Page number (1-indexed)
+        page_size: Items per page
     """
-    # Load session once
-    session_obj = fastf1_client.get_session(year, gp, session)
-    session_obj.load()
+    try:
+        session_obj = fastf1_client.get_session(year, gp, session)
+        session_obj.load()
+    except Exception as exc:
+        raise to_tool_error("get_session_data", "fastf1", exc)
 
     response = SessionDataResponse()
 
     if "details" in includes:
-        # Populate details
         fastest_lap = session_obj.laps.pick_fastest() if len(session_obj.laps) > 0 else None
 
-        # Calculate rainfall
         rainfall = False
         if session_obj.weather_data is not None and not session_obj.weather_data.empty:
             rainfall = session_obj.weather_data["Rainfall"].any()
-
-        # Get results for classification
-
-        if hasattr(session_obj, "results"):
-            for drv in session_obj.results:
-                # Convert FastF1 result to model
-                # Logic simplified for brevity, assume standard FastF1 result object
-                pass
 
         response.details = SessionDetailsResponse(
             session_info=SessionInfo(
@@ -71,12 +76,12 @@ def get_session_data(
                 event_name=session_obj.event.EventName,
                 location=session_obj.event.Location,
                 country=session_obj.event.Country,
-                circuit_name=session_obj.event.EventName,  # Approximation
+                circuit_name=session_obj.event.EventName,
                 year=year,
                 round=session_obj.event.RoundNumber,
                 session_date=session_obj.date,
             ),
-            results=[],  # Populated below or via get_session_results logic
+            results=[],
             weather=SessionWeather(
                 air_temp=session_obj.weather_data["AirTemp"].mean()
                 if len(session_obj.weather_data) > 0
@@ -104,68 +109,59 @@ def get_session_data(
 
     if "results" in includes:
         res_list = []
-        if hasattr(session_obj, "results"):
-            # FastF1 results is usually a DataFrame or list-like
-            # But in recent versions it might be accessed via session.results (DataFrame)
-            # Safe access: use session_obj.results object directly if available
+        partial = PartialErrors()
+        for driver in session_obj.drivers:
             try:
-                # Iterate through drivers in results
-                # Note: Implementation details vary by FastF1 version.
-                # We'll use a simplified iteration over drivers
-                for driver in session_obj.drivers:
-                    d_info = session_obj.get_driver(driver)
-                    res_list.append(
-                        SessionResult(
-                            position=d_info.get("Position"),
-                            driver_number=str(d_info["DriverNumber"]),
-                            broadcast_name=d_info.get("BroadcastName", str(d_info["Abbreviation"])),
-                            abbreviation=str(d_info["Abbreviation"]),
-                            team_name=d_info.get("TeamName", ""),
-                            team_color=f"#{d_info.get('TeamColor', '')}",
-                            first_name=d_info.get("FirstName"),
-                            last_name=d_info.get("LastName"),
-                            full_name=d_info.get("FullName"),
-                            status=str(d_info.get("Status", "")),
-                            points=d_info.get("Points"),
-                        )
+                d_info = session_obj.get_driver(driver)
+                res_list.append(
+                    SessionResult(
+                        position=d_info.get("Position"),
+                        driver_number=str(d_info["DriverNumber"]),
+                        broadcast_name=d_info.get("BroadcastName", str(d_info["Abbreviation"])),
+                        abbreviation=str(d_info["Abbreviation"]),
+                        team_name=d_info.get("TeamName", ""),
+                        team_color=f"#{d_info.get('TeamColor', '')}",
+                        first_name=d_info.get("FirstName"),
+                        last_name=d_info.get("LastName"),
+                        full_name=d_info.get("FullName"),
+                        status=str(d_info.get("Status", "")),
+                        points=d_info.get("Points"),
                     )
-            except Exception:
-                pass
+                )
+            except Exception as exc:
+                logger.warning("Driver %s result fetch failed: %s", driver, exc)
+                partial.add(str(driver), "fastf1", exc)
 
+        paged, meta = paginate(res_list, page, page_size)
         response.results = SessionResultsResponse(
             session_name=session_obj.name,
             event_name=session_obj.event.EventName,
-            results=res_list,
-            total_drivers=len(res_list),
+            results=paged,
+            total_drivers=meta.total_items,
         )
+        response.pagination = meta
+        if partial.has_errors:
+            response.partial_errors = partial
 
     if "drivers" in includes:
-        # Populate drivers
-        drv_list = []
-        for driver in session_obj.drivers:
-            d_info = session_obj.get_driver(driver)
-            drv_list.append(
-                DriverInfo(
-                    driver_number=str(d_info["DriverNumber"]),
-                    broadcast_name=d_info.get("BroadcastName", str(d_info["Abbreviation"])),
-                    full_name=d_info.get("FullName"),
-                    abbreviation=str(d_info["Abbreviation"]),
-                    team_name=d_info.get("TeamName", ""),
-                    face_url=d_info.get("HeadshotUrl"),
-                    team_color=f"#{d_info.get('TeamColor', '')}",
-                )
-            )
-
+        drv_list = list(session_obj.drivers)
+        paged, meta = paginate(drv_list, page, page_size)
         response.drivers = SessionDriversResponse(
-            session_name=session_obj.name, year=year, drivers=drv_list, total_drivers=len(drv_list)
+            session_name=session_obj.name,
+            event_name=session_obj.event.EventName,
+            year=year,
+            drivers=paged,
+            total_drivers=meta.total_items,
         )
+        if response.pagination is None:
+            response.pagination = meta
 
     if "weather" in includes:
         w_points = []
         if session_obj.weather_data is not None:
-            for idx, row in session_obj.weather_data.iterrows():
+            for _idx, row in session_obj.weather_data.iterrows():
                 w_points.append(
-                    WeatherPoint(
+                    WeatherDataPoint(
                         time=str(row["Time"]),
                         air_temp=float(row["AirTemp"]),
                         track_temp=float(row["TrackTemp"]),
@@ -176,28 +172,11 @@ def get_session_data(
                     )
                 )
 
-        start_w = session_obj.weather_data.iloc[0] if len(session_obj.weather_data) > 0 else None
-
         response.weather = SessionWeatherDataResponse(
             session_name=session_obj.name,
-            weather_points=w_points,
+            event_name=session_obj.event.EventName,
+            weather_data=w_points,
             total_points=len(w_points),
-            average_air_temp=session_obj.weather_data["AirTemp"].mean()
-            if len(session_obj.weather_data) > 0
-            else 0,
-            average_track_temp=session_obj.weather_data["TrackTemp"].mean()
-            if len(session_obj.weather_data) > 0
-            else 0,
-            rain_chance=100.0 if session_obj.weather_data["Rainfall"].any() else 0.0,
-            initial_weather=f"Air: {start_w['AirTemp']}C, Track: {start_w['TrackTemp']}C"
-            if start_w is not None
-            else "Unknown",
         )
 
     return response
-
-
-if __name__ == "__main__":
-    print("Testing get_session_data...")
-    # data = get_session_data(2024, "Monaco", "R", includes=["details", "weather"])
-    # print(f"Session: {data.details.session_info.name if data.details else 'N/A'}")

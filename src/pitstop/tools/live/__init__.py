@@ -1,14 +1,1 @@
-# Live timing tools (OpenF1 API)
-from .intervals import get_live_intervals
-from .meetings import get_meeting_info
-from .pit_stops import get_live_pit_stops
-from .radio import get_driver_radio
-from .stints import get_stints_live
-
-__all__ = [
-    "get_driver_radio",
-    "get_live_pit_stops",
-    "get_live_intervals",
-    "get_meeting_info",
-    "get_stints_live",
-]
+# ponytail: stubs removed; Task 9 will re-add these when the modules exist

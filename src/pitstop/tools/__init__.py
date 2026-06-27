@@ -1,35 +1,34 @@
-# Session data
-# Generic (Consolidated)
+# ponytail: imports guarded so partially-implemented tools don't block working ones.
+# Each task (9-13) will clean up its own subpackage __init__ when it ships.
 from .general.session import get_session_data
 from .general.telemetry import get_telemetry_data
 
-# Live (Consolidated OpenF1)
-from .live.live_data import get_live_data
+try:
+    from .live.live_data import get_live_data  # noqa: F401
+except ImportError:
+    pass
 
-# Media/News
-from .media import get_f1_news
+try:
+    from .media import get_f1_news  # noqa: F401
+except ImportError:
+    pass
 
-# Reference (Consolidated with Track/Circuit)
-from .reference import get_reference_data
+try:
+    from .reference import get_reference_data  # noqa: F401
+except ImportError:
+    pass
 
-# Schedule
-from .schedule import get_schedule
+try:
+    from .schedule import get_schedule  # noqa: F401
+except ImportError:
+    pass
 
-# Standings
-from .standings import get_standings
+try:
+    from .standings import get_standings  # noqa: F401
+except ImportError:
+    pass
 
 __all__ = [
-    # Generic
     "get_session_data",
     "get_telemetry_data",
-    # Standings
-    "get_standings",
-    # Media
-    "get_f1_news",
-    # Schedule
-    "get_schedule",
-    # Reference
-    "get_reference_data",
-    # Live
-    "get_live_data",
 ]
