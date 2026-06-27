@@ -6,9 +6,10 @@ a tenacity retry wrapper for transient failures as recommended in the
 task brief.
 """
 
-import httpx
 import logging
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+
+import httpx
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 logger = logging.getLogger("pitstop.http")
 

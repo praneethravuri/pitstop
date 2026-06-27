@@ -1,9 +1,9 @@
 """Tests for src/pitstop/clients/http.py — written first (TDD)."""
 
 import httpx
-import pytest
-from pitstop.clients.http import make_client, http_retry
-from pitstop.clients import get_openf1_client, get_jolpica_client
+
+from pitstop.clients import get_jolpica_client, get_openf1_client
+from pitstop.clients.http import http_retry, make_client
 
 
 def test_make_client_returns_nonnone():

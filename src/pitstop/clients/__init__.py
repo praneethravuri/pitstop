@@ -1,6 +1,7 @@
 """Client factories and exports for the pitstop package."""
 
 from pitstop.clients.http import make_client
+
 from .fastf1_client import FastF1Client
 
 _openf1_client = None
