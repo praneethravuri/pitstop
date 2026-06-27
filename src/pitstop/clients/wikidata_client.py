@@ -41,12 +41,11 @@ def run_sparql(sparql: str) -> list[dict]:
             params={"query": sparql, "format": "json"},
         )
         r.raise_for_status()
-    except httpx.HTTPStatusError as e:
+        data = r.json()
+    except (httpx.HTTPStatusError, ValueError) as e:
         raise DataSourceError("wikidata", "sparql", str(e)) from e
     elapsed = int((time.monotonic() - t) * 1000)
     logger.debug("[pitstop.wikidata] SPARQL -> %d (%dms)", r.status_code, elapsed)
-
-    data = r.json()
     if "boolean" in data:
         return [{"boolean": str(data["boolean"]).lower()}]
     bindings = data.get("results", {}).get("bindings", [])

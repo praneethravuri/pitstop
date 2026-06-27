@@ -85,13 +85,13 @@ def get_session_data(
             results=[],
             weather=SessionWeather(
                 air_temp=session_obj.weather_data["AirTemp"].mean()
-                if len(session_obj.weather_data) > 0
+                if session_obj.weather_data is not None and not session_obj.weather_data.empty
                 else None,
                 track_temp=session_obj.weather_data["TrackTemp"].mean()
-                if len(session_obj.weather_data) > 0
+                if session_obj.weather_data is not None and not session_obj.weather_data.empty
                 else None,
                 humidity=session_obj.weather_data["Humidity"].mean()
-                if len(session_obj.weather_data) > 0
+                if session_obj.weather_data is not None and not session_obj.weather_data.empty
                 else None,
                 rainfall=bool(rainfall),
             ),
@@ -103,9 +103,7 @@ def get_session_data(
             )
             if fastest_lap is not None
             else None,
-            total_laps=session_obj.total_laps
-            if hasattr(session_obj, "total_laps")
-            else len(session_obj.laps),
+            total_laps=session_obj.total_laps,
         )
 
     if "results" in includes:

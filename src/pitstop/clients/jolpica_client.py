@@ -24,11 +24,11 @@ def query(path: str, **params) -> dict:
     try:
         r = client.get(url, params=clean_params)
         r.raise_for_status()
-    except httpx.HTTPStatusError as e:
+        elapsed = int((time.monotonic() - t) * 1000)
+        logger.debug("[pitstop.jolpica] GET %s -> %d (%dms)", url, r.status_code, elapsed)
+        return r.json()
+    except (httpx.HTTPStatusError, ValueError) as e:
         raise DataSourceError("jolpica", path, str(e)) from e
-    elapsed = int((time.monotonic() - t) * 1000)
-    logger.debug("[pitstop.jolpica] GET %s -> %d (%dms)", url, r.status_code, elapsed)
-    return r.json()
 
 
 def get_seasons(**kw) -> dict:

@@ -62,6 +62,7 @@ def get_telemetry_data(
         try:
             driver_laps = session_obj.laps.pick_driver(driver)
             if len(driver_laps) == 0:
+                partial.add(str(driver), "fastf1", Exception("no laps found"))
                 continue
 
             if lap_num is None:
@@ -71,6 +72,7 @@ def get_telemetry_data(
                 selected_lap = laps.iloc[0] if not laps.empty else None
 
             if selected_lap is None:
+                partial.add(str(driver), "fastf1", Exception("no laps found"))
                 continue
 
             tel_data = selected_lap.get_telemetry()
@@ -80,16 +82,16 @@ def get_telemetry_data(
                 points.append(
                     TelemetryPoint(
                         session_time=str(row["SessionTime"]),
-                        rpm=int(row["RPM"]) if pd.notna(row.get("RPM")) else 0,
-                        speed=float(row["Speed"]) if pd.notna(row.get("Speed")) else 0.0,
-                        throttle=float(row["Throttle"]) if pd.notna(row.get("Throttle")) else 0.0,
-                        brake=bool(row["Brake"]) if pd.notna(row.get("Brake")) else False,
-                        n_gear=int(row["nGear"]) if pd.notna(row.get("nGear")) else 0,
-                        drs=int(row["DRS"]) if pd.notna(row.get("DRS")) else 0,
-                        distance=float(row["Distance"]) if pd.notna(row.get("Distance")) else 0.0,
-                        x=float(row["X"]) if pd.notna(row.get("X")) else 0.0,
-                        y=float(row["Y"]) if pd.notna(row.get("Y")) else 0.0,
-                        z=float(row["Z"]) if pd.notna(row.get("Z")) else 0.0,
+                        rpm=int(row["RPM"]) if pd.notna(row.get("RPM")) else None,
+                        speed=float(row["Speed"]) if pd.notna(row.get("Speed")) else None,
+                        throttle=float(row["Throttle"]) if pd.notna(row.get("Throttle")) else None,
+                        brake=float(row["Brake"]) if pd.notna(row.get("Brake")) else None,
+                        n_gear=int(row["nGear"]) if pd.notna(row.get("nGear")) else None,
+                        drs=int(row["DRS"]) if pd.notna(row.get("DRS")) else None,
+                        distance=float(row["Distance"]) if pd.notna(row.get("Distance")) else None,
+                        x=float(row["X"]) if pd.notna(row.get("X")) else None,
+                        y=float(row["Y"]) if pd.notna(row.get("Y")) else None,
+                        z=float(row["Z"]) if pd.notna(row.get("Z")) else None,
                     )
                 )
 

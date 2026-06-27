@@ -23,11 +23,13 @@ def query(endpoint: str, **filters) -> list[dict]:
     try:
         response = client.get(endpoint, params=params)
         response.raise_for_status()
-    except httpx.HTTPStatusError as e:
+        elapsed = int((time.monotonic() - t) * 1000)
+        logger.debug(
+            "[pitstop.openf1] GET %s -> %d (%dms)", endpoint, response.status_code, elapsed
+        )
+        return response.json()
+    except (httpx.HTTPStatusError, ValueError) as e:
         raise DataSourceError("openf1", endpoint, str(e)) from e
-    elapsed = int((time.monotonic() - t) * 1000)
-    logger.debug("[pitstop.openf1] GET %s -> %d (%dms)", endpoint, response.status_code, elapsed)
-    return response.json()
 
 
 def get_intervals(**kw) -> list[dict]:

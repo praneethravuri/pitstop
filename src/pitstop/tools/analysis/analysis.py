@@ -79,7 +79,7 @@ def get_race_analysis(
                     degradation_list.append(
                         TireDegradationData(
                             driver=str(driver),
-                            compound=str(compound) if compound is not None else None,
+                            compound=str(compound) if compound == compound else None,
                             stint_number=int(stint_num),
                             lap_start=int(lap_nums.min()),
                             lap_end=int(lap_nums.max()),
@@ -98,7 +98,7 @@ def get_race_analysis(
                         StintSummary(
                             driver=str(driver),
                             stint_number=int(stint_num),
-                            compound=str(compound) if compound is not None else None,
+                            compound=str(compound) if compound == compound else None,
                             lap_start=int(lap_nums.min()),
                             lap_end=int(lap_nums.max()),
                             laps=int(n),

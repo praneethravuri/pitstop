@@ -45,11 +45,15 @@ def truncate_text(text: str, max_length: int, suffix: str = "...") -> str:
     Returns:
         str: Truncated text with suffix, or original text if under max_length
     """
+    if max_length <= 0:
+        return ""
     if len(text) <= max_length:
         return text
 
     # Account for suffix length
     truncate_at = max_length - len(suffix)
+    if truncate_at <= 0:
+        return text[:max_length]
 
     # Try to truncate at a word boundary
     truncated = text[:truncate_at].rsplit(" ", 1)[0]

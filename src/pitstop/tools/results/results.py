@@ -95,7 +95,7 @@ def get_results(
             path = f"{year}/{round}/{result_type}"
 
         data = jolpica_client.query(path, **extra)
-        mr = data["MRData"]
+        mr = data.get("MRData") or {}
         total = _int(mr.get("total", 0)) or 0
         pagination = _page_meta(total, page, page_size)
 

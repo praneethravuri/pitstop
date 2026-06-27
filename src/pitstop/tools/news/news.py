@@ -116,7 +116,7 @@ def get_f1_news(
             page = 1
 
         has_filters = any([keywords, driver, team, circuit, year, date_from, date_to])
-        fetch_limit = min(page_size * 3, 100) if has_filters else page_size * page
+        fetch_limit = min(page_size * page * 5, 500) if has_filters else page_size * page
 
         news_response = rss_client.get_news(source=source, limit=fetch_limit)
         filtered_articles = news_response.articles

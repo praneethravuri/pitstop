@@ -97,11 +97,10 @@ def get_live_data(
 
         try:
             raw = openf1_client.query(endpoint, **filters)
-        except DataSourceError as e:
+            all_items = [Model.model_validate(d) for d in raw]
+        except (DataSourceError, Exception) as e:
             partial_errors.add(dtype, "openf1", e)
             continue
-
-        all_items = [Model.model_validate(d) for d in raw]
         items, _ = paginate(all_items, page, page_size)
 
         if dtype == "intervals":

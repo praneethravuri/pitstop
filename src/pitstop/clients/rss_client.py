@@ -61,10 +61,6 @@ class RSSClient:
         "racedepartment": "https://www.racedepartment.com/forums/f1-2021-the-game.214/index.rss",
     }
 
-    def __init__(self):
-        """Initialize the RSS client."""
-        pass
-
     def get_news(self, source: str, limit: int) -> "NewsResponse":
         """
         Fetch F1 news from RSS feeds.
@@ -89,10 +85,6 @@ class RSSClient:
                 return self._fetch_all_sources(limit)
             else:
                 return self._fetch_single_source(source, limit)
-        except ValueError:
-            raise
-        except DataSourceError:
-            raise
         except Exception as e:
             raise DataSourceError("rss", f"fetch:{source}", str(e))
 
@@ -147,7 +139,7 @@ class RSSClient:
             reason = f"all {len(failed_feeds)} feeds failed"
             raise DataSourceError("rss", "fetch", reason)
 
-        all_articles = all_articles[: limit * len(self.RSS_FEEDS)]
+        all_articles = all_articles[:limit]
 
         return NewsResponse(
             source="all",

@@ -149,16 +149,14 @@ def get_reference_data(
                 # Enriched data: If name was provided and we have a match, try to get corners
                 if name:
                     try:
-                        search_year = year if year else datetime.now().year
-
                         try:
                             session_obj = fastf1_client.get_session(
-                                search_year, circuit_info.location, "R"
+                                year, circuit_info.location, "R"
                             )
                         except Exception:
                             try:
                                 session_obj = fastf1_client.get_session(
-                                    search_year, circuit_info.circuit_name, "R"
+                                    year, circuit_info.circuit_name, "R"
                                 )
                             except Exception:
                                 session_obj = None
