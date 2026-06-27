@@ -2,6 +2,8 @@ from datetime import date
 
 from pydantic import BaseModel, Field
 
+from pitstop.models.common import PageMeta
+
 
 class DriverInfo(BaseModel):
     """Information about an F1 driver."""
@@ -82,3 +84,4 @@ class ReferenceDataResponse(BaseModel):
     # Metadata
     total_records: int = Field(..., description="Total number of records returned")
     name_filter: str | None = Field(None, description="Name filter applied (if any)")
+    pagination: PageMeta | None = Field(None, description="Pagination metadata")
