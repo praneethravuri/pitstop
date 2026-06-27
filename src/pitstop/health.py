@@ -46,7 +46,7 @@ async def _probe_openf1() -> SourceStatus:
     t = time.monotonic()
     try:
         async with httpx.AsyncClient(timeout=5.0) as c:
-            r = await c.get("https://api.openf1.org/v1/sessions", params={"limit": 1})
+            r = await c.get("https://api.openf1.org/v1/meetings", params={"year": 2024})
             r.raise_for_status()
         return {
             "name": "openf1",
@@ -66,7 +66,7 @@ async def _probe_openf1() -> SourceStatus:
 async def _probe_rss() -> SourceStatus:
     t = time.monotonic()
     try:
-        async with httpx.AsyncClient(timeout=5.0) as c:
+        async with httpx.AsyncClient(timeout=5.0, follow_redirects=True) as c:
             r = await c.get("https://www.autosport.com/rss/f1/news")
             r.raise_for_status()
         return {
