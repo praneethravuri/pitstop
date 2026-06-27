@@ -1,8 +1,14 @@
+import logging
+from datetime import datetime
+from pathlib import Path
+from typing import Literal
+
 import fastf1
 from fastf1.ergast import Ergast
-from pathlib import Path
-from datetime import datetime
-from typing import Optional, Union, Literal
+
+from pitstop.exceptions import DataSourceError
+
+logger = logging.getLogger("pitstop.fastf1")
 
 
 class FastF1Client:
@@ -37,10 +43,10 @@ class FastF1Client:
     def get_session(
         self,
         year: int,
-        gp: Union[str, int],
-        identifier: Optional[Union[int, str]] = None,
+        gp: str | int,
+        identifier: int | str | None = None,
         *,
-        backend: Optional[Literal['fastf1', 'f1timing', 'ergast']] = None
+        backend: Literal["fastf1", "f1timing", "ergast"] | None = None,
     ):
         """
         Get a session object for a specific event.
@@ -62,12 +68,14 @@ class FastF1Client:
             >>> session = client.get_session(2024, 'Monza', 'Q')
             >>> session.load()
         """
+        logger.debug(
+            "[pitstop.fastf1] get_session year=%s gp=%s identifier=%s", year, gp, identifier
+        )
         try:
             return fastf1.get_session(year, gp, identifier, backend=backend)
         except Exception as e:
-            raise RuntimeError(
-                f"Failed to get session {identifier} for {gp} {year}: {str(e)}"
-            )
+            logger.error("[pitstop.fastf1] failed: %s", e, exc_info=True)
+            raise DataSourceError("fastf1", "get_session", str(e)) from e
 
     def get_testing_session(
         self,
@@ -75,7 +83,7 @@ class FastF1Client:
         test_number: int,
         session_number: int,
         *,
-        backend: Optional[Literal['fastf1', 'f1timing']] = None
+        backend: Literal["fastf1", "f1timing"] | None = None,
     ):
         """
         Get a testing session object.
@@ -96,22 +104,25 @@ class FastF1Client:
             >>> session = client.get_testing_session(2024, 1, 2)
             >>> session.load()
         """
+        logger.debug(
+            "[pitstop.fastf1] get_testing_session year=%s test=%s session=%s",
+            year,
+            test_number,
+            session_number,
+        )
         try:
-            return fastf1.get_testing_session(
-                year, test_number, session_number, backend=backend
-            )
+            return fastf1.get_testing_session(year, test_number, session_number, backend=backend)
         except Exception as e:
-            raise RuntimeError(
-                f"Failed to get testing session {test_number}-{session_number} for {year}: {str(e)}"
-            )
+            logger.error("[pitstop.fastf1] failed: %s", e, exc_info=True)
+            raise DataSourceError("fastf1", "get_testing_session", str(e)) from e
 
     def get_event(
         self,
         year: int,
-        gp: Union[int, str],
+        gp: int | str,
         *,
-        backend: Optional[Literal['fastf1', 'f1timing', 'ergast']] = None,
-        exact_match: bool = False
+        backend: Literal["fastf1", "f1timing", "ergast"] | None = None,
+        exact_match: bool = False,
     ):
         """
         Get an event (Grand Prix) object.
@@ -132,19 +143,19 @@ class FastF1Client:
             >>> event = client.get_event(2024, 'Monza')
             >>> event = client.get_event(2024, 1)  # Round number
         """
+        logger.debug("[pitstop.fastf1] get_event year=%s gp=%s", year, gp)
         try:
             return fastf1.get_event(year, gp, backend=backend, exact_match=exact_match)
         except Exception as e:
-            raise RuntimeError(
-                f"Failed to get event {gp} for {year}: {str(e)}"
-            )
+            logger.error("[pitstop.fastf1] failed: %s", e, exc_info=True)
+            raise DataSourceError("fastf1", "get_event", str(e)) from e
 
     def get_testing_event(
         self,
         year: int,
         test_number: int,
         *,
-        backend: Optional[Literal['fastf1', 'f1timing']] = None
+        backend: Literal["fastf1", "f1timing"] | None = None,
     ):
         """
         Get a testing event object.
@@ -163,19 +174,19 @@ class FastF1Client:
         Examples:
             >>> event = client.get_testing_event(2024, 1)
         """
+        logger.debug("[pitstop.fastf1] get_testing_event year=%s test=%s", year, test_number)
         try:
             return fastf1.get_testing_event(year, test_number, backend=backend)
         except Exception as e:
-            raise RuntimeError(
-                f"Failed to get testing event {test_number} for {year}: {str(e)}"
-            )
+            logger.error("[pitstop.fastf1] failed: %s", e, exc_info=True)
+            raise DataSourceError("fastf1", "get_testing_event", str(e)) from e
 
     def get_events_remaining(
         self,
-        dt: Optional[datetime] = None,
+        dt: datetime | None = None,
         *,
         include_testing: bool = True,
-        backend: Optional[Literal['fastf1', 'f1timing', 'ergast']] = None
+        backend: Literal["fastf1", "f1timing", "ergast"] | None = None,
     ):
         """
         Get remaining events from a given date.
@@ -196,21 +207,19 @@ class FastF1Client:
             >>> from datetime import datetime
             >>> remaining = client.get_events_remaining(datetime(2024, 6, 1))
         """
+        logger.debug("[pitstop.fastf1] get_events_remaining dt=%s", dt)
         try:
-            return fastf1.get_events_remaining(
-                dt, include_testing=include_testing, backend=backend
-            )
+            return fastf1.get_events_remaining(dt, include_testing=include_testing, backend=backend)
         except Exception as e:
-            raise RuntimeError(
-                f"Failed to get remaining events: {str(e)}"
-            )
+            logger.error("[pitstop.fastf1] failed: %s", e, exc_info=True)
+            raise DataSourceError("fastf1", "get_events_remaining", str(e)) from e
 
     def get_event_schedule(
         self,
         year: int,
         *,
         include_testing: bool = True,
-        backend: Optional[Literal['fastf1', 'f1timing', 'ergast']] = None
+        backend: Literal["fastf1", "f1timing", "ergast"] | None = None,
     ):
         """
         Get the full event schedule for a season.
@@ -230,11 +239,9 @@ class FastF1Client:
             >>> schedule = client.get_event_schedule(2024)
             >>> schedule = client.get_event_schedule(2024, include_testing=False)
         """
+        logger.debug("[pitstop.fastf1] get_event_schedule year=%s", year)
         try:
-            return fastf1.get_event_schedule(
-                year, include_testing=include_testing, backend=backend
-            )
+            return fastf1.get_event_schedule(year, include_testing=include_testing, backend=backend)
         except Exception as e:
-            raise RuntimeError(
-                f"Failed to get event schedule for {year}: {str(e)}"
-            )
+            logger.error("[pitstop.fastf1] failed: %s", e, exc_info=True)
+            raise DataSourceError("fastf1", "get_event_schedule", str(e)) from e

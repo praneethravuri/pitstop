@@ -2,20 +2,27 @@
 
 ## Supported Versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
-
 | Version | Supported          |
 | ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+| 0.2.x   | :white_check_mark: |
+| 0.1.x   | :x:                |
 
 ## Reporting a Vulnerability
 
-Use this section to tell people how to report a vulnerability.
+To report a security vulnerability, please email **ravpraneeth@gmail.com** or open a [GitHub Security Advisory](https://github.com/praneethravuri/pitstop/security/advisories/new) with:
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+- A description of the vulnerability
+- Steps to reproduce
+- Potential impact
+- Any suggested mitigations
+
+You can expect an acknowledgement within **48 hours** and a status update within **7 days**.
+
+**Please do not open a public GitHub issue for security vulnerabilities.**
+
+## Security Considerations
+
+- **Transport:** The server defaults to HTTP on `0.0.0.0:8000`. In production, run behind a reverse proxy (nginx, Caddy) with TLS.
+- **Rate limiting:** Built-in `RateLimitingMiddleware` guards all MCP tool endpoints.
+- **Data sources:** All upstream API calls (Jolpica, OpenF1) use HTTPS.
+- **No authentication:** This server is designed to run in a trusted environment (localhost or private network). Do not expose port 8000 directly to the internet without adding authentication.

@@ -1,10 +1,10 @@
 from .openf1 import (
-    TeamRadioMessage,
-    TeamRadioResponse,
-    PitStopData,
-    PitStopsResponse,
     IntervalData,
     IntervalsResponse,
+    PitStopData,
+    PitStopsResponse,
+    TeamRadioMessage,
+    TeamRadioResponse,
 )
 
 __all__ = [

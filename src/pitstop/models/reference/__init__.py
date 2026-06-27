@@ -1,15 +1,17 @@
 from .reference import (
-    DriverInfo,
-    ConstructorInfo,
     CircuitInfo,
-    TireCompoundInfo,
+    ConstructorInfo,
+    CornerInfo,
+    DriverInfo,
     ReferenceDataResponse,
+    TireCompoundInfo,
 )
 
 __all__ = [
     "DriverInfo",
     "ConstructorInfo",
     "CircuitInfo",
+    "CornerInfo",
     "TireCompoundInfo",
     "ReferenceDataResponse",
 ]

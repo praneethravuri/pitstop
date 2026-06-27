@@ -30,6 +30,14 @@ ENV PATH="/app/.venv/bin:$PATH"
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV PITSTOP_ENV=production
+ENV PITSTOP_TRANSPORT=http
+ENV PITSTOP_HOST=0.0.0.0
+ENV PITSTOP_PORT=8000
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
 
 # Entry point
 ENTRYPOINT ["uv", "run", "pitstop"]

@@ -1,18 +1,19 @@
 from pydantic import BaseModel, Field
-from typing import Optional
 
 
 class RaceControlMessage(BaseModel):
     """Single race control message."""
 
-    time: Optional[str] = Field(None, description="When the message was issued")
-    category: Optional[str] = Field(None, description="Message category (e.g., Flag, SafetyCar, CarEvent)")
-    message: Optional[str] = Field(None, description="The actual message text")
-    status: Optional[str] = Field(None, description="Current session/track status")
-    flag: Optional[str] = Field(None, description="Flag status (GREEN, YELLOW, RED, etc.)")
-    scope: Optional[str] = Field(None, description="Scope of the message (Track, Sector, Driver)")
-    sector: Optional[float] = Field(None, description="Relevant sector (if applicable)")
-    racing_number: Optional[str] = Field(None, description="Driver number (if applicable)")
+    time: str | None = Field(None, description="When the message was issued")
+    category: str | None = Field(
+        None, description="Message category (e.g., Flag, SafetyCar, CarEvent)"
+    )
+    message: str | None = Field(None, description="The actual message text")
+    status: str | None = Field(None, description="Current session/track status")
+    flag: str | None = Field(None, description="Flag status (GREEN, YELLOW, RED, etc.)")
+    scope: str | None = Field(None, description="Scope of the message (Track, Sector, Driver)")
+    sector: float | None = Field(None, description="Relevant sector (if applicable)")
+    racing_number: str | None = Field(None, description="Driver number (if applicable)")
 
 
 class RaceControlMessagesResponse(BaseModel):

@@ -1,0 +1,130 @@
+"""Tests for tools/general/telemetry.py — written TDD-first."""
+
+from unittest.mock import MagicMock, patch
+
+import pytest
+from fastmcp.exceptions import ToolError
+
+from pitstop.tools.general.telemetry import TelemetryDataResponse, get_telemetry_data
+
+
+def _make_lap(driver: str, lap_num: int = 1):
+    lap = MagicMock()
+    lap.__getitem__ = lambda self, k: {
+        "Driver": driver,
+        "LapTime": "1:12.000",
+        "LapNumber": lap_num,
+    }[k]
+    # Empty telemetry to keep tests fast
+    tel_df = MagicMock()
+    tel_df.iterrows.return_value = iter([])
+    lap.get_telemetry.return_value = tel_df
+    return lap
+
+
+def _make_driver_laps(driver: str, failing: bool = False):
+    driver_laps = MagicMock()
+    driver_laps.__len__ = MagicMock(return_value=1)
+    if failing:
+        driver_laps.pick_fastest.side_effect = RuntimeError("telemetry unavailable")
+    else:
+        driver_laps.pick_fastest.return_value = _make_lap(driver)
+    return driver_laps
+
+
+def _make_session(drivers=("VER", "HAM"), failing_drivers=()):
+    session = MagicMock()
+    session.name = "Qualifying"
+    session.event = MagicMock()
+    session.event.EventName = "Monaco Grand Prix"
+
+    def pick_driver(drv):
+        return _make_driver_laps(drv, failing=drv in failing_drivers)
+
+    session.laps.pick_driver.side_effect = pick_driver
+    return session
+
+
+# ---------------------------------------------------------------------------
+# top-level error propagation
+# ---------------------------------------------------------------------------
+
+
+@patch("pitstop.tools.general.telemetry.fastf1_client")
+def test_raises_tool_error_on_get_session_failure(mock_client):
+    mock_client.get_session.side_effect = RuntimeError("connection error")
+    with pytest.raises(ToolError):
+        get_telemetry_data(2024, "Monaco", "Q", ["VER"])
+
+
+@patch("pitstop.tools.general.telemetry.fastf1_client")
+def test_raises_tool_error_on_load_failure(mock_client):
+    session = _make_session()
+    session.load.side_effect = RuntimeError("cache miss")
+    mock_client.get_session.return_value = session
+    with pytest.raises(ToolError):
+        get_telemetry_data(2024, "Monaco", "Q", ["VER"])
+
+
+# ---------------------------------------------------------------------------
+# partial errors
+# ---------------------------------------------------------------------------
+
+
+@patch("pitstop.tools.general.telemetry.fastf1_client")
+def test_partial_error_when_one_driver_fails(mock_client):
+    session = _make_session(("VER", "HAM"), failing_drivers=("HAM",))
+    mock_client.get_session.return_value = session
+
+    result = get_telemetry_data(2024, "Monaco", "Q", ["VER", "HAM"])
+
+    assert len(result.drivers_telemetry) == 1
+    assert result.drivers_telemetry[0].driver == "VER"
+    assert result.partial_errors is not None
+    assert result.partial_errors.has_errors
+    assert any("HAM" in e.item for e in result.partial_errors.errors)
+
+
+@patch("pitstop.tools.general.telemetry.fastf1_client")
+def test_successful_drivers_returned_despite_partial_failure(mock_client):
+    session = _make_session(("VER", "HAM", "LEC"), failing_drivers=("HAM",))
+    mock_client.get_session.return_value = session
+
+    result = get_telemetry_data(2024, "Monaco", "Q", ["VER", "HAM", "LEC"])
+
+    drivers_returned = {t.driver for t in result.drivers_telemetry}
+    assert drivers_returned == {"VER", "LEC"}
+    assert result.partial_errors is not None
+    assert len(result.partial_errors.errors) == 1
+
+
+# ---------------------------------------------------------------------------
+# pagination
+# ---------------------------------------------------------------------------
+
+
+@patch("pitstop.tools.general.telemetry.fastf1_client")
+def test_telemetry_pagination_page2(mock_client):
+    session = _make_session(("VER", "HAM", "LEC"))
+    mock_client.get_session.return_value = session
+
+    result = get_telemetry_data(2024, "Monaco", "Q", ["VER", "HAM", "LEC"], page=2, page_size=1)
+
+    assert len(result.drivers_telemetry) == 1
+    assert result.drivers_telemetry[0].driver == "HAM"
+    assert result.pagination is not None
+    assert result.pagination.page == 2
+    assert result.pagination.total_items == 3
+    assert result.pagination.has_prev is True
+    assert result.pagination.has_next is True
+
+
+@patch("pitstop.tools.general.telemetry.fastf1_client")
+def test_telemetry_returns_response_type(mock_client):
+    session = _make_session(("VER",))
+    mock_client.get_session.return_value = session
+
+    result = get_telemetry_data(2024, "Monaco", "Q", ["VER"])
+
+    assert isinstance(result, TelemetryDataResponse)
+    assert result.pagination is not None

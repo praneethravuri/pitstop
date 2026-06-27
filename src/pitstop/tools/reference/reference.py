@@ -1,15 +1,23 @@
-from pitstop.clients.fastf1_client import FastF1Client
-from typing import Optional, Literal
-from pitstop.models.reference import (
-    ReferenceDataResponse,
-    DriverInfo,
-    ConstructorInfo,
-    CircuitInfo,
-    TireCompoundInfo,
-    CornerInfo,
-)
+import logging
 from datetime import datetime
+from typing import Literal
+
 import pandas as pd
+from fastmcp.exceptions import ToolError
+
+from pitstop.clients.fastf1_client import FastF1Client
+from pitstop.exceptions import DataSourceError
+from pitstop.models.reference import (
+    CircuitInfo,
+    ConstructorInfo,
+    CornerInfo,
+    DriverInfo,
+    ReferenceDataResponse,
+    TireCompoundInfo,
+)
+from pitstop.utils import filter_by_name, paginate, to_tool_error
+
+logger = logging.getLogger("pitstop.reference")
 
 # Initialize FastF1 client
 fastf1_client = FastF1Client()
@@ -17,8 +25,10 @@ fastf1_client = FastF1Client()
 
 def get_reference_data(
     reference_type: Literal["driver", "constructor", "circuit", "tire_compounds"],
-    year: Optional[int] = None,
-    name: Optional[str] = None,
+    year: int | None = None,
+    name: str | None = None,
+    page: int = 1,
+    page_size: int = 30,
 ) -> ReferenceDataResponse:
     """
     **PRIMARY TOOL** for Formula 1 reference data and static information (1950-present).
@@ -35,6 +45,8 @@ def get_reference_data(
         reference_type: Type of data - 'driver', 'constructor', 'circuit', or 'tire_compounds'
         year: Season year (1950-2025). Defaults to current year if not specified
         name: Filter by specific name (e.g., "Verstappen", "Red Bull", "Monaco")
+        page: Page number (1-indexed, default: 1)
+        page_size: Items per page (default: 30)
 
     Returns:
         ReferenceDataResponse with complete driver/team/circuit information or tire specifications.
@@ -46,249 +58,209 @@ def get_reference_data(
         get_reference_data("constructor", year=2024) → All 2024 teams
         get_reference_data("tire_compounds") → F1 tire compound specifications
     """
-    if year is None:
-        year = datetime.now().year
+    try:
+        if year is None:
+            year = datetime.now().year
 
-    if reference_type == "driver":
-        # Get driver information from Ergast
-        driver_response = fastf1_client.ergast.get_driver_info(season=year)
-        drivers_data = driver_response.to_dict('records')
+        if reference_type == "driver":
+            driver_response = fastf1_client.ergast.get_driver_info(season=year)
+            drivers_data = driver_response.to_dict("records")
 
-        # Filter by name if provided
-        if name:
-            drivers_data = [
-                d for d in drivers_data
-                if name.lower() in d.get('givenName', '').lower()
-                or name.lower() in d.get('familyName', '').lower()
-                or name.lower() in d.get('driverId', '').lower()
-                or name.lower() in d.get('driverCode', '').lower()
-            ]
-
-        # Convert to Pydantic models
-        drivers_list = [
-            DriverInfo(
-                driver_id=str(d['driverId']),
-                driver_number=int(d['driverNumber']) if d.get('driverNumber') else None,
-                driver_code=str(d['driverCode']) if d.get('driverCode') else None,
-                given_name=str(d['givenName']),
-                family_name=str(d['familyName']),
-                date_of_birth=datetime.fromisoformat(d['dateOfBirth']).date() if d.get('dateOfBirth') and isinstance(d['dateOfBirth'], str) else None,
-                nationality=str(d['nationality']),
-            )
-            for d in drivers_data
-        ]
-
-        return ReferenceDataResponse(
-            reference_type=reference_type,
-            year=year,
-            drivers=drivers_list,
-            total_records=len(drivers_list),
-            name_filter=name,
-        )
-
-    elif reference_type == "constructor":
-        # Get constructor information from Ergast
-        constructor_response = fastf1_client.ergast.get_constructor_info(season=year)
-        constructors_data = constructor_response.to_dict('records')
-
-        # Filter by name if provided
-        if name:
-            constructors_data = [
-                c for c in constructors_data
-                if name.lower() in c.get('constructorName', '').lower()
-                or name.lower() in c.get('constructorId', '').lower()
-            ]
-
-        # Convert to Pydantic models
-        constructors_list = [
-            ConstructorInfo(
-                constructor_id=str(c['constructorId']),
-                constructor_name=str(c['constructorName']),
-                nationality=str(c['nationality']),
-            )
-            for c in constructors_data
-        ]
-
-        return ReferenceDataResponse(
-            reference_type=reference_type,
-            year=year,
-            constructors=constructors_list,
-            total_records=len(constructors_list),
-            name_filter=name,
-        )
-
-    elif reference_type == "circuit":
-        # Get circuit information from Ergast
-        # Note: Circuits are not season-specific, but we can filter by year's schedule
-        if year:
-            circuits_response = fastf1_client.ergast.get_circuits(season=year)
-        else:
-            circuits_response = fastf1_client.ergast.get_circuits()
-
-        circuits_data = circuits_response.to_dict('records')
-
-        # Filter by name if provided
-        if name:
-            circuits_data = [
-                c for c in circuits_data
-                if name.lower() in c.get('circuitName', '').lower()
-                or name.lower() in c.get('location', '').lower()
-                or name.lower() in c.get('country', '').lower()
-                or name.lower() in c.get('circuitId', '').lower()
-            ]
-
-        # Convert to Pydantic models
-        circuits_list = []
-        for c in circuits_data:
-            circuit_info = CircuitInfo(
-                circuit_id=str(c['circuitId']),
-                circuit_name=str(c['circuitName']),
-                location=str(c['location']),
-                country=str(c['country']),
-                lat=float(c['lat']) if c.get('lat') else None,
-                lng=float(c['lng']) if c.get('lng') else None,
-                url=str(c['url']) if c.get('url') else None,
-            )
-
-            # Enriched data: If name was provided and we have a match, try to get corners
             if name:
-                try:
-                    # Use year or default to current (if not provided) or 2024 to ensure data exists
-                    # FastF1 needs a session to get circuit info.
-                    search_year = year if year else datetime.now().year
-                    
-                    # Fuzzy match event by circuit name/location
-                    # This is heavy, so we only do it if explicitly filtered by name
-                    try:
-                        session_obj = fastf1_client.get_session(search_year, circuit_info.location, 'R')
-                    except Exception:
-                        try:
-                            session_obj = fastf1_client.get_session(search_year, circuit_info.circuit_name, 'R')
-                        except Exception:
-                            session_obj = None # Skip if not found
+                drivers_data = filter_by_name(
+                    drivers_data, name, ["givenName", "familyName", "driverId", "driverCode"]
+                )
 
-                    if session_obj:
-                        session_obj.load(laps=False, telemetry=False, weather=False, messages=False)
-                        detailed_info = session_obj.get_circuit_info()
-                        
-                        if detailed_info and detailed_info.corners is not None:
-                            corners_list = []
-                            for _, corner in detailed_info.corners.iterrows():
-                                corners_list.append(
-                                    CornerInfo(
-                                        number=int(corner['Number']) if pd.notna(corner.get('Number')) else 0,
-                                        letter=str(corner['Letter']) if pd.notna(corner.get('Letter')) else None,
-                                        distance=float(corner['Distance']) if pd.notna(corner.get('Distance')) else None,
-                                        x=float(corner['X']) if pd.notna(corner.get('X')) else None,
-                                        y=float(corner['Y']) if pd.notna(corner.get('Y')) else None,
-                                    )
-                                )
-                            circuit_info.corners = corners_list
-                            if hasattr(detailed_info, 'rotation'):
-                                circuit_info.rotation = float(detailed_info.rotation)
-                except Exception:
-                    # Ignore errors in enrichment, just return basic info
-                    pass
-
-            circuits_list.append(circuit_info)
-
-        return ReferenceDataResponse(
-            reference_type=reference_type,
-            year=year,
-            circuits=circuits_list,
-            total_records=len(circuits_list),
-            name_filter=name,
-        )
-
-    elif reference_type == "tire_compounds":
-        # Get tire compound information (this is relatively static)
-        # FastF1 has some compound information, but we'll provide the standard compounds
-        compounds = [
-            TireCompoundInfo(
-                compound_name="SOFT",
-                color="red",
-                description="Softest compound with highest grip but fastest degradation"
-            ),
-            TireCompoundInfo(
-                compound_name="MEDIUM",
-                color="yellow",
-                description="Middle compound balancing grip and durability"
-            ),
-            TireCompoundInfo(
-                compound_name="HARD",
-                color="white",
-                description="Hardest compound with lowest grip but slowest degradation"
-            ),
-            TireCompoundInfo(
-                compound_name="INTERMEDIATE",
-                color="green",
-                description="For damp or drying track conditions"
-            ),
-            TireCompoundInfo(
-                compound_name="WET",
-                color="blue",
-                description="For heavy rain conditions"
-            ),
-        ]
-
-        # Filter by name if provided
-        if name:
-            compounds = [
-                c for c in compounds
-                if name.lower() in c.compound_name.lower()
+            drivers_list = [
+                DriverInfo(
+                    driver_id=str(d["driverId"]),
+                    driver_number=int(d["driverNumber"]) if d.get("driverNumber") else None,
+                    driver_code=str(d["driverCode"]) if d.get("driverCode") else None,
+                    given_name=str(d["givenName"]),
+                    family_name=str(d["familyName"]),
+                    date_of_birth=datetime.fromisoformat(d["dateOfBirth"]).date()
+                    if d.get("dateOfBirth") and isinstance(d["dateOfBirth"], str)
+                    else None,
+                    nationality=str(d["nationality"]),
+                )
+                for d in drivers_data
             ]
 
-        return ReferenceDataResponse(
-            reference_type=reference_type,
-            year=None,
-            tire_compounds=compounds,
-            total_records=len(compounds),
-            name_filter=name,
-        )
+            paged, meta = paginate(drivers_list, page, page_size)
+            return ReferenceDataResponse(
+                reference_type=reference_type,
+                year=year,
+                drivers=paged,
+                total_records=meta.total_items,
+                name_filter=name,
+                pagination=meta,
+            )
 
+        elif reference_type == "constructor":
+            constructor_response = fastf1_client.ergast.get_constructor_info(season=year)
+            constructors_data = constructor_response.to_dict("records")
 
-if __name__ == "__main__":
-    # Test reference data functionality
-    print("Testing get_reference_data...")
+            if name:
+                constructors_data = filter_by_name(
+                    constructors_data, name, ["constructorName", "constructorId"]
+                )
 
-    # Test 1: Get drivers from 2024
-    print("\n1. Getting 2024 drivers:")
-    drivers = get_reference_data("driver", year=2024)
-    print(f"   Total drivers: {drivers.total_records}")
-    if drivers.drivers:
-        print(f"   Sample: {drivers.drivers[0].given_name} {drivers.drivers[0].family_name} ({drivers.drivers[0].driver_code})")
+            constructors_list = [
+                ConstructorInfo(
+                    constructor_id=str(c["constructorId"]),
+                    constructor_name=str(c["constructorName"]),
+                    nationality=str(c["nationality"]),
+                )
+                for c in constructors_data
+            ]
 
-    # Test 2: Get specific driver
-    print("\n2. Getting Verstappen's info:")
-    ver = get_reference_data("driver", year=2024, name="Verstappen")
-    if ver.drivers:
-        driver = ver.drivers[0]
-        print(f"   Driver: {driver.given_name} {driver.family_name}")
-        print(f"   Number: {driver.driver_number}, Code: {driver.driver_code}")
-        print(f"   Nationality: {driver.nationality}")
+            paged, meta = paginate(constructors_list, page, page_size)
+            return ReferenceDataResponse(
+                reference_type=reference_type,
+                year=year,
+                constructors=paged,
+                total_records=meta.total_items,
+                name_filter=name,
+                pagination=meta,
+            )
 
-    # Test 3: Get constructors
-    print("\n3. Getting 2024 constructors:")
-    teams = get_reference_data("constructor", year=2024)
-    print(f"   Total teams: {teams.total_records}")
-    if teams.constructors:
-        print(f"   Sample: {teams.constructors[0].constructor_name}")
+        elif reference_type == "circuit":
+            circuits_response = fastf1_client.ergast.get_circuits(season=year)
 
-    # Test 4: Get circuits
-    print("\n4. Getting Monaco circuit info:")
-    monaco = get_reference_data("circuit", name="Monaco")
-    if monaco.circuits:
-        circuit = monaco.circuits[0]
-        print(f"   Circuit: {circuit.circuit_name}")
-        print(f"   Location: {circuit.location}, {circuit.country}")
+            circuits_data = circuits_response.to_dict("records")
 
-    # Test 5: Get tire compounds
-    print("\n5. Getting tire compounds:")
-    tires = get_reference_data("tire_compounds")
-    print(f"   Total compounds: {tires.total_records}")
-    if tires.tire_compounds:
-        for tire in tires.tire_compounds:
-            print(f"   {tire.compound_name} ({tire.color})")
+            if name:
+                circuits_data = filter_by_name(
+                    circuits_data, name, ["circuitName", "location", "country", "circuitId"]
+                )
 
-    # Test JSON serialization
-    print(f"\n   JSON: {drivers.model_dump_json()[:150]}...")
+            circuits_list = []
+            for c in circuits_data:
+                circuit_info = CircuitInfo(
+                    circuit_id=str(c["circuitId"]),
+                    circuit_name=str(c["circuitName"]),
+                    location=str(c["location"]),
+                    country=str(c["country"]),
+                    lat=float(c["lat"]) if c.get("lat") else None,
+                    lng=float(c["lng"]) if c.get("lng") else None,
+                    url=str(c["url"]) if c.get("url") else None,
+                )
+
+                # Enriched data: If name was provided and we have a match, try to get corners
+                if name:
+                    try:
+                        search_year = year if year else datetime.now().year
+
+                        try:
+                            session_obj = fastf1_client.get_session(
+                                search_year, circuit_info.location, "R"
+                            )
+                        except Exception:
+                            try:
+                                session_obj = fastf1_client.get_session(
+                                    search_year, circuit_info.circuit_name, "R"
+                                )
+                            except Exception:
+                                session_obj = None
+
+                        if session_obj is None:
+                            logger.warning(
+                                "Circuit enrichment failed for %s: session not found; returning basic info",
+                                circuit_info.circuit_name,
+                            )
+                        else:
+                            session_obj.load(
+                                laps=False, telemetry=False, weather=False, messages=False
+                            )
+                            detailed_info = session_obj.get_circuit_info()
+
+                            if detailed_info and detailed_info.corners is not None:
+                                corners_list = []
+                                for _, corner in detailed_info.corners.iterrows():
+                                    corners_list.append(
+                                        CornerInfo(
+                                            number=int(corner["Number"])
+                                            if pd.notna(corner.get("Number"))
+                                            else 0,
+                                            letter=str(corner["Letter"])
+                                            if pd.notna(corner.get("Letter"))
+                                            else None,
+                                            distance=float(corner["Distance"])
+                                            if pd.notna(corner.get("Distance"))
+                                            else None,
+                                            x=float(corner["X"])
+                                            if pd.notna(corner.get("X"))
+                                            else None,
+                                            y=float(corner["Y"])
+                                            if pd.notna(corner.get("Y"))
+                                            else None,
+                                        )
+                                    )
+                                circuit_info.corners = corners_list
+                                if hasattr(detailed_info, "rotation"):
+                                    circuit_info.rotation = float(detailed_info.rotation)
+                    except Exception as exc:
+                        logger.warning(
+                            "Circuit enrichment failed for %s: %s; returning basic info",
+                            circuit_info.circuit_name,
+                            exc,
+                        )
+
+                circuits_list.append(circuit_info)
+
+            paged, meta = paginate(circuits_list, page, page_size)
+            return ReferenceDataResponse(
+                reference_type=reference_type,
+                year=year,
+                circuits=paged,
+                total_records=meta.total_items,
+                name_filter=name,
+                pagination=meta,
+            )
+
+        elif reference_type == "tire_compounds":
+            compounds = [
+                TireCompoundInfo(
+                    compound_name="SOFT",
+                    color="red",
+                    description="Softest compound with highest grip but fastest degradation",
+                ),
+                TireCompoundInfo(
+                    compound_name="MEDIUM",
+                    color="yellow",
+                    description="Middle compound balancing grip and durability",
+                ),
+                TireCompoundInfo(
+                    compound_name="HARD",
+                    color="white",
+                    description="Hardest compound with lowest grip but slowest degradation",
+                ),
+                TireCompoundInfo(
+                    compound_name="INTERMEDIATE",
+                    color="green",
+                    description="For damp or drying track conditions",
+                ),
+                TireCompoundInfo(
+                    compound_name="WET", color="blue", description="For heavy rain conditions"
+                ),
+            ]
+
+            if name:
+                compounds = [c for c in compounds if name.lower() in c.compound_name.lower()]
+
+            paged, meta = paginate(compounds, page, page_size)
+            return ReferenceDataResponse(
+                reference_type=reference_type,
+                year=None,
+                tire_compounds=paged,
+                total_records=meta.total_items,
+                name_filter=name,
+                pagination=meta,
+            )
+
+    except ToolError:
+        raise
+    except DataSourceError as exc:
+        raise to_tool_error("get_reference_data", exc.source, exc)
+    except Exception as exc:
+        raise to_tool_error("get_reference_data", "fastf1", exc)

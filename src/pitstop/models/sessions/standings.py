@@ -1,6 +1,8 @@
-from pydantic import BaseModel, Field
-from typing import Optional
 from datetime import date
+
+from pydantic import BaseModel, Field
+
+from pitstop.models.common import PageMeta
 
 
 class DriverStanding(BaseModel):
@@ -15,7 +17,7 @@ class DriverStanding(BaseModel):
     driver_code: str = Field(description="3-letter driver code")
     given_name: str = Field(description="Driver first name")
     family_name: str = Field(description="Driver last name")
-    date_of_birth: Optional[date] = Field(None, description="Driver date of birth")
+    date_of_birth: date | None = Field(None, description="Driver date of birth")
     nationality: str = Field(description="Driver nationality")
     constructor_ids: list[str] = Field(description="Constructor IDs driver raced for")
     constructor_names: list[str] = Field(description="Constructor names driver raced for")
@@ -38,7 +40,10 @@ class StandingsResponse(BaseModel):
     """Championship standings response."""
 
     year: int = Field(description="Season year")
-    round: Optional[int] = Field(None, description="Round number (None for final/current standings)")
-    round_name: Optional[str] = Field(None, description="Grand Prix name if round specified")
-    drivers: Optional[list[DriverStanding]] = Field(None, description="Driver standings")
-    constructors: Optional[list[ConstructorStanding]] = Field(None, description="Constructor standings")
+    round: int | None = Field(None, description="Round number (None for final/current standings)")
+    round_name: str | None = Field(None, description="Grand Prix name if round specified")
+    drivers: list[DriverStanding] | None = Field(None, description="Driver standings")
+    constructors: list[ConstructorStanding] | None = Field(
+        None, description="Constructor standings"
+    )
+    pagination: PageMeta | None = Field(None, description="Pagination metadata")

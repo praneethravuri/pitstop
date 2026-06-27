@@ -1,7 +1,13 @@
-import feedparser
+import logging
 from datetime import datetime
-from models import NewsResponse, NewsArticle
-from utils import clean_html
+
+import feedparser
+
+from pitstop.exceptions import DataSourceError
+from pitstop.models.news_and_updates.general import NewsArticle, NewsResponse
+from pitstop.utils.text_cleaner import clean_html
+
+logger = logging.getLogger("pitstop.rss")
 
 
 class RSSClient:
@@ -20,7 +26,6 @@ class RSSClient:
         # Official sources
         "formula1": "https://www.formula1.com/content/fom-website/en/latest/all.xml",
         "fia": "https://www.fia.com/rss/press-release",
-
         # Major F1 news outlets
         "autosport": "https://www.autosport.com/rss/feed/f1",
         "motorsport": "https://www.motorsport.com/rss/f1/news/",
@@ -31,26 +36,22 @@ class RSSClient:
         "grandprix": "https://www.grandprix.com/feed/",
         "espnf1": "https://www.espn.com/espn/rss/rpm/news",
         "skysportsf1": "https://www.skysports.com/rss/12040",
-
         # Specialist & Technical sources
         "f1technical": "https://www.f1technical.net/rss/news.xml",
         "pitpass": "https://www.pitpass.com/rss",
         "joe-saward": "https://joesaward.wordpress.com/feed/",
         "racecar-engineering": "https://www.racecar-engineering.com/feed/",
-
         # Regional & International sources
         "gpblog": "https://www.gpblog.com/en/rss.xml",
         "f1i": "https://f1i.com/feed",
         "f1-insider-de": "https://www.f1-insider.com/feed/",
         "formel1-de": "https://www.formel1.de/rss.xml",
-
         # Community & Fan sources
         "wtf1": "https://wtf1.com/feed/",
         "racingnews365": "https://racingnews365.com/rss",
         "formulanerds": "https://formulanerds.com/feed/",
         "f1destinations": "https://f1destinations.com/feed/",
         "gpfans": "https://www.gpfans.com/en/rss.xml",
-
         # Additional coverage
         "motorsportweek": "https://www.motorsportweek.com/feed/",
         "racedepartment": "https://www.racedepartment.com/forums/f1-2021-the-game.214/index.rss",
@@ -73,14 +74,11 @@ class RSSClient:
 
         Raises:
             ValueError: If source is invalid
-            RuntimeError: If feed fetch fails
+            DataSourceError: If feed fetch fails
         """
-        # Validate source
         if source != "all" and source not in self.RSS_FEEDS:
             valid_sources = ", ".join(self.RSS_FEEDS.keys())
-            raise ValueError(
-                f"Invalid source '{source}'. Must be one of: {valid_sources}, all"
-            )
+            raise ValueError(f"Invalid source '{source}'. Must be one of: {valid_sources}, all")
 
         try:
             if source == "all":
@@ -89,8 +87,10 @@ class RSSClient:
                 return self._fetch_single_source(source, limit)
         except ValueError:
             raise
+        except DataSourceError:
+            raise
         except Exception as e:
-            raise RuntimeError(f"Failed to fetch news from {source}: {str(e)}")
+            raise DataSourceError("rss", f"fetch:{source}", str(e))
 
     def _fetch_single_source(self, source: str, limit: int) -> NewsResponse:
         """Fetch from a single RSS source."""
@@ -124,20 +124,21 @@ class RSSClient:
 
     def _fetch_all_sources(self, limit: int) -> NewsResponse:
         """Fetch from all RSS sources and aggregate."""
-        all_articles = []
+        all_articles: list[NewsArticle] = []
+        failed_feeds: list[str] = []
 
         for source in self.RSS_FEEDS.keys():
             try:
                 result = self._fetch_single_source(source, limit)
                 all_articles.extend(result.articles)
-            except Exception:
-                # Skip failed sources when aggregating
-                continue
+            except Exception as e:
+                logger.warning("RSS feed failed: %s (%s) — %s", source, self.RSS_FEEDS[source], e)
+                failed_feeds.append(source)
 
         if not all_articles:
-            raise RuntimeError("Failed to fetch articles from all sources")
+            reason = f"all {len(failed_feeds)} feeds failed"
+            raise DataSourceError("rss", "fetch", reason)
 
-        # Sort by source and limit total
         all_articles = all_articles[: limit * len(self.RSS_FEEDS)]
 
         return NewsResponse(
@@ -145,4 +146,5 @@ class RSSClient:
             fetched_at=datetime.now().isoformat(),
             article_count=len(all_articles),
             articles=all_articles,
+            failed_feeds=failed_feeds,
         )

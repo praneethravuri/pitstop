@@ -1,6 +1,6 @@
-from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import Optional
+
+from pydantic import BaseModel, Field
 
 
 class SessionInfo(BaseModel):
@@ -14,33 +14,33 @@ class SessionInfo(BaseModel):
     circuit_name: str = Field(description="Official circuit name")
     year: int = Field(description="Season year")
     round: int = Field(description="Round number in the season")
-    session_date: Optional[datetime] = Field(None, description="Session start date and time")
+    session_date: datetime | None = Field(None, description="Session start date and time")
 
 
 class DriverSessionResult(BaseModel):
     """Individual driver result in a session."""
 
-    position: Optional[int] = Field(None, description="Final position")
+    position: int | None = Field(None, description="Final position")
     driver_number: str = Field(description="Driver number")
     driver_name: str = Field(description="Full driver name")
     abbreviation: str = Field(description="3-letter driver abbreviation")
     team: str = Field(description="Team name")
-    time: Optional[str] = Field(None, description="Session time (for race/qualifying)")
-    gap_to_leader: Optional[str] = Field(None, description="Gap to session leader")
-    laps_completed: Optional[int] = Field(None, description="Number of laps completed")
-    points: Optional[float] = Field(None, description="Points earned (for race)")
-    status: Optional[str] = Field(None, description="Finishing status")
+    time: str | None = Field(None, description="Session time (for race/qualifying)")
+    gap_to_leader: str | None = Field(None, description="Gap to session leader")
+    laps_completed: int | None = Field(None, description="Number of laps completed")
+    points: float | None = Field(None, description="Points earned (for race)")
+    status: str | None = Field(None, description="Finishing status")
 
 
 class SessionWeather(BaseModel):
     """Weather information for the session."""
 
-    air_temp: Optional[float] = Field(None, description="Air temperature (°C)")
-    track_temp: Optional[float] = Field(None, description="Track temperature (°C)")
-    humidity: Optional[float] = Field(None, description="Humidity percentage")
-    pressure: Optional[float] = Field(None, description="Atmospheric pressure")
-    wind_speed: Optional[float] = Field(None, description="Wind speed (m/s)")
-    rainfall: Optional[bool] = Field(None, description="Whether it rained during session")
+    air_temp: float | None = Field(None, description="Air temperature (°C)")
+    track_temp: float | None = Field(None, description="Track temperature (°C)")
+    humidity: float | None = Field(None, description="Humidity percentage")
+    pressure: float | None = Field(None, description="Atmospheric pressure")
+    wind_speed: float | None = Field(None, description="Wind speed (m/s)")
+    rainfall: bool | None = Field(None, description="Whether it rained during session")
 
 
 class LapInfo(BaseModel):
@@ -49,7 +49,7 @@ class LapInfo(BaseModel):
     driver: str = Field(description="Driver who set the lap")
     lap_time: str = Field(description="Lap time")
     lap_number: int = Field(description="Lap number")
-    compound: Optional[str] = Field(None, description="Tire compound used")
+    compound: str | None = Field(None, description="Tire compound used")
 
 
 class SessionDetailsResponse(BaseModel):
@@ -57,7 +57,7 @@ class SessionDetailsResponse(BaseModel):
 
     session_info: SessionInfo = Field(description="Basic session information")
     results: list[DriverSessionResult] = Field(description="Driver results/classification")
-    weather: Optional[SessionWeather] = Field(None, description="Weather conditions")
-    fastest_lap: Optional[LapInfo] = Field(None, description="Fastest lap of the session")
-    total_laps: Optional[int] = Field(None, description="Total laps in session")
-    session_duration: Optional[str] = Field(None, description="Session duration")
+    weather: SessionWeather | None = Field(None, description="Weather conditions")
+    fastest_lap: LapInfo | None = Field(None, description="Fastest lap of the session")
+    total_laps: int | None = Field(None, description="Total laps in session")
+    session_duration: str | None = Field(None, description="Session duration")
