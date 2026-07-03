@@ -1,6 +1,7 @@
 """Tests for src/pitstop/clients/http.py — written first (TDD)."""
 
 import httpx
+from urllib.parse import urlparse
 
 from pitstop.clients import get_jolpica_client, get_openf1_client
 from pitstop.clients.http import http_retry, make_client
@@ -73,7 +74,8 @@ def test_get_openf1_client_base_url():
     clients_mod._openf1_client = None
 
     client = get_openf1_client()
-    assert "openf1.org" in str(client.base_url)
+    host = urlparse(str(client.base_url)).hostname
+    assert host is not None and (host == "openf1.org" or host.endswith(".openf1.org"))
 
 
 def test_get_jolpica_client_returns_nonnone():
