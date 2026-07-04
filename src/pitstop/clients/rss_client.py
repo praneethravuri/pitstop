@@ -1,9 +1,12 @@
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from typing import TYPE_CHECKING
 
 import feedparser
 
+from pitstop.clients.http import make_client
+from pitstop.config import CACHE_TTL_SECONDS, ENABLE_CACHING
 from pitstop.exceptions import DataSourceError
 from pitstop.utils.text_cleaner import clean_html
 
@@ -11,6 +14,13 @@ if TYPE_CHECKING:
     from pitstop.tools.news.models import NewsResponse
 
 logger = logging.getLogger("pitstop.rss")
+
+# Redirects are common among these feeds; caching makes repeated news calls cheap.
+_client = make_client(
+    timeout=10.0,
+    follow_redirects=True,
+    cache_ttl=CACHE_TTL_SECONDS if ENABLE_CACHING else None,
+)
 
 
 class RSSClient:
@@ -93,7 +103,9 @@ class RSSClient:
         from pitstop.tools.news.models import NewsArticle, NewsResponse
 
         feed_url = self.RSS_FEEDS[source]
-        feed = feedparser.parse(feed_url)
+        resp = _client.get(feed_url)
+        resp.raise_for_status()
+        feed = feedparser.parse(resp.content)
 
         if not feed.entries:
             raise RuntimeError(f"No articles found from {source}")
@@ -124,18 +136,32 @@ class RSSClient:
         """Fetch from all RSS sources and aggregate."""
         from pitstop.tools.news.models import NewsArticle, NewsResponse
 
-        all_articles: list[NewsArticle] = []
         failed_feeds: list[str] = []
 
         # Ceiling division so each source contributes proportionally; ensures diversity
         per_source = max(1, -(-limit // len(self.RSS_FEEDS)))  # ceil(limit/n)
-        for source in self.RSS_FEEDS.keys():
-            try:
-                result = self._fetch_single_source(source, per_source)
-                all_articles.extend(result.articles)
-            except Exception as e:
-                logger.warning("RSS feed failed: %s (%s) — %s", source, self.RSS_FEEDS[source], e)
-                failed_feeds.append(source)
+
+        results: dict[str, NewsResponse] = {}
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            future_to_source = {
+                executor.submit(self._fetch_single_source, source, per_source): source
+                for source in self.RSS_FEEDS
+            }
+            for future in as_completed(future_to_source):
+                source = future_to_source[future]
+                try:
+                    results[source] = future.result()
+                except Exception as e:
+                    logger.warning(
+                        "RSS feed failed: %s (%s) — %s", source, self.RSS_FEEDS[source], e
+                    )
+                    failed_feeds.append(source)
+
+        # Deterministic order: iterate RSS_FEEDS insertion order, not completion order
+        all_articles: list[NewsArticle] = []
+        for source in self.RSS_FEEDS:
+            if source in results:
+                all_articles.extend(results[source].articles)
 
         if not all_articles:
             reason = f"all {len(failed_feeds)} feeds failed"
