@@ -50,8 +50,7 @@ def test_no_cache_ttl_means_no_caching(httpx_mock):
 
 
 def test_factory_wiring_caches_repeated_openf1_calls(httpx_mock, monkeypatch):
-    monkeypatch.setattr(clients_mod, "ENABLE_CACHING", True)
-    monkeypatch.setattr(clients_mod, "CACHE_TTL_SECONDS", 60)
+    monkeypatch.setattr(clients_mod, "HTTP_CACHE_TTL", 60)
     httpx_mock.add_response(json=[{"session_name": "Race"}])
 
     client = clients_mod.get_openf1_client()

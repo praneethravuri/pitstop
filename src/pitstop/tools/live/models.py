@@ -5,6 +5,14 @@ from pydantic import BaseModel, Field
 from pitstop.models.common import PartialErrors
 
 
+class SessionScope(BaseModel):
+    """Session context (session_name/year/country) shared by every live-data section."""
+
+    session_name: str | None = Field(None, description="Session name")
+    year: int | None = Field(None, description="Year")
+    country: str | None = Field(None, description="Country name")
+
+
 class TeamRadioMessage(BaseModel):
     """Team radio message data."""
 
@@ -15,12 +23,9 @@ class TeamRadioMessage(BaseModel):
     recording_url: str | None = Field(None, description="URL to audio recording")
 
 
-class TeamRadioResponse(BaseModel):
+class TeamRadioResponse(SessionScope):
     """Response for team radio messages."""
 
-    session_name: str | None = Field(None, description="Session name")
-    year: int | None = Field(None, description="Year")
-    country: str | None = Field(None, description="Country name")
     messages: list[TeamRadioMessage] = Field(..., description="List of radio messages")
     total_messages: int = Field(..., description="Total number of messages")
 
@@ -36,12 +41,9 @@ class PitStopData(BaseModel):
     meeting_key: int = Field(..., description="Meeting identifier")
 
 
-class PitStopsResponse(BaseModel):
+class PitStopsResponse(SessionScope):
     """Response for pit stop data."""
 
-    session_name: str | None = Field(None, description="Session name")
-    year: int | None = Field(None, description="Year")
-    country: str | None = Field(None, description="Country name")
     pit_stops: list[PitStopData] = Field(..., description="List of pit stops")
     total_pit_stops: int = Field(..., description="Total number of pit stops")
     fastest_stop: float | None = Field(None, description="Fastest pit stop duration")
@@ -60,12 +62,9 @@ class IntervalData(BaseModel):
     meeting_key: int = Field(..., description="Meeting identifier")
 
 
-class IntervalsResponse(BaseModel):
+class IntervalsResponse(SessionScope):
     """Response for intervals data."""
 
-    session_name: str | None = Field(None, description="Session name")
-    year: int | None = Field(None, description="Year")
-    country: str | None = Field(None, description="Country name")
     intervals: list[IntervalData] = Field(..., description="List of interval data points")
     total_data_points: int = Field(..., description="Total number of data points")
 
@@ -81,12 +80,9 @@ class StintData(BaseModel):
     tyre_age_at_start: int | None = Field(None, description="Tyre age at start of stint")
 
 
-class StintsResponse(BaseModel):
+class StintsResponse(SessionScope):
     """Response for tire stint data."""
 
-    session_name: str | None = Field(None, description="Session name")
-    year: int | None = Field(None, description="Year")
-    country: str | None = Field(None, description="Country name")
     stints: list[StintData] = Field(..., description="List of tire stints")
     total_stints: int = Field(..., description="Total number of stints")
 
@@ -104,12 +100,9 @@ class RaceControlMessage(BaseModel):
     sector: int | None = Field(None, description="Sector number")
 
 
-class RaceControlResponse(BaseModel):
+class RaceControlResponse(SessionScope):
     """Response for race control messages."""
 
-    session_name: str | None = Field(None, description="Session name")
-    year: int | None = Field(None, description="Year")
-    country: str | None = Field(None, description="Country name")
     messages: list[RaceControlMessage] = Field(..., description="List of messages")
     total_messages: int = Field(..., description="Total number of messages")
 
@@ -129,12 +122,9 @@ class WeatherData(BaseModel):
     meeting_key: int | None = Field(None, description="Meeting identifier")
 
 
-class WeatherResponse(BaseModel):
+class WeatherResponse(SessionScope):
     """Response for weather data."""
 
-    session_name: str | None = Field(None, description="Session name")
-    year: int | None = Field(None, description="Year")
-    country: str | None = Field(None, description="Country name")
     weather: list[WeatherData] = Field(..., description="List of weather readings")
     total_data_points: int = Field(..., description="Total number of data points")
 
@@ -149,12 +139,9 @@ class PositionData(BaseModel):
     meeting_key: int | None = Field(None, description="Meeting identifier")
 
 
-class PositionResponse(BaseModel):
+class PositionResponse(SessionScope):
     """Response for position data."""
 
-    session_name: str | None = Field(None, description="Session name")
-    year: int | None = Field(None, description="Year")
-    country: str | None = Field(None, description="Country name")
     positions: list[PositionData] = Field(..., description="List of position changes")
     total_data_points: int = Field(..., description="Total number of data points")
 
@@ -177,12 +164,9 @@ class LapData(BaseModel):
     meeting_key: int | None = Field(None, description="Meeting identifier")
 
 
-class LapsResponse(BaseModel):
+class LapsResponse(SessionScope):
     """Response for lap data."""
 
-    session_name: str | None = Field(None, description="Session name")
-    year: int | None = Field(None, description="Year")
-    country: str | None = Field(None, description="Country name")
     laps: list[LapData] = Field(..., description="List of laps")
     total_laps: int = Field(..., description="Total number of laps")
 
@@ -198,22 +182,15 @@ class OvertakeData(BaseModel):
     meeting_key: int | None = Field(None, description="Meeting identifier")
 
 
-class OvertakesResponse(BaseModel):
+class OvertakesResponse(SessionScope):
     """Response for overtake data."""
 
-    session_name: str | None = Field(None, description="Session name")
-    year: int | None = Field(None, description="Year")
-    country: str | None = Field(None, description="Country name")
     overtakes: list[OvertakeData] = Field(..., description="List of overtakes")
     total_overtakes: int = Field(..., description="Total number of overtakes")
 
 
-class LiveDataResponse(BaseModel):
+class LiveDataResponse(SessionScope):
     """Comprehensive live session data."""
-
-    session_name: str | None = Field(None, description="Session name")
-    year: int | None = Field(None, description="Year")
-    country: str | None = Field(None, description="Country")
 
     # Optional components based on requested data_types
     intervals: IntervalsResponse | None = Field(None, description="Intervals and gaps")

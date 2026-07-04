@@ -182,15 +182,25 @@ def test_empty_session_returns_empty_response(mock_query):
 
 
 @patch("pitstop.clients.openf1_client.query")
-def test_weather_calls_query_with_correct_endpoint(mock_query):
+def test_new_data_types_populate_their_sections(mock_query):
+    fixtures = {
+        "/weather": _weather(1),
+        "/position": _position(1),
+        "/laps": _lap(1),
+        "/overtakes": _overtake(1),
+    }
+
     def side(ep, **kw):
-        return SESSION if ep == "/sessions" else [_weather(1)]
+        return SESSION if ep == "/sessions" else [fixtures[ep]]
 
     mock_query.side_effect = side
-    result = get_live_data(["weather"], 2024, "Monaco")
+    result = get_live_data(["weather", "position", "laps", "overtakes"], 2024, "Monaco")
     assert result.weather is not None
-    endpoints = [c.args[0] for c in mock_query.call_args_list]
-    assert "/weather" in endpoints
+    assert result.position is not None
+    assert result.laps is not None
+    assert result.overtakes is not None
+    endpoints = {c.args[0] for c in mock_query.call_args_list}
+    assert endpoints >= set(fixtures)
 
 
 @patch("pitstop.clients.openf1_client.query")
@@ -202,42 +212,6 @@ def test_weather_omits_driver_number_filter(mock_query):
     get_live_data(["weather"], 2024, "Monaco", driver_number=44)
     weather_call = next(c for c in mock_query.call_args_list if c.args[0] == "/weather")
     assert "driver_number" not in weather_call.kwargs
-
-
-@patch("pitstop.clients.openf1_client.query")
-def test_position_calls_query_with_correct_endpoint(mock_query):
-    def side(ep, **kw):
-        return SESSION if ep == "/sessions" else [_position(1)]
-
-    mock_query.side_effect = side
-    result = get_live_data(["position"], 2024, "Monaco")
-    assert result.position is not None
-    endpoints = [c.args[0] for c in mock_query.call_args_list]
-    assert "/position" in endpoints
-
-
-@patch("pitstop.clients.openf1_client.query")
-def test_laps_calls_query_with_correct_endpoint(mock_query):
-    def side(ep, **kw):
-        return SESSION if ep == "/sessions" else [_lap(1)]
-
-    mock_query.side_effect = side
-    result = get_live_data(["laps"], 2024, "Monaco")
-    assert result.laps is not None
-    endpoints = [c.args[0] for c in mock_query.call_args_list]
-    assert "/laps" in endpoints
-
-
-@patch("pitstop.clients.openf1_client.query")
-def test_overtakes_calls_query_with_correct_endpoint(mock_query):
-    def side(ep, **kw):
-        return SESSION if ep == "/sessions" else [_overtake(1)]
-
-    mock_query.side_effect = side
-    result = get_live_data(["overtakes"], 2024, "Monaco")
-    assert result.overtakes is not None
-    endpoints = [c.args[0] for c in mock_query.call_args_list]
-    assert "/overtakes" in endpoints
 
 
 @patch("pitstop.clients.openf1_client.query")
