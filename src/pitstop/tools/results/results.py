@@ -27,7 +27,7 @@ from pitstop.utils import to_tool_error
 logger = logging.getLogger("pitstop.results")
 
 
-# ponytail: returns None for strict Pydantic optional fields; safe_int/safe_float exist but default to 0
+# ponytail: returns None for strict Pydantic optional fields
 def _int(v) -> int | None:
     try:
         return int(v)

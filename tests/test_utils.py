@@ -3,7 +3,7 @@
 import pytest
 
 from pitstop.models.common import PageMeta
-from pitstop.utils.utils import drop_none, filter_by_name, paginate, safe_float, safe_int, safe_str
+from pitstop.utils.utils import drop_none, filter_by_name, paginate
 
 # ---------------------------------------------------------------------------
 # drop_none
@@ -153,62 +153,3 @@ def test_paginate_negative_page_size_raises():
 def test_paginate_zero_page_size_raises():
     with pytest.raises(ValueError, match="page_size must be >= 1"):
         paginate([1, 2, 3], 1, 0)
-
-
-# ---------------------------------------------------------------------------
-# safe_int
-# ---------------------------------------------------------------------------
-
-
-def test_safe_int_happy():
-    assert safe_int(42) == 42
-    assert safe_int("7") == 7
-
-
-def test_safe_int_none():
-    assert safe_int(None) == 0
-    assert safe_int(None, default=5) == 5
-
-
-def test_safe_int_bad_string():
-    assert safe_int("abc") == 0
-    assert safe_int("abc", default=-1) == -1
-
-
-# ---------------------------------------------------------------------------
-# safe_str
-# ---------------------------------------------------------------------------
-
-
-def test_safe_str_happy():
-    assert safe_str("hello") == "hello"
-    assert safe_str(123) == "123"
-
-
-def test_safe_str_none():
-    assert safe_str(None) == ""
-    assert safe_str(None, default="n/a") == "n/a"
-
-
-def test_safe_str_empty():
-    assert safe_str("") == ""
-
-
-# ---------------------------------------------------------------------------
-# safe_float
-# ---------------------------------------------------------------------------
-
-
-def test_safe_float_happy():
-    assert safe_float(3.14) == pytest.approx(3.14)
-    assert safe_float("2.5") == pytest.approx(2.5)
-
-
-def test_safe_float_none():
-    assert safe_float(None) == 0.0
-    assert safe_float(None, default=1.0) == 1.0
-
-
-def test_safe_float_bad_string():
-    assert safe_float("not_a_float") == 0.0
-    assert safe_float("nope", default=-1.0) == -1.0
