@@ -278,7 +278,7 @@ def test_rss_feeds_new_feeds_have_correct_urls():
     """New feeds have the correct RSS URLs."""
     client = RSSClient()
     expected_urls = {
-        "formula1": "https://www.formula1.com/en/latest/all.rss",
+        "formula1": "https://www.formula1.com/en/latest/all.xml",
         "reddit_f1": "https://www.reddit.com/r/formula1/.rss",
         "the_race": "https://the-race.com/feed/",
         "crash_net": "https://www.crash.net/rss/f1",

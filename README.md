@@ -20,7 +20,7 @@ Pitstop exposes F1 data as 10 MCP tools over HTTP (default) or stdio. It pulls f
 | [Jolpica-F1](https://github.com/jolpica/jolpica-f1) | 1950–present | Historical (Ergast-compatible) |
 | [OpenF1](https://openf1.org/) | 2023–present | Real-time |
 | [Wikidata](https://www.wikidata.org/) | All eras | SPARQL queries |
-| RSS Feeds (27 sources) | Live | News |
+| RSS Feeds (20 sources) | Live | News |
 
 ---
 
@@ -34,7 +34,7 @@ Pitstop exposes F1 data as 10 MCP tools over HTTP (default) or stdio. It pulls f
 | `get_standings` | Driver and constructor championship standings (1950–present) | `year`, `round`, `type`, `driver_name`, `team_name`, `page`, `page_size` |
 | `get_schedule` | Race calendar and session schedule | `year`, `include_testing`, `round`, `event_name`, `only_remaining`, `page`, `page_size` |
 | `get_reference_data` | Circuits, drivers, constructors encyclopedia (1950–present) | `reference_type`, `year`, `name`, `page`, `page_size` |
-| `get_f1_news` | F1 headlines from 27 RSS sources | `source`, `limit`, `keywords`, `driver`, `team`, `circuit`, `year`, `date_from`, `date_to`, `page`, `page_size` |
+| `get_f1_news` | F1 headlines from 20 RSS sources | `source`, `limit`, `keywords`, `driver`, `team`, `circuit`, `year`, `date_from`, `date_to`, `page`, `page_size` |
 | `get_results` | Race/qualifying/sprint results, lap times, pit stops (1950–present) | `year`, `round`, `result_type`, `driver`, `page` |
 | `get_race_analysis` | Pace, tire degradation, stint summaries, consistency (2018–present) | `year`, `gp`, `session`, `drivers`, `analysis_type`, `page` |
 | `query_wikidata` | SPARQL queries to Wikidata for F1 biography, career records, history | `sparql`, `page`, `page_size` |
