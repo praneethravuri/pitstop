@@ -20,6 +20,7 @@ dependencies = [
 
 [project.scripts]
 pitstop = "pitstop.server:main"
+pitstop-db-seed = "pitstop.db.seed:main"
 
 [dependency-groups]
 dev = [
