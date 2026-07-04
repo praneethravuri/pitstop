@@ -30,6 +30,7 @@ from pitstop.tools import (
     get_session_data,
     get_standings,
     get_telemetry_data,
+    query_f1_database,
     query_wikidata,
 )
 
@@ -46,6 +47,7 @@ _TOOLS = [
     get_results,
     get_race_analysis,
     query_wikidata,
+    query_f1_database,
 ]
 
 
@@ -90,12 +92,13 @@ def build_server() -> FastMCP:
     mcp = FastMCP(
         "Pitstop F1",
         instructions=(
-            "Formula 1 data server with 10 tools. "
+            "Formula 1 data server with 11 tools. "
             "Historical data (1950–present): get_results, get_standings, get_reference_data. "
             "FastF1 timing/telemetry (2018–present): get_session_data, get_telemetry_data, get_race_analysis. "
             "Live/real-time (2023–present): get_live_data. "
             "Schedule and news: get_schedule, get_f1_news. "
-            "Wikidata SPARQL (all eras): query_wikidata."
+            "Wikidata SPARQL (all eras): query_wikidata. "
+            "Owned F1 database SQL (1950–present): query_f1_database."
         ),
     )
 
