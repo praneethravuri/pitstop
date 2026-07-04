@@ -70,8 +70,14 @@ def get_results(
     Args:
         year: Season year (1950-present)
         round: Round number or "last" / "next"
-        result_type: Type of results to retrieve
-        driver: Filter by driver id (e.g. "hamilton")
+        result_type: Type of results to retrieve:
+            - 'race': Final race classification with positions, points, and status
+            - 'qualifying': Q1/Q2/Q3 lap times per driver
+            - 'sprint': Sprint race results (works for every sprint weekend)
+            - 'laps': Per-lap position and lap time for every driver — large dataset; narrow with driver= and use pagination
+            - 'pitstops': Lap number, stop count, and duration of each pit stop
+            - 'status': Finish-status summary (finished, DNF reasons, etc.) — driver filter not applicable
+        driver: Filter by driver id (e.g. "hamilton") — not supported for result_type='status'
         page: Page number (1-indexed)
         page_size: Items per page
     """

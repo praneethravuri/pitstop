@@ -28,7 +28,7 @@ def get_f1_news(
     page_size: int = 10,
 ) -> NewsResponse:
     """
-    **PRIMARY TOOL** for RECENT Formula 1 news from 30+ authoritative F1 sources via RSS feeds.
+    **PRIMARY TOOL** for RECENT Formula 1 news from 27 authoritative F1 sources via RSS feeds.
 
     ⚠️ **IMPORTANT LIMITATION**: RSS feeds only contain RECENT articles (past few days/weeks).
     This tool CANNOT retrieve historical news from months or years ago (e.g., 2013, 2020, etc.).
@@ -47,7 +47,7 @@ def get_f1_news(
     - News older than ~2 months
     - Historical race coverage or archived articles
 
-    **Available Sources (25+ RSS Feeds):**
+    **Available Sources (27 RSS Feeds):**
 
     Official Sources:
     - "formula1" - Official Formula 1 website
@@ -56,13 +56,14 @@ def get_f1_news(
     Major Outlets:
     - "autosport" - Autosport F1
     - "motorsport" - Motorsport.com F1
-    - "the-race" - The Race
+    - "the_race" - The Race
     - "racefans" - RaceFans.net
     - "planetf1" - PlanetF1
-    - "crash" - Crash.net F1
+    - "crash_net" - Crash.net F1
     - "grandprix" - GrandPrix.com
     - "espnf1" - ESPN F1
     - "skysportsf1" - Sky Sports F1
+    - "reddit_f1" - Reddit F1
 
     Specialist & Technical:
     - "f1technical" - F1Technical.net
@@ -82,6 +83,8 @@ def get_f1_news(
     - "formulanerds" - Formula Nerds
     - "f1destinations" - F1 Destinations
     - "gpfans" - GPFans
+
+    Additional Coverage:
     - "motorsportweek" - Motorsport Week
     - "racedepartment" - Race Department
 
@@ -102,7 +105,7 @@ def get_f1_news(
         NewsResponse with articles including titles, links, publication dates, summaries, and source names.
 
     Examples:
-        get_f1_news() → Latest F1 news from all 25+ sources
+        get_f1_news() → Latest F1 news from all 27 sources
         get_f1_news(driver="Verstappen") → Recent news about Verstappen
         get_f1_news(team="Ferrari") → Recent Ferrari news
         get_f1_news(circuit="Monaco") → Recent Monaco-related news
