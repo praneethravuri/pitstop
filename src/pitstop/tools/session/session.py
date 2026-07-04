@@ -3,7 +3,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from pitstop.clients.fastf1_client import FastF1Client
+from pitstop.clients import get_fastf1_client
 from pitstop.models.common import PageMeta, PartialErrors
 from pitstop.tools.session.models import (
     LapInfo,
@@ -20,8 +20,7 @@ from pitstop.utils import paginate, to_tool_error
 
 logger = logging.getLogger("pitstop.session")
 
-# ponytail: module-level singleton; swap for shared factory when clients/__init__ ships it
-fastf1_client = FastF1Client()
+fastf1_client = get_fastf1_client()
 
 
 class SessionDataResponse(BaseModel):

@@ -4,13 +4,13 @@ from datetime import datetime
 import pandas as pd
 from fastmcp.exceptions import ToolError
 
-from pitstop.clients.fastf1_client import FastF1Client
+from pitstop.clients import get_fastf1_client
 from pitstop.exceptions import DataSourceError
 from pitstop.tools.schedule.models import EventInfo, ScheduleResponse
 from pitstop.utils import filter_by_name, paginate, to_tool_error
 
 logger = logging.getLogger("pitstop.schedule")
-fastf1_client = FastF1Client()
+fastf1_client = get_fastf1_client()
 
 
 def _row_to_event_info(row) -> EventInfo:
