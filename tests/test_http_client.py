@@ -1,7 +1,8 @@
 """Tests for src/pitstop/clients/http.py — written first (TDD)."""
 
-import httpx
 from urllib.parse import urlparse
+
+import httpx
 
 from pitstop.clients import get_jolpica_client, get_openf1_client
 from pitstop.clients.http import http_retry, make_client
