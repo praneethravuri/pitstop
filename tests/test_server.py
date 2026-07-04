@@ -12,7 +12,7 @@ def test_build_server_returns_fastmcp():
 
 
 @pytest.mark.asyncio
-async def test_seven_tools_registered():
+async def test_all_tools_registered():
     mcp = build_server()
     tools = await mcp.list_tools()
     names = {t.name for t in tools}
@@ -24,8 +24,11 @@ async def test_seven_tools_registered():
         "get_schedule",
         "get_reference_data",
         "get_f1_news",
+        "get_results",
+        "get_race_analysis",
+        "query_wikidata",
     }
-    assert expected.issubset(names), f"missing tools: {expected - names}"
+    assert names == expected, f"tool mismatch: got {names}, expected {expected}"
 
 
 def test_main_is_callable():

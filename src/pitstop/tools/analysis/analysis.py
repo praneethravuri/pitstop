@@ -5,7 +5,7 @@ from typing import Literal
 
 import numpy as np
 
-from pitstop.clients.fastf1_client import FastF1Client
+from pitstop.clients import get_fastf1_client
 from pitstop.models.common import PartialErrors
 from pitstop.tools.analysis.models import (
     AnalysisResponse,
@@ -18,8 +18,7 @@ from pitstop.utils import paginate, to_tool_error
 
 logger = logging.getLogger("pitstop.analysis")
 
-# ponytail: module-level singleton; swap for shared factory when clients/__init__ ships it
-fastf1_client = FastF1Client()
+fastf1_client = get_fastf1_client()
 
 
 def get_race_analysis(

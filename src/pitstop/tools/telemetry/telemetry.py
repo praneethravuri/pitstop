@@ -1,9 +1,10 @@
 import logging
+import math
 
 import pandas as pd
 from pydantic import BaseModel
 
-from pitstop.clients.fastf1_client import FastF1Client
+from pitstop.clients import get_fastf1_client
 from pitstop.models.common import PageMeta, PartialErrors
 from pitstop.tools.telemetry.models import (
     LapTelemetryResponse,
@@ -14,8 +15,7 @@ from pitstop.utils import paginate, to_tool_error
 
 logger = logging.getLogger("pitstop.telemetry")
 
-# ponytail: module-level singleton; swap for shared factory when clients/__init__ ships it
-fastf1_client = FastF1Client()
+fastf1_client = get_fastf1_client()
 
 
 class TelemetryDataResponse(BaseModel):
@@ -31,6 +31,7 @@ def get_telemetry_data(
     session: str,
     drivers: list[str | int],
     lap_numbers: list[int] | None = None,
+    max_points: int = 100,
     page: int = 1,
     page_size: int = 20,
 ) -> TelemetryDataResponse:
@@ -44,6 +45,9 @@ def get_telemetry_data(
         drivers: List of driver identifiers (e.g. ["VER", "HAM"])
         lap_numbers: Optional list of lap numbers corresponding to drivers.
                      If None or matching index is None, fetches fastest lap.
+        max_points: Cap telemetry points per lap via uniform downsampling
+                    (default 100 ≈ one point per 40-70 m of track). Raise for
+                    finer resolution, 0 to disable.
         page: Page number (1-indexed)
         page_size: Items per page
     """
@@ -76,6 +80,9 @@ def get_telemetry_data(
                 continue
 
             tel_data = selected_lap.get_telemetry()
+            if max_points and len(tel_data) > max_points:
+                step = math.ceil(len(tel_data) / max_points)
+                tel_data = tel_data.iloc[::step]
 
             points = []
             for _, row in tel_data.iterrows():

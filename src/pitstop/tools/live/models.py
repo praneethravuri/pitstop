@@ -5,6 +5,14 @@ from pydantic import BaseModel, Field
 from pitstop.models.common import PartialErrors
 
 
+class SessionScope(BaseModel):
+    """Session context (session_name/year/country) shared by every live-data section."""
+
+    session_name: str | None = Field(None, description="Session name")
+    year: int | None = Field(None, description="Year")
+    country: str | None = Field(None, description="Country name")
+
+
 class TeamRadioMessage(BaseModel):
     """Team radio message data."""
 
@@ -15,12 +23,9 @@ class TeamRadioMessage(BaseModel):
     recording_url: str | None = Field(None, description="URL to audio recording")
 
 
-class TeamRadioResponse(BaseModel):
+class TeamRadioResponse(SessionScope):
     """Response for team radio messages."""
 
-    session_name: str | None = Field(None, description="Session name")
-    year: int | None = Field(None, description="Year")
-    country: str | None = Field(None, description="Country name")
     messages: list[TeamRadioMessage] = Field(..., description="List of radio messages")
     total_messages: int = Field(..., description="Total number of messages")
 
@@ -36,12 +41,9 @@ class PitStopData(BaseModel):
     meeting_key: int = Field(..., description="Meeting identifier")
 
 
-class PitStopsResponse(BaseModel):
+class PitStopsResponse(SessionScope):
     """Response for pit stop data."""
 
-    session_name: str | None = Field(None, description="Session name")
-    year: int | None = Field(None, description="Year")
-    country: str | None = Field(None, description="Country name")
     pit_stops: list[PitStopData] = Field(..., description="List of pit stops")
     total_pit_stops: int = Field(..., description="Total number of pit stops")
     fastest_stop: float | None = Field(None, description="Fastest pit stop duration")
@@ -60,12 +62,9 @@ class IntervalData(BaseModel):
     meeting_key: int = Field(..., description="Meeting identifier")
 
 
-class IntervalsResponse(BaseModel):
+class IntervalsResponse(SessionScope):
     """Response for intervals data."""
 
-    session_name: str | None = Field(None, description="Session name")
-    year: int | None = Field(None, description="Year")
-    country: str | None = Field(None, description="Country name")
     intervals: list[IntervalData] = Field(..., description="List of interval data points")
     total_data_points: int = Field(..., description="Total number of data points")
 
@@ -81,12 +80,9 @@ class StintData(BaseModel):
     tyre_age_at_start: int | None = Field(None, description="Tyre age at start of stint")
 
 
-class StintsResponse(BaseModel):
+class StintsResponse(SessionScope):
     """Response for tire stint data."""
 
-    session_name: str | None = Field(None, description="Session name")
-    year: int | None = Field(None, description="Year")
-    country: str | None = Field(None, description="Country name")
     stints: list[StintData] = Field(..., description="List of tire stints")
     total_stints: int = Field(..., description="Total number of stints")
 
@@ -104,22 +100,97 @@ class RaceControlMessage(BaseModel):
     sector: int | None = Field(None, description="Sector number")
 
 
-class RaceControlResponse(BaseModel):
+class RaceControlResponse(SessionScope):
     """Response for race control messages."""
 
-    session_name: str | None = Field(None, description="Session name")
-    year: int | None = Field(None, description="Year")
-    country: str | None = Field(None, description="Country name")
     messages: list[RaceControlMessage] = Field(..., description="List of messages")
     total_messages: int = Field(..., description="Total number of messages")
 
 
-class LiveDataResponse(BaseModel):
-    """Comprehensive live session data."""
+class WeatherData(BaseModel):
+    """Weather data."""
 
-    session_name: str | None = Field(None, description="Session name")
-    year: int | None = Field(None, description="Year")
-    country: str | None = Field(None, description="Country")
+    date: str | None = Field(None, description="Timestamp of weather reading")
+    air_temperature: float | None = Field(None, description="Air temperature in Celsius")
+    track_temperature: float | None = Field(None, description="Track temperature in Celsius")
+    humidity: float | None = Field(None, description="Relative humidity (%)")
+    pressure: float | None = Field(None, description="Air pressure (mbar)")
+    rainfall: float | None = Field(None, description="Rainfall indicator")
+    wind_direction: float | None = Field(None, description="Wind direction (degrees)")
+    wind_speed: float | None = Field(None, description="Wind speed (m/s)")
+    session_key: int | None = Field(None, description="Session identifier")
+    meeting_key: int | None = Field(None, description="Meeting identifier")
+
+
+class WeatherResponse(SessionScope):
+    """Response for weather data."""
+
+    weather: list[WeatherData] = Field(..., description="List of weather readings")
+    total_data_points: int = Field(..., description="Total number of data points")
+
+
+class PositionData(BaseModel):
+    """Position data."""
+
+    date: str | None = Field(None, description="Timestamp of position change")
+    driver_number: int | None = Field(None, description="Driver number (1-99)")
+    position: int | None = Field(None, description="Position on track")
+    session_key: int | None = Field(None, description="Session identifier")
+    meeting_key: int | None = Field(None, description="Meeting identifier")
+
+
+class PositionResponse(SessionScope):
+    """Response for position data."""
+
+    positions: list[PositionData] = Field(..., description="List of position changes")
+    total_data_points: int = Field(..., description="Total number of data points")
+
+
+class LapData(BaseModel):
+    """Lap timing data."""
+
+    driver_number: int | None = Field(None, description="Driver number (1-99)")
+    lap_number: int | None = Field(None, description="Lap number")
+    lap_duration: float | None = Field(None, description="Lap duration in seconds")
+    duration_sector_1: float | None = Field(None, description="Sector 1 duration in seconds")
+    duration_sector_2: float | None = Field(None, description="Sector 2 duration in seconds")
+    duration_sector_3: float | None = Field(None, description="Sector 3 duration in seconds")
+    i1_speed: float | None = Field(None, description="Speed trap 1 speed (km/h)")
+    i2_speed: float | None = Field(None, description="Speed trap 2 speed (km/h)")
+    st_speed: float | None = Field(None, description="Speed trap (straight) speed (km/h)")
+    is_pit_out_lap: bool | None = Field(None, description="Whether lap is a pit-out lap")
+    date_start: str | None = Field(None, description="Timestamp of lap start")
+    session_key: int | None = Field(None, description="Session identifier")
+    meeting_key: int | None = Field(None, description="Meeting identifier")
+
+
+class LapsResponse(SessionScope):
+    """Response for lap data."""
+
+    laps: list[LapData] = Field(..., description="List of laps")
+    total_laps: int = Field(..., description="Total number of laps")
+
+
+class OvertakeData(BaseModel):
+    """Overtake data (beta endpoint)."""
+
+    date: str | None = Field(None, description="Timestamp of overtake")
+    overtaking_driver_number: int | None = Field(None, description="Overtaking driver number")
+    overtaken_driver_number: int | None = Field(None, description="Overtaken driver number")
+    position: int | None = Field(None, description="Position at overtake")
+    session_key: int | None = Field(None, description="Session identifier")
+    meeting_key: int | None = Field(None, description="Meeting identifier")
+
+
+class OvertakesResponse(SessionScope):
+    """Response for overtake data."""
+
+    overtakes: list[OvertakeData] = Field(..., description="List of overtakes")
+    total_overtakes: int = Field(..., description="Total number of overtakes")
+
+
+class LiveDataResponse(SessionScope):
+    """Comprehensive live session data."""
 
     # Optional components based on requested data_types
     intervals: IntervalsResponse | None = Field(None, description="Intervals and gaps")
@@ -127,6 +198,10 @@ class LiveDataResponse(BaseModel):
     radio: TeamRadioResponse | None = Field(None, description="Team radio messages")
     stints: StintsResponse | None = Field(None, description="Tire stint history")
     race_control: RaceControlResponse | None = Field(None, description="Race control messages")
+    weather: WeatherResponse | None = Field(None, description="Weather conditions")
+    position: PositionResponse | None = Field(None, description="Position changes over time")
+    laps: LapsResponse | None = Field(None, description="Per-lap sector times and speeds")
+    overtakes: OvertakesResponse | None = Field(None, description="On-track overtakes (beta)")
     partial_errors: PartialErrors | None = Field(
         None, description="Partial fetch errors per data type"
     )

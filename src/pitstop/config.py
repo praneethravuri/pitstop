@@ -20,3 +20,5 @@ PORT = int(os.getenv("PITSTOP_PORT", "8000"))
 FASTF1_CACHE_DIR = os.getenv("FASTF1_CACHE", "cache")
 ENABLE_CACHING = os.getenv("PITSTOP_ENABLE_CACHING", "true").lower() == "true"
 CACHE_TTL_SECONDS = int(os.getenv("PITSTOP_CACHE_TTL_SECONDS", "300"))
+# TTL to pass to make_client(): None disables HTTP response caching
+HTTP_CACHE_TTL = CACHE_TTL_SECONDS if ENABLE_CACHING else None

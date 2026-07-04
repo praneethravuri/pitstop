@@ -3,8 +3,10 @@
 import logging
 from unittest.mock import MagicMock, patch
 
+import httpx
 import pytest
 
+from pitstop.clients import rss_client as rss_mod
 from pitstop.clients.rss_client import RSSClient
 from pitstop.exceptions import DataSourceError
 from pitstop.tools.news.models import NewsArticle, NewsResponse
@@ -12,6 +14,28 @@ from pitstop.tools.news.models import NewsArticle, NewsResponse
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+
+def _make_http_response(status_code=200, content=b"<rss></rss>"):
+    """Fake httpx.Response standing in for the module-level cached client's .get()."""
+    resp = MagicMock()
+    resp.status_code = status_code
+    resp.content = content
+    if status_code >= 400:
+        request = MagicMock()
+
+        def _raise():
+            raise httpx.HTTPStatusError(f"{status_code} error", request=request, response=resp)
+
+        resp.raise_for_status.side_effect = _raise
+    else:
+        resp.raise_for_status.return_value = None
+    return resp
+
+
+def _patch_client_get(**kwargs):
+    """Patch the shared rss_client._client.get so tests never hit the network."""
+    return patch.object(rss_mod._client, "get", **kwargs)
 
 
 def _make_entry(
@@ -83,8 +107,9 @@ def test_empty_feed_logs_warning(caplog):
 
     with caplog.at_level(logging.WARNING, logger="pitstop.rss"):
         with patch("feedparser.parse", return_value=empty_feed):
-            with pytest.raises(DataSourceError):
-                client._fetch_all_sources(limit=5)
+            with _patch_client_get(return_value=_make_http_response()):
+                with pytest.raises(DataSourceError):
+                    client._fetch_all_sources(limit=5)
 
     warning_records = [r for r in caplog.records if r.levelno == logging.WARNING]
     assert len(warning_records) > 0
@@ -97,8 +122,9 @@ def test_empty_feed_warning_contains_source_info(caplog):
 
     with caplog.at_level(logging.WARNING, logger="pitstop.rss"):
         with patch("feedparser.parse", return_value=empty_feed):
-            with pytest.raises(DataSourceError):
-                client._fetch_all_sources(limit=5)
+            with _patch_client_get(return_value=_make_http_response()):
+                with pytest.raises(DataSourceError):
+                    client._fetch_all_sources(limit=5)
 
     warning_messages = [r.getMessage() for r in caplog.records if r.levelno == logging.WARNING]
     assert len(warning_messages) > 0
@@ -161,6 +187,28 @@ def test_aggregate_raises_data_source_error_when_all_fail():
     assert exc_info.value.source == "rss"
 
 
+def test_aggregate_one_feed_500_others_still_aggregate():
+    """A single feed returning HTTP 500 is recorded as failed; other feeds still aggregate."""
+    client = RSSClient()
+    entry = _make_entry()
+    good_feed = _make_feed([entry])
+    bad_source = next(iter(client.RSS_FEEDS))
+    bad_url = client.RSS_FEEDS[bad_source]
+
+    def fake_get(url, *args, **kwargs):
+        if url == bad_url:
+            return _make_http_response(status_code=500)
+        return _make_http_response()
+
+    with patch("feedparser.parse", return_value=good_feed):
+        with _patch_client_get(side_effect=fake_get):
+            result = client._fetch_all_sources(limit=5)
+
+    assert bad_source in result.failed_feeds
+    assert result.article_count > 0
+    assert all(a.source != bad_source for a in result.articles)
+
+
 # ---------------------------------------------------------------------------
 # get_news — public API
 # ---------------------------------------------------------------------------
@@ -180,7 +228,8 @@ def test_get_news_single_source_success():
     good_feed = _make_feed([entry])
 
     with patch("feedparser.parse", return_value=good_feed):
-        result = client.get_news(source="formula1", limit=5)
+        with _patch_client_get(return_value=_make_http_response()):
+            result = client.get_news(source="formula1", limit=5)
 
     assert isinstance(result, NewsResponse)
     assert result.source == "formula1"
@@ -193,8 +242,9 @@ def test_get_news_single_source_empty_raises_data_source_error():
     empty_feed = _make_feed([])
 
     with patch("feedparser.parse", return_value=empty_feed):
-        with pytest.raises(DataSourceError):
-            client.get_news(source="formula1", limit=5)
+        with _patch_client_get(return_value=_make_http_response()):
+            with pytest.raises(DataSourceError):
+                client.get_news(source="formula1", limit=5)
 
 
 def test_get_news_all_respects_limit():
@@ -204,7 +254,8 @@ def test_get_news_all_respects_limit():
     good_feed = _make_feed(entries)
 
     with patch("feedparser.parse", return_value=good_feed):
-        result = client.get_news(source="all", limit=3)
+        with _patch_client_get(return_value=_make_http_response()):
+            result = client.get_news(source="all", limit=3)
 
     # Each source contributes up to 3 articles; at most 3 * num_feeds total
     assert result.article_count <= 3 * len(client.RSS_FEEDS)
@@ -227,7 +278,7 @@ def test_rss_feeds_new_feeds_have_correct_urls():
     """New feeds have the correct RSS URLs."""
     client = RSSClient()
     expected_urls = {
-        "formula1": "https://www.formula1.com/en/latest/all.rss",
+        "formula1": "https://www.formula1.com/en/latest/all.xml",
         "reddit_f1": "https://www.reddit.com/r/formula1/.rss",
         "the_race": "https://the-race.com/feed/",
         "crash_net": "https://www.crash.net/rss/f1",

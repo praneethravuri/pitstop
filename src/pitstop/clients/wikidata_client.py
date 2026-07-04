@@ -7,6 +7,7 @@ import httpx
 
 from pitstop import __version__
 from pitstop.clients.http import http_retry, make_client
+from pitstop.config import HTTP_CACHE_TTL
 from pitstop.exceptions import DataSourceError
 
 logger = logging.getLogger("pitstop.wikidata")
@@ -24,7 +25,11 @@ def get_wikidata_client() -> httpx.Client:
     """Lazy singleton httpx client for Wikidata."""
     global _client
     if _client is None:
-        _client = make_client(base_url="", timeout=_TIMEOUT)
+        _client = make_client(
+            base_url="",
+            timeout=_TIMEOUT,
+            cache_ttl=HTTP_CACHE_TTL,
+        )
         _client.headers.update({"User-Agent": _USER_AGENT})
     return _client
 

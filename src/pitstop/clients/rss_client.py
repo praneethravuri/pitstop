@@ -1,9 +1,12 @@
 import logging
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from typing import TYPE_CHECKING
 
 import feedparser
 
+from pitstop.clients.http import make_client
+from pitstop.config import HTTP_CACHE_TTL
 from pitstop.exceptions import DataSourceError
 from pitstop.utils.text_cleaner import clean_html
 
@@ -12,53 +15,55 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger("pitstop.rss")
 
+# Redirects are common among these feeds; caching makes repeated news calls cheap.
+_client = make_client(
+    timeout=10.0,
+    follow_redirects=True,
+    cache_ttl=HTTP_CACHE_TTL,
+)
+
 
 class RSSClient:
     """
     RSS client for accessing Formula 1 news feeds.
 
-    Aggregates F1 news from 25+ trusted sources including:
+    Aggregates F1 news from 20 trusted sources including:
     - Official Formula 1 website & FIA
     - Major outlets: Autosport, Motorsport.com, The Race, RaceFans
-    - Specialist sources: F1Technical, Pitpass, Joe Saward
-    - Regional sources: GPBlog, Formel1.de, F1 Insider
-    - Community sources: WTF1, FormulaNerds, RacingNews365
+    - Specialist sources: Pitpass, Joe Saward, Racecar Engineering
+    - Regional sources: F1i, F1 Insider
+    - Community sources: FormulaNerds, GPFans, Reddit F1
+
+    Every URL below was verified live (HTTP 200 + parseable entries).
     """
 
     RSS_FEEDS = {
         # Official sources
-        "formula1": "https://www.formula1.com/en/latest/all.rss",
+        "formula1": "https://www.formula1.com/en/latest/all.xml",
         "fia": "https://www.fia.com/rss/press-release",
         # Major F1 news outlets
         "autosport": "https://www.autosport.com/rss/feed/f1",
         "motorsport": "https://www.motorsport.com/rss/f1/news/",
         "the_race": "https://the-race.com/feed/",
         "racefans": "https://www.racefans.net/feed/",
-        "planetf1": "https://www.planetf1.com/feed/",
         "crash_net": "https://www.crash.net/rss/f1",
-        "grandprix": "https://www.grandprix.com/feed/",
+        "grandprix": "https://www.grandprix.com/rss.xml",
         "espnf1": "https://www.espn.com/espn/rss/rpm/news",
         "skysportsf1": "https://www.skysports.com/rss/12040",
         "reddit_f1": "https://www.reddit.com/r/formula1/.rss",
         # Specialist & Technical sources
-        "f1technical": "https://www.f1technical.net/rss/news.xml",
-        "pitpass": "https://www.pitpass.com/rss",
+        "pitpass": "https://www.pitpass.com/fes_php/fes_usr_sit_newsfeed.php",
         "joe-saward": "https://joesaward.wordpress.com/feed/",
         "racecar-engineering": "https://www.racecar-engineering.com/feed/",
         # Regional & International sources
-        "gpblog": "https://www.gpblog.com/en/rss.xml",
         "f1i": "https://f1i.com/feed",
         "f1-insider-de": "https://www.f1-insider.com/feed/",
-        "formel1-de": "https://www.formel1.de/rss.xml",
         # Community & Fan sources
-        "wtf1": "https://wtf1.com/feed/",
-        "racingnews365": "https://racingnews365.com/rss",
         "formulanerds": "https://formulanerds.com/feed/",
         "f1destinations": "https://f1destinations.com/feed/",
         "gpfans": "https://www.gpfans.com/en/rss.xml",
         # Additional coverage
         "motorsportweek": "https://www.motorsportweek.com/feed/",
-        "racedepartment": "https://www.racedepartment.com/forums/f1-2021-the-game.214/index.rss",
     }
 
     def get_news(self, source: str, limit: int) -> "NewsResponse":
@@ -93,7 +98,9 @@ class RSSClient:
         from pitstop.tools.news.models import NewsArticle, NewsResponse
 
         feed_url = self.RSS_FEEDS[source]
-        feed = feedparser.parse(feed_url)
+        resp = _client.get(feed_url)
+        resp.raise_for_status()
+        feed = feedparser.parse(resp.content)
 
         if not feed.entries:
             raise RuntimeError(f"No articles found from {source}")
@@ -124,18 +131,27 @@ class RSSClient:
         """Fetch from all RSS sources and aggregate."""
         from pitstop.tools.news.models import NewsArticle, NewsResponse
 
-        all_articles: list[NewsArticle] = []
-        failed_feeds: list[str] = []
-
         # Ceiling division so each source contributes proportionally; ensures diversity
         per_source = max(1, -(-limit // len(self.RSS_FEEDS)))  # ceil(limit/n)
-        for source in self.RSS_FEEDS.keys():
+
+        def _try_fetch(source: str) -> "NewsResponse | None":
             try:
-                result = self._fetch_single_source(source, per_source)
-                all_articles.extend(result.articles)
+                return self._fetch_single_source(source, per_source)
             except Exception as e:
                 logger.warning("RSS feed failed: %s (%s) — %s", source, self.RSS_FEEDS[source], e)
+                return None
+
+        # executor.map preserves RSS_FEEDS insertion order in its results
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            outcomes = list(executor.map(_try_fetch, self.RSS_FEEDS))
+
+        failed_feeds: list[str] = []
+        all_articles: list[NewsArticle] = []
+        for source, resp in zip(self.RSS_FEEDS, outcomes):
+            if resp is None:
                 failed_feeds.append(source)
+            else:
+                all_articles.extend(resp.articles)
 
         if not all_articles:
             reason = f"all {len(failed_feeds)} feeds failed"

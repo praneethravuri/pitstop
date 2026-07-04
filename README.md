@@ -2,13 +2,13 @@
 
 An HTTP-first Model Context Protocol (MCP) server for Formula 1 data. Aggregates real-time, historical, and news data from multiple authoritative sources into 10 tools ready for any MCP client.
 
-**v0.3.0** | Author: [Praneeth Ravuri](https://github.com/praneethravuri)
+**v0.4.0** | Author: [Praneeth Ravuri](https://github.com/praneethravuri)
 
 ---
 
 ## Overview
 
-Pitstop exposes F1 data as 10 MCP tools over HTTP (default) or stdio. It pulls from FastF1, Jolpica, OpenF1, Wikidata, and RSS feeds, handles pagination, retries, caching, and rate limiting transparently.
+Pitstop exposes F1 data as 10 MCP tools over HTTP (default) or stdio. It pulls from FastF1, Jolpica, OpenF1, Wikidata, and RSS feeds, handles pagination, retries, caching, and concurrency limits transparently.
 
 ---
 
@@ -19,7 +19,8 @@ Pitstop exposes F1 data as 10 MCP tools over HTTP (default) or stdio. It pulls f
 | [FastF1](https://github.com/theOehrly/Fast-F1) | 2018–present | Historical / timing / telemetry |
 | [Jolpica-F1](https://github.com/jolpica/jolpica-f1) | 1950–present | Historical (Ergast-compatible) |
 | [OpenF1](https://openf1.org/) | 2023–present | Real-time |
-| RSS Feeds (Autosport, BBC, etc.) | Live | News |
+| [Wikidata](https://www.wikidata.org/) | All eras | SPARQL queries |
+| RSS Feeds (20 sources) | Live | News |
 
 ---
 
@@ -27,13 +28,13 @@ Pitstop exposes F1 data as 10 MCP tools over HTTP (default) or stdio. It pulls f
 
 | Tool | Description | Key Parameters |
 |------|-------------|----------------|
-| `get_session_data` | Race/qualifying results, lap times, weather, driver details (2018–present) | `year`, `event`, `session`, `includes`, `page`, `page_size` |
-| `get_telemetry_data` | Lap-by-lap car telemetry (speed, throttle, brake, gears) (2018–present) | `year`, `event`, `session`, `driver`, `page`, `page_size` |
-| `get_live_data` | Live intervals, pit stops, team radio, stints, race control (2023–present) | `category`, `session_key`, `page`, `page_size` |
-| `get_standings` | Driver and constructor championship standings (1950–present) | `year`, `type`, `page`, `page_size` |
-| `get_schedule` | Race calendar and session schedule | `year`, `event`, `page`, `page_size` |
-| `get_reference_data` | Circuits, drivers, constructors encyclopedia (1950–present) | `category`, `query`, `page`, `page_size` |
-| `get_f1_news` | F1 headlines from 30+ RSS sources | `query`, `page`, `page_size` |
+| `get_session_data` | Race/qualifying results, lap times, weather, driver details (2018–present) | `year`, `gp`, `session`, `includes`, `page`, `page_size` |
+| `get_telemetry_data` | Lap-by-lap car telemetry (speed, throttle, brake, gears) (2018–present) | `year`, `gp`, `session`, `drivers`, `lap_numbers`, `max_points`, `page`, `page_size` |
+| `get_live_data` | Live intervals, pit stops, team radio, stints, race control, weather, position, laps, overtakes (2023–present) | `data_types`, `year`, `country`, `session_name`, `driver_number`, `compound`, `flag`, `category`, `page`, `page_size` |
+| `get_standings` | Driver and constructor championship standings (1950–present) | `year`, `round`, `type`, `driver_name`, `team_name`, `page`, `page_size` |
+| `get_schedule` | Race calendar and session schedule | `year`, `include_testing`, `round`, `event_name`, `only_remaining`, `page`, `page_size` |
+| `get_reference_data` | Circuits, drivers, constructors encyclopedia (1950–present) | `reference_type`, `year`, `name`, `page`, `page_size` |
+| `get_f1_news` | F1 headlines from 20 RSS sources | `source`, `limit`, `keywords`, `driver`, `team`, `circuit`, `year`, `date_from`, `date_to`, `page`, `page_size` |
 | `get_results` | Race/qualifying/sprint results, lap times, pit stops (1950–present) | `year`, `round`, `result_type`, `driver`, `page` |
 | `get_race_analysis` | Pace, tire degradation, stint summaries, consistency (2018–present) | `year`, `gp`, `session`, `drivers`, `analysis_type`, `page` |
 | `query_wikidata` | SPARQL queries to Wikidata for F1 biography, career records, history | `sparql`, `page`, `page_size` |
@@ -97,7 +98,7 @@ Example `/health` response:
 
 ```json
 {
-  "version": "0.3.0",
+  "version": "0.4.0",
   "overall": "ok",
   "sources": [
     { "name": "fastf1",  "status": "ok", "latency_ms": 2,   "detail": "cache writable" },
@@ -133,7 +134,7 @@ SELECT ?driver ?driverLabel ?birthDate WHERE {
 
 ## Pagination
 
-All list-returning tools accept `page` (1-based, default 1) and `page_size` (default 20). Responses include a `pagination` block:
+All list-returning tools accept `page` (1-based, default 1) and `page_size` (defaults vary per tool: 10–50). Responses include a `pagination` block:
 
 ```json
 {
@@ -158,13 +159,29 @@ All list-returning tools accept `page` (1-based, default 1) and `page_size` (def
 | `PITSTOP_TRANSPORT` | `http` | `http` or `stdio` |
 | `PITSTOP_HOST` | `0.0.0.0` | Bind address (HTTP only) |
 | `PITSTOP_PORT` | `8000` | Listen port (HTTP only) |
-| `PITSTOP_LOG_LEVEL` | `INFO` | `DEBUG` / `INFO` / `WARNING` / `ERROR` |
-| `PITSTOP_LOG_FORMAT` | `json` | `json` or `text` |
 | `PITSTOP_ENV` | `development` | `development` or `production` |
-| `PITSTOP_RATE_LIMIT_ENABLED` | `false` | Enable rate limiting |
-| `PITSTOP_RATE_LIMIT_PER_HOUR` | `3600` | Requests allowed per hour |
-| `PITSTOP_CACHE_TTL_SECONDS` | `300` | HTTP response cache TTL |
+| `PITSTOP_LOG_LEVEL` | Depends on `PITSTOP_ENV` | `DEBUG` if development, else `INFO` |
+| `PITSTOP_LOG_FORMAT` | Depends on `PITSTOP_ENV` | `text` if development, else `json` |
+| `PITSTOP_ENABLE_CACHING` | `true` | Enable HTTP response and FastF1 disk caching |
+| `PITSTOP_CACHE_TTL_SECONDS` | `300` | HTTP response cache time-to-live (seconds) |
+| `PITSTOP_RATE_LIMIT_ENABLED` | `false` | Enable concurrent-call limiting |
+| `PITSTOP_RATE_LIMIT_PER_HOUR` | `3600` | Max concurrent calls (derived from per-hour quota) |
 | `FASTF1_CACHE` | `cache` | FastF1 cache directory path |
+
+---
+
+## Caching
+
+Pitstop uses in-memory HTTP response caching (via [Hishel](https://github.com/karpetrosyan/hishel)) for GET requests with 200 responses. This keeps tool calls inside upstream rate limits:
+
+- **Jolpica**: 4 req/s, 500/hr
+- **OpenF1**: 3 req/s, 30/min
+- **Wikidata**: Query complexity limits
+- **RSS**: Per-feed redirects cached
+
+FastF1 maintains its own disk cache in `FASTF1_CACHE` directory. Control caching via:
+- `PITSTOP_ENABLE_CACHING=true` (default)
+- `PITSTOP_CACHE_TTL_SECONDS=300` (default)
 
 ---
 

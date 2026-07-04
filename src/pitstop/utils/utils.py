@@ -44,26 +44,3 @@ def paginate(items: list, page: int, page_size: int) -> tuple[list, PageMeta]:
         has_next=page < total_pages,
         has_prev=page > 1,
     )
-
-
-def safe_int(val, default: int = 0) -> int:
-    """Convert val to int, returning default on failure."""
-    try:
-        return int(val)
-    except (TypeError, ValueError):
-        return default
-
-
-def safe_str(val, default: str = "") -> str:
-    """Convert val to str, returning default on failure."""
-    if val is None:
-        return default
-    return str(val)
-
-
-def safe_float(val, default: float = 0.0) -> float:
-    """Convert val to float, returning default on failure."""
-    try:
-        return float(val)
-    except (TypeError, ValueError):
-        return default

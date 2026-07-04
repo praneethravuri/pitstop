@@ -5,7 +5,7 @@ from typing import Literal
 import pandas as pd
 from fastmcp.exceptions import ToolError
 
-from pitstop.clients.fastf1_client import FastF1Client
+from pitstop.clients import get_fastf1_client
 from pitstop.exceptions import DataSourceError
 from pitstop.tools.reference.models import (
     CircuitInfo,
@@ -19,8 +19,7 @@ from pitstop.utils import filter_by_name, paginate, to_tool_error
 
 logger = logging.getLogger("pitstop.reference")
 
-# Initialize FastF1 client
-fastf1_client = FastF1Client()
+fastf1_client = get_fastf1_client()
 
 
 def get_reference_data(

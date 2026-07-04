@@ -2,44 +2,64 @@
 
 from unittest.mock import MagicMock, patch
 
+import pandas as pd
 import pytest
 from fastmcp.exceptions import ToolError
 
 from pitstop.tools.telemetry.telemetry import TelemetryDataResponse, get_telemetry_data
 
 
-def _make_lap(driver: str, lap_num: int = 1):
+def _make_lap(driver: str, lap_num: int = 1, tel_df=None):
     lap = MagicMock()
     lap.__getitem__ = lambda self, k: {
         "Driver": driver,
         "LapTime": "1:12.000",
         "LapNumber": lap_num,
     }[k]
-    # Empty telemetry to keep tests fast
-    tel_df = MagicMock()
-    tel_df.iterrows.return_value = iter([])
+    if tel_df is None:
+        # Empty telemetry to keep tests fast
+        tel_df = MagicMock()
+        tel_df.iterrows.return_value = iter([])
     lap.get_telemetry.return_value = tel_df
     return lap
 
 
-def _make_driver_laps(driver: str, failing: bool = False):
+def _make_telemetry_df(n_rows: int) -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "SessionTime": [float(i) for i in range(n_rows)],
+            "RPM": [10000] * n_rows,
+            "Speed": [200.0] * n_rows,
+            "Throttle": [100.0] * n_rows,
+            "Brake": [0.0] * n_rows,
+            "nGear": [7] * n_rows,
+            "DRS": [1] * n_rows,
+            "Distance": [float(i) * 10 for i in range(n_rows)],
+            "X": [0.0] * n_rows,
+            "Y": [0.0] * n_rows,
+            "Z": [0.0] * n_rows,
+        }
+    )
+
+
+def _make_driver_laps(driver: str, failing: bool = False, tel_df=None):
     driver_laps = MagicMock()
     driver_laps.__len__ = MagicMock(return_value=1)
     if failing:
         driver_laps.pick_fastest.side_effect = RuntimeError("telemetry unavailable")
     else:
-        driver_laps.pick_fastest.return_value = _make_lap(driver)
+        driver_laps.pick_fastest.return_value = _make_lap(driver, tel_df=tel_df)
     return driver_laps
 
 
-def _make_session(drivers=("VER", "HAM"), failing_drivers=()):
+def _make_session(drivers=("VER", "HAM"), failing_drivers=(), tel_df=None):
     session = MagicMock()
     session.name = "Qualifying"
     session.event = MagicMock()
     session.event.EventName = "Monaco Grand Prix"
 
     def pick_driver(drv):
-        return _make_driver_laps(drv, failing=drv in failing_drivers)
+        return _make_driver_laps(drv, failing=drv in failing_drivers, tel_df=tel_df)
 
     session.laps.pick_driver.side_effect = pick_driver
     return session
@@ -167,3 +187,30 @@ def test_three_drivers_no_comparison(mock_client):
     result = get_telemetry_data(2024, "Monaco", "Q", ["VER", "HAM", "LEC"])
 
     assert result.comparison is None
+
+
+# ---------------------------------------------------------------------------
+# downsampling
+# ---------------------------------------------------------------------------
+
+
+@patch("pitstop.tools.telemetry.telemetry.fastf1_client")
+def test_downsampling_caps_points_at_max_points(mock_client):
+    tel_df = _make_telemetry_df(500)
+    session = _make_session(("VER",), tel_df=tel_df)
+    mock_client.get_session.return_value = session
+
+    result = get_telemetry_data(2024, "Monaco", "Q", ["VER"])
+
+    assert result.drivers_telemetry[0].total_points <= 100
+
+
+@patch("pitstop.tools.telemetry.telemetry.fastf1_client")
+def test_max_points_zero_disables_downsampling(mock_client):
+    tel_df = _make_telemetry_df(500)
+    session = _make_session(("VER",), tel_df=tel_df)
+    mock_client.get_session.return_value = session
+
+    result = get_telemetry_data(2024, "Monaco", "Q", ["VER"], max_points=0)
+
+    assert result.drivers_telemetry[0].total_points == 500
