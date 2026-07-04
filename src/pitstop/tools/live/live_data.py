@@ -7,32 +7,56 @@ from pitstop.models.common import PartialErrors
 from pitstop.tools.live.models import (
     IntervalData,
     IntervalsResponse,
+    LapData,
+    LapsResponse,
     LiveDataResponse,
+    OvertakeData,
+    OvertakesResponse,
     PitStopData,
     PitStopsResponse,
+    PositionData,
+    PositionResponse,
     RaceControlMessage,
     RaceControlResponse,
     StintData,
     StintsResponse,
     TeamRadioMessage,
     TeamRadioResponse,
+    WeatherData,
+    WeatherResponse,
 )
 from pitstop.utils import paginate, to_tool_error
 
 logger = logging.getLogger("pitstop.live")
 
-# ponytail: dispatch eliminates 5 near-identical fetch+map blocks
+# ponytail: dispatch eliminates near-identical fetch+map blocks
 DISPATCH: dict[str, tuple[str, type]] = {
     "intervals": ("/intervals", IntervalData),
     "pit_stops": ("/pit", PitStopData),
     "radio": ("/team_radio", TeamRadioMessage),
     "stints": ("/stints", StintData),
     "race_control": ("/race_control", RaceControlMessage),
+    "weather": ("/weather", WeatherData),
+    "position": ("/position", PositionData),
+    "laps": ("/laps", LapData),
+    "overtakes": ("/overtakes", OvertakeData),
 }
 
 
 def get_live_data(
-    data_types: list[Literal["intervals", "pit_stops", "radio", "stints", "race_control"]],
+    data_types: list[
+        Literal[
+            "intervals",
+            "pit_stops",
+            "radio",
+            "stints",
+            "race_control",
+            "weather",
+            "position",
+            "laps",
+            "overtakes",
+        ]
+    ],
     year: int,
     country: str,
     session_name: str = "Race",
@@ -55,6 +79,12 @@ def get_live_data(
                    - 'radio': Team radio audio and transcripts
                    - 'stints': Tire usage and stint history
                    - 'race_control': Race control messages (flags, penalties, SC)
+                   - 'weather': Air/track temperature, humidity, rainfall, wind (no driver filter)
+                   - 'position': Position changes over time per driver
+                   - 'laps': Per-lap sector times and speed-trap speeds (2023+; for older seasons
+                     use get_session_data)
+                   - 'overtakes': On-track overtakes (beta endpoint; driver_number filters the
+                     overtaking driver)
         year: Season year (e.g., 2024)
         country: Country name (e.g., "Monaco")
         session_name: Session name (default: "Race")
@@ -94,6 +124,10 @@ def get_live_data(
         if dtype == "race_control":
             filters["flag"] = flag
             filters["category"] = category
+        if dtype == "weather":
+            filters.pop("driver_number", None)
+        if dtype == "overtakes":
+            filters["overtaking_driver_number"] = filters.pop("driver_number", None)
 
         try:
             raw = openf1_client.query(endpoint, **filters)
@@ -148,6 +182,38 @@ def get_live_data(
                 session_name=session_name,
                 messages=items,
                 total_messages=len(all_items),
+            )
+        elif dtype == "weather":
+            response.weather = WeatherResponse(
+                year=year,
+                country=country,
+                session_name=session_name,
+                weather=items,
+                total_data_points=len(all_items),
+            )
+        elif dtype == "position":
+            response.position = PositionResponse(
+                year=year,
+                country=country,
+                session_name=session_name,
+                positions=items,
+                total_data_points=len(all_items),
+            )
+        elif dtype == "laps":
+            response.laps = LapsResponse(
+                year=year,
+                country=country,
+                session_name=session_name,
+                laps=items,
+                total_laps=len(all_items),
+            )
+        elif dtype == "overtakes":
+            response.overtakes = OvertakesResponse(
+                year=year,
+                country=country,
+                session_name=session_name,
+                overtakes=items,
+                total_overtakes=len(all_items),
             )
 
     if partial_errors.has_errors:
