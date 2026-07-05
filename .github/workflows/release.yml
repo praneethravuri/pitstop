@@ -45,7 +45,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   # NOTE: requires a one-time manual step — register this repo/workflow as a
-  # Trusted Publisher for the "pitstop" project at
+  # Trusted Publisher for the "pitstop-f1" project at
   # https://pypi.org/manage/account/publishing/ before the first tag push.
   pypi:
     if: startsWith(github.ref, 'refs/tags/v')
