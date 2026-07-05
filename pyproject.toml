@@ -1,5 +1,5 @@
 [project]
-name = "pitstop"
+name = "pitstop-f1"
 version = "0.5.0"
 description = "All-in-one F1 MCP Server"
 readme = "README.md"
@@ -30,6 +30,8 @@ Repository = "https://github.com/praneethravuri/pitstop"
 
 [project.scripts]
 pitstop = "pitstop.server:main"
+# alias so `uvx pitstop-f1` resolves (uvx runs the entry point matching the dist name)
+pitstop-f1 = "pitstop.server:main"
 pitstop-db-seed = "pitstop.db.seed:main"
 pitstop-db-update = "pitstop.db.updater:main"
 

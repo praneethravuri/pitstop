@@ -10,7 +10,7 @@
   "packages": [
     {
       "registryType": "pypi",
-      "identifier": "pitstop",
+      "identifier": "pitstop-f1",
       "version": "0.5.0",
       "registryBaseUrl": "https://pypi.org",
       "runtimeHint": "uvx",

@@ -13,13 +13,13 @@ An HTTP-first Model Context Protocol (MCP) server for Formula 1 data. Aggregates
 stdio, via [uvx](https://docs.astral.sh/uv/guides/tools/) (no clone needed):
 
 ```bash
-PITSTOP_TRANSPORT=stdio uvx pitstop
+PITSTOP_TRANSPORT=stdio uvx pitstop-f1
 ```
 
 Via the [Claude Code CLI](https://docs.claude.com/en/docs/claude-code):
 
 ```bash
-claude mcp add pitstop -e PITSTOP_TRANSPORT=stdio -- uvx pitstop
+claude mcp add pitstop -e PITSTOP_TRANSPORT=stdio -- uvx pitstop-f1
 ```
 
 Claude Desktop (`claude_desktop_config.json`):
@@ -29,7 +29,7 @@ Claude Desktop (`claude_desktop_config.json`):
   "mcpServers": {
     "pitstop": {
       "command": "uvx",
-      "args": ["pitstop"],
+      "args": ["pitstop-f1"],
       "env": { "PITSTOP_TRANSPORT": "stdio" }
     }
   }
