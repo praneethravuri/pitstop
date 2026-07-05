@@ -110,6 +110,20 @@ def build_server() -> FastMCP:
     for tool_fn in _TOOLS:
         mcp.tool(tool_fn)
 
+    @mcp.custom_route("/", methods=["GET"])
+    async def root(request: Request) -> JSONResponse:
+        from pitstop import __version__
+
+        return JSONResponse(
+            {
+                "name": "Pitstop F1 MCP Server",
+                "version": __version__,
+                "mcp_endpoint": "/mcp",
+                "health": "/health",
+                "docs": "https://github.com/praneethravuri/pitstop",
+            }
+        )
+
     @mcp.custom_route("/health", methods=["GET"])
     async def health_route(request: Request) -> JSONResponse:
         from pitstop.health import check_health
