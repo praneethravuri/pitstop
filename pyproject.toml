@@ -21,6 +21,7 @@ dependencies = [
 [project.scripts]
 pitstop = "pitstop.server:main"
 pitstop-db-seed = "pitstop.db.seed:main"
+pitstop-db-update = "pitstop.db.updater:main"
 
 [dependency-groups]
 dev = [

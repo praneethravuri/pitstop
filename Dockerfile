@@ -17,6 +17,22 @@ COPY pyproject.toml uv.lock ./
 # --no-install-project installs only deps, not the project itself yet (caching layer)
 RUN uv sync --frozen --no-install-project --no-dev
 
+# Download and extract F1 database from latest release
+# ponytail: Python built-in urllib/zipfile avoids extra deps; placed here so code changes
+# don't trigger db re-download; if download fails, build fails (db is essential)
+RUN python3 << 'EOF'
+import urllib.request
+import zipfile
+import os
+
+url = "https://github.com/praneethravuri/pitstop/releases/download/database/f1db.zip"
+os.makedirs("cache/f1db", exist_ok=True)
+urllib.request.urlretrieve(url, "cache/f1db/f1db.zip")
+with zipfile.ZipFile("cache/f1db/f1db.zip") as z:
+    z.extractall("cache/f1db")
+os.remove("cache/f1db/f1db.zip")
+EOF
+
 # Copy source code
 COPY src ./src
 COPY README.md ./

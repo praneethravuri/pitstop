@@ -1,0 +1,102 @@
+name: Update F1 Database
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'  # Mondays 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  update-and-rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: latest
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Download current database
+        run: |
+          gh release download database --pattern 'f1db.zip' || {
+            echo "ERROR: 'database' release not found. Please create it manually first."
+            exit 1
+          }
+          unzip -q f1db.zip
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Get before counts
+        run: |
+          echo "BEFORE_RACE=$(sqlite3 f1db.db 'SELECT COUNT(*) FROM race_data')" >> $GITHUB_ENV
+          echo "BEFORE_LAP=$(sqlite3 f1db.db 'SELECT COUNT(*) FROM lap_time')" >> $GITHUB_ENV
+          echo "BEFORE_DRIVER=$(sqlite3 f1db.db 'SELECT COUNT(*) FROM driver')" >> $GITHUB_ENV
+
+      - name: Run database update
+        run: uv run pitstop-db-update --db f1db.db
+
+      - name: Verify data integrity
+        run: |
+          after_race=$(sqlite3 f1db.db 'SELECT COUNT(*) FROM race_data')
+          after_lap=$(sqlite3 f1db.db 'SELECT COUNT(*) FROM lap_time')
+          after_driver=$(sqlite3 f1db.db 'SELECT COUNT(*) FROM driver')
+
+          echo "race_data: ${{ env.BEFORE_RACE }} → $after_race"
+          echo "lap_time: ${{ env.BEFORE_LAP }} → $after_lap"
+          echo "driver: ${{ env.BEFORE_DRIVER }} → $after_driver"
+
+          if [ "$after_race" -lt "${{ env.BEFORE_RACE }}" ]; then
+            echo "ERROR: race_data count decreased"
+            exit 1
+          fi
+          if [ "$after_lap" -lt "${{ env.BEFORE_LAP }}" ]; then
+            echo "ERROR: lap_time count decreased"
+            exit 1
+          fi
+          if [ "$after_driver" -lt "${{ env.BEFORE_DRIVER }}" ]; then
+            echo "ERROR: driver count decreased"
+            exit 1
+          fi
+
+      - name: Upload updated database
+        run: |
+          zip -q f1db.zip f1db.db
+          gh release upload database f1db.zip --clobber
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Set update date
+        run: echo "UPDATE_DATE=$(date -u +%Y-%m-%d)" >> $GITHUB_ENV
+
+      - name: Log into registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:f1db-updated-${{ github.run_number }}
+          labels: |
+            f1db.updated=${{ env.UPDATE_DATE }}
