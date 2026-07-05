@@ -16,13 +16,31 @@ stdio, via [uvx](https://docs.astral.sh/uv/guides/tools/) (no clone needed):
 PITSTOP_TRANSPORT=stdio uvx pitstop-f1
 ```
 
-Via the [Claude Code CLI](https://docs.claude.com/en/docs/claude-code):
+[Claude Code](https://docs.claude.com/en/docs/claude-code):
 
 ```bash
 claude mcp add pitstop -e PITSTOP_TRANSPORT=stdio -- uvx pitstop-f1
 ```
 
-Claude Desktop (`claude_desktop_config.json`):
+[Codex CLI](https://github.com/openai/codex):
+
+```bash
+codex mcp add pitstop --env PITSTOP_TRANSPORT=stdio -- uvx pitstop-f1
+```
+
+[Gemini CLI](https://github.com/google-gemini/gemini-cli):
+
+```bash
+gemini mcp add pitstop uvx pitstop-f1 --env PITSTOP_TRANSPORT=stdio
+```
+
+VS Code:
+
+```bash
+code --add-mcp '{"name":"pitstop","command":"uvx","args":["pitstop-f1"],"env":{"PITSTOP_TRANSPORT":"stdio"}}'
+```
+
+Claude Desktop (`claude_desktop_config.json`), Cursor (`~/.cursor/mcp.json`), and Windsurf (`~/.codeium/windsurf/mcp_config.json`) share the same JSON shape:
 
 ```json
 {
