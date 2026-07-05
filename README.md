@@ -1,14 +1,53 @@
 # Pitstop — F1 MCP Server
 
-An HTTP-first Model Context Protocol (MCP) server for Formula 1 data. Aggregates real-time, historical, and news data from multiple authoritative sources into 10 tools ready for any MCP client.
+<!-- mcp-name: io.github.praneethravuri/pitstop -->
 
-**v0.4.0** | Author: [Praneeth Ravuri](https://github.com/praneethravuri)
+An HTTP-first Model Context Protocol (MCP) server for Formula 1 data. Aggregates real-time, historical, and news data from multiple authoritative sources into 11 tools ready for any MCP client.
+
+**v0.5.0** | Author: [Praneeth Ravuri](https://github.com/praneethravuri)
+
+---
+
+## Install
+
+stdio, via [uvx](https://docs.astral.sh/uv/guides/tools/) (no clone needed):
+
+```bash
+PITSTOP_TRANSPORT=stdio uvx pitstop
+```
+
+Via the [Claude Code CLI](https://docs.claude.com/en/docs/claude-code):
+
+```bash
+claude mcp add pitstop -e PITSTOP_TRANSPORT=stdio -- uvx pitstop
+```
+
+Claude Desktop (`claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "pitstop": {
+      "command": "uvx",
+      "args": ["pitstop"],
+      "env": { "PITSTOP_TRANSPORT": "stdio" }
+    }
+  }
+}
+```
+
+Docker (HTTP transport, runs the full server incl. the F1 database):
+
+```bash
+docker compose up
+# → http://localhost:8000/mcp
+```
 
 ---
 
 ## Overview
 
-Pitstop exposes F1 data as 10 MCP tools over HTTP (default) or stdio. It pulls from FastF1, Jolpica, OpenF1, Wikidata, and RSS feeds, handles pagination, retries, caching, and concurrency limits transparently.
+Pitstop exposes F1 data as 11 MCP tools over HTTP (default) or stdio. It pulls from FastF1, Jolpica, OpenF1, Wikidata, RSS feeds, and its own seeded F1 database, handling pagination, retries, caching, and concurrency limits transparently.
 
 ---
 
@@ -21,6 +60,9 @@ Pitstop exposes F1 data as 10 MCP tools over HTTP (default) or stdio. It pulls f
 | [OpenF1](https://openf1.org/) | 2023–present | Real-time |
 | [Wikidata](https://www.wikidata.org/) | All eras | SPARQL queries |
 | RSS Feeds (20 sources) | Live | News |
+| Pitstop F1 Database | 1950–present | Owned sqlite (seeded from F1DB, self-updated weekly from Jolpica) + per-lap times |
+
+Database refresh: `.github/workflows/db-update.yml` runs weekly to pull new Jolpica results into the owned F1 database.
 
 ---
 
@@ -38,6 +80,7 @@ Pitstop exposes F1 data as 10 MCP tools over HTTP (default) or stdio. It pulls f
 | `get_results` | Race/qualifying/sprint results, lap times, pit stops (1950–present) | `year`, `round`, `result_type`, `driver`, `page` |
 | `get_race_analysis` | Pace, tire degradation, stint summaries, consistency (2018–present) | `year`, `gp`, `session`, `drivers`, `analysis_type`, `page` |
 | `query_wikidata` | SPARQL queries to Wikidata for F1 biography, career records, history | `sparql`, `page`, `page_size` |
+| `query_f1_database` | Read-only SQL over pitstop's owned F1 database (1950–present): results, standings, driver family trees, team lineage | `sql`, `page`, `page_size` |
 
 ---
 
@@ -90,7 +133,7 @@ MCP client config:
 
 | Endpoint | Purpose |
 |----------|---------|
-| `GET /health` | Per-source status (FastF1, Jolpica, OpenF1, RSS) |
+| `GET /health` | Per-source status (FastF1, f1db, Jolpica, OpenF1, RSS) |
 | `GET /live` | Liveness probe |
 | `GET /ready` | Readiness probe |
 
@@ -98,10 +141,11 @@ Example `/health` response:
 
 ```json
 {
-  "version": "0.4.0",
+  "version": "0.5.0",
   "overall": "ok",
   "sources": [
     { "name": "fastf1",  "status": "ok", "latency_ms": 2,   "detail": "cache writable" },
+    { "name": "f1db",    "status": "ok", "latency_ms": 1,   "detail": "" },
     { "name": "jolpica", "status": "ok", "latency_ms": 134, "detail": "" },
     { "name": "openf1",  "status": "ok", "latency_ms": 98,  "detail": "" },
     { "name": "rss",     "status": "ok", "latency_ms": 210, "detail": "" }
@@ -185,16 +229,6 @@ FastF1 maintains its own disk cache in `FASTF1_CACHE` directory. Control caching
 
 ---
 
-## Docker
-
-```bash
-docker compose up
-```
-
-Server starts on port 8000 with health check at `/health`.
-
----
-
 ## Development
 
 ```bash
@@ -211,14 +245,16 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
-## Credits / Acknowledgements
+## Credits & attribution
 
 | Source | Description | License |
 |--------|-------------|---------|
+| [F1DB](https://github.com/f1db/f1db) | Database seeded from F1DB and subsequently modified & extended by pitstop | CC BY 4.0 |
 | [FastF1](https://github.com/theOehrly/Fast-F1) | Python library for F1 timing, telemetry, and session data | MIT |
-| [Jolpica-F1](https://github.com/jolpica/jolpica-f1) | Ergast-compatible F1 data API, 1950–present | — |
+| [Jolpica-F1](https://github.com/jolpica/jolpica-f1) | Ergast-compatible F1 data API, 1950–present; also used to self-update the F1DB-seeded database weekly | — |
 | [OpenF1](https://openf1.org/) | Free open-source API for real-time F1 data | MIT |
 | [Wikidata](https://www.wikidata.org/) | Open knowledge graph with SPARQL query service | CC0 |
 | [Ergast Motor Racing API](https://ergast.com/mrd/) | Historical F1 data 1950–2024 (now served via Jolpica) | — |
+| RSS Feeds (20 sources) | News headlines, credited collectively; see each feed's `link` field in `get_f1_news` results | Respective publishers |
 
 Not affiliated with Formula 1 or the FIA. Data provided by third-party sources under their respective terms.

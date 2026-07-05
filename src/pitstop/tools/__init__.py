@@ -1,4 +1,5 @@
 from .analysis.analysis import get_race_analysis
+from .f1db.f1db import query_f1_database
 from .live.live_data import get_live_data
 from .news.news import get_f1_news
 from .reference.reference import get_reference_data
@@ -20,4 +21,5 @@ __all__ = [
     "get_results",
     "get_race_analysis",
     "query_wikidata",
+    "query_f1_database",
 ]

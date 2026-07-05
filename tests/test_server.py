@@ -27,6 +27,7 @@ async def test_all_tools_registered():
         "get_results",
         "get_race_analysis",
         "query_wikidata",
+        "query_f1_database",
     }
     assert names == expected, f"tool mismatch: got {names}, expected {expected}"
 

@@ -22,3 +22,10 @@ ENABLE_CACHING = os.getenv("PITSTOP_ENABLE_CACHING", "true").lower() == "true"
 CACHE_TTL_SECONDS = int(os.getenv("PITSTOP_CACHE_TTL_SECONDS", "300"))
 # TTL to pass to make_client(): None disables HTTP response caching
 HTTP_CACHE_TTL = CACHE_TTL_SECONDS if ENABLE_CACHING else None
+
+F1DB_DB_URL = os.getenv(
+    "PITSTOP_F1DB_DB_URL",
+    "https://github.com/praneethravuri/pitstop/releases/download/database/f1db.zip",
+)
+F1DB_CACHE_DIR = os.getenv("PITSTOP_F1DB_CACHE_DIR", os.path.join(FASTF1_CACHE_DIR, "f1db"))
+F1DB_UPDATE_CHECK_SECONDS = int(os.getenv("PITSTOP_F1DB_UPDATE_CHECK_SECONDS", "86400"))

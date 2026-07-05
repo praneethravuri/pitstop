@@ -1,13 +1,21 @@
 """Client factories and exports for the pitstop package."""
 
 from pitstop.clients.http import make_client
-from pitstop.config import ENABLE_CACHING, FASTF1_CACHE_DIR, HTTP_CACHE_TTL
+from pitstop.config import (
+    ENABLE_CACHING,
+    F1DB_CACHE_DIR,
+    F1DB_DB_URL,
+    FASTF1_CACHE_DIR,
+    HTTP_CACHE_TTL,
+)
 
+from .f1db_client import F1DBClient
 from .fastf1_client import FastF1Client
 
 _openf1_client = None
 _jolpica_client = None
 _fastf1_client = None
+_f1db_client = None
 
 
 def get_openf1_client():
@@ -45,10 +53,23 @@ def get_fastf1_client() -> FastF1Client:
     return _fastf1_client
 
 
+def get_f1db_client() -> F1DBClient:
+    """Return the shared F1DBClient singleton."""
+    global _f1db_client
+    if _f1db_client is None:
+        _f1db_client = F1DBClient(
+            cache_dir=F1DB_CACHE_DIR,
+            db_url=F1DB_DB_URL,
+        )
+    return _f1db_client
+
+
 __all__ = [
     "FastF1Client",
+    "F1DBClient",
     "make_client",
     "get_openf1_client",
     "get_jolpica_client",
     "get_fastf1_client",
+    "get_f1db_client",
 ]

@@ -3,6 +3,7 @@
 import asyncio
 import logging
 import os
+import sqlite3
 import tempfile
 import time
 from typing import TypedDict
@@ -10,6 +11,8 @@ from typing import TypedDict
 import httpx
 
 from pitstop import __version__
+from pitstop.clients.f1db_client import _DB_FILENAME
+from pitstop.config import F1DB_CACHE_DIR
 
 logger = logging.getLogger("pitstop.health")
 
@@ -106,13 +109,48 @@ def _probe_fastf1() -> SourceStatus:
         }
 
 
+def _probe_f1db() -> SourceStatus:
+    t = time.monotonic()
+    db_path = os.path.join(F1DB_CACHE_DIR, _DB_FILENAME)
+    if not os.path.exists(db_path):
+        # Not yet downloaded still leaves 10/11 tools working (only
+        # query_f1_database depends on this db) — degraded, not down.
+        return {
+            "name": "f1db",
+            "status": "degraded",
+            "latency_ms": int((time.monotonic() - t) * 1000),
+            "detail": "database not downloaded yet",
+        }
+    try:
+        # mode=ro: health checks must never trigger a download or write.
+        con = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+        try:
+            con.execute("SELECT 1")
+        finally:
+            con.close()
+        return {
+            "name": "f1db",
+            "status": "ok",
+            "latency_ms": int((time.monotonic() - t) * 1000),
+            "detail": "",
+        }
+    except sqlite3.Error as e:
+        return {
+            "name": "f1db",
+            "status": "down",
+            "latency_ms": int((time.monotonic() - t) * 1000),
+            "detail": str(e),
+        }
+
+
 async def check_health() -> dict:
     """Concurrently probe all data sources. Returns health dict."""
     fastf1_status = _probe_fastf1()
+    f1db_status = _probe_f1db()
     jolpica_status, openf1_status, rss_status = await asyncio.gather(
         _probe_jolpica(), _probe_openf1(), _probe_rss()
     )
-    sources = [fastf1_status, jolpica_status, openf1_status, rss_status]
+    sources = [fastf1_status, f1db_status, jolpica_status, openf1_status, rss_status]
     if any(s["status"] == "down" for s in sources):
         overall = "down"
     elif any(s["status"] != "ok" for s in sources):

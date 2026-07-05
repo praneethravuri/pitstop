@@ -1,0 +1,30 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.praneethravuri/pitstop",
+  "description": "F1 MCP server: live timing, telemetry, standings, news, and a queryable 1950-present database.",
+  "version": "0.5.0",
+  "repository": {
+    "url": "https://github.com/praneethravuri/pitstop",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "pitstop",
+      "version": "0.5.0",
+      "registryBaseUrl": "https://pypi.org",
+      "runtimeHint": "uvx",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "PITSTOP_TRANSPORT",
+          "description": "Transport mode; must be 'stdio' when run via an MCP client.",
+          "isRequired": true,
+          "default": "stdio"
+        }
+      ]
+    }
+  ]
+}
