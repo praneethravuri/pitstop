@@ -10,6 +10,22 @@ An HTTP-first Model Context Protocol (MCP) server for Formula 1 data. Aggregates
 
 ## Install
 
+### Hosted endpoint (nothing to install)
+
+A free public instance runs on [Hugging Face Spaces](https://huggingface.co/spaces/praneeth1025/pitstop):
+
+```
+https://praneeth1025-pitstop.hf.space/mcp
+```
+
+```bash
+claude mcp add --transport http pitstop https://praneeth1025-pitstop.hf.space/mcp
+```
+
+Note: the Space sleeps after long inactivity — the first request after a quiet spell takes a cold start.
+
+### Local install
+
 stdio, via [uvx](https://docs.astral.sh/uv/guides/tools/) (no clone needed):
 
 ```bash
