@@ -101,6 +101,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - name: Build and push Docker image
+        id: build
         uses: docker/build-push-action@v7
         with:
           context: .
@@ -109,3 +110,29 @@ jobs:
           labels: |
             ${{ steps.meta.outputs.labels }}
             f1db.updated=${{ env.UPDATE_DATE }}
+
+      # The HF Space pins the image by digest (its token can't call the
+      # restart API), so bump the digest to make the Space rebuild onto the
+      # fresh image. Skips cleanly when the HF_TOKEN secret isn't configured.
+      - name: Bump image digest in HF Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          if [ -z "$HF_TOKEN" ]; then
+            echo "HF_TOKEN secret not set; skipping Space digest bump"
+            exit 0
+          fi
+          if [ -z "$DIGEST" ]; then
+            echo "ERROR: build step produced no digest"
+            exit 1
+          fi
+          curl -sf https://huggingface.co/spaces/praneeth1025/pitstop/raw/main/Dockerfile -o SpaceDockerfile
+          sed -E "s|^FROM ghcr\.io/praneethravuri/pitstop.*|FROM ghcr.io/praneethravuri/pitstop:main@${DIGEST}|" SpaceDockerfile > SpaceDockerfile.new
+          mv SpaceDockerfile.new SpaceDockerfile
+          if ! grep -q "$DIGEST" SpaceDockerfile; then
+            echo "ERROR: FROM line did not match — Space Dockerfile format drifted; fix the sed pattern"
+            exit 1
+          fi
+          uvx --from huggingface_hub hf upload praneeth1025/pitstop SpaceDockerfile Dockerfile --type space \
+            --commit-message "Bump image digest to ${DIGEST} (weekly db refresh)"
