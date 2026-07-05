@@ -23,6 +23,8 @@ logger = logging.getLogger("pitstop.f1db")
 
 _DB_FILENAME = "f1db.db"
 _SIDECAR_SUFFIX = ".etag"
+_QUERY_TIMEOUT_S = 15.0  # abort a pathological query (e.g. a giant cross join) after this long
+_FETCH_CAP = 1001  # tools/f1db/f1db.py imports this; its _MAX_ROWS truncation is _FETCH_CAP - 1
 
 
 class F1DBClient:
@@ -47,6 +49,7 @@ class F1DBClient:
             f.write(f"{etag or ''}\n{last_modified or ''}\n")
 
     def _touch_sidecar(self) -> None:
+        open(self._sidecar_path, "a").close()  # create-if-missing, then bump mtime
         os.utime(self._sidecar_path, None)
 
     def _download(self) -> None:
@@ -148,8 +151,12 @@ class F1DBClient:
                 # sqlite3's execute() runs exactly one statement — this is the
                 # multi-statement guard (a second `; DROP ...` etc. raises
                 # ProgrammingError before mode=ro even gets a chance to reject it).
+                deadline = time.monotonic() + _QUERY_TIMEOUT_S
+                # Called every 100k VM instructions; returning truthy interrupts the
+                # query, which sqlite3 surfaces as an OperationalError below.
+                con.set_progress_handler(lambda: time.monotonic() > deadline, 100_000)
                 cur = con.execute(sql)
-                rows = cur.fetchall()
+                rows = cur.fetchmany(_FETCH_CAP)
             finally:
                 con.close()
         except sqlite3.Error as e:

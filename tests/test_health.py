@@ -108,13 +108,14 @@ async def test_fastf1_degraded_gives_degraded(tmp_path):
     assert result["overall"] == "degraded"
 
 
-def test_probe_f1db_down_when_db_missing(tmp_path):
+def test_probe_f1db_degraded_when_db_missing(tmp_path):
+    """Not-yet-downloaded is degraded (10/11 tools still work), not down."""
     from pitstop.health import _probe_f1db
 
     with patch("pitstop.health.F1DB_CACHE_DIR", str(tmp_path / "missing")):
         status = _probe_f1db()
 
-    assert status["status"] == "down"
+    assert status["status"] == "degraded"
 
 
 def test_probe_f1db_ok_when_db_present(tmp_path):

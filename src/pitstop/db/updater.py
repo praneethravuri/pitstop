@@ -752,17 +752,35 @@ def write_race_standings(
     driver_standings = fetch_driver_standings(year, round)
     constructor_standings = fetch_constructor_standings(year, round)
 
-    conn.execute("DELETE FROM race_driver_standing WHERE race_id = ?", (race_id,))
-    for order, s in enumerate(driver_standings, start=1):
-        driver_id = resolve_driver(conn, id_map, s["Driver"], dry_run)
-        conn.execute(
-            "INSERT INTO race_driver_standing "
-            "(race_id, position_display_order, position_number, position_text, "
-            "driver_id, points, positions_gained, championship_won) "
-            "VALUES (?, ?, ?, ?, ?, ?, NULL, 0)",
-            (race_id, order, int(s["position"]), s["positionText"], driver_id, float(s["points"])),
-        )
+    if not driver_standings:
+        # A 200 with an empty StandingsLists is Jolpica saying "nothing here yet",
+        # not "the standings are now empty" — don't let that wipe good data.
+        print(f"[updater] {year}/{round}: empty driver standings from Jolpica, leaving rows as-is")
+    else:
+        conn.execute("DELETE FROM race_driver_standing WHERE race_id = ?", (race_id,))
+        for order, s in enumerate(driver_standings, start=1):
+            driver_id = resolve_driver(conn, id_map, s["Driver"], dry_run)
+            conn.execute(
+                "INSERT INTO race_driver_standing "
+                "(race_id, position_display_order, position_number, position_text, "
+                "driver_id, points, positions_gained, championship_won) "
+                "VALUES (?, ?, ?, ?, ?, ?, NULL, 0)",
+                (
+                    race_id,
+                    order,
+                    int(s["position"]),
+                    s["positionText"],
+                    driver_id,
+                    float(s["points"]),
+                ),
+            )
 
+    if not constructor_standings:
+        print(
+            f"[updater] {year}/{round}: empty constructor standings from Jolpica, "
+            "leaving rows as-is"
+        )
+        return
     conn.execute("DELETE FROM race_constructor_standing WHERE race_id = ?", (race_id,))
     for order, s in enumerate(constructor_standings, start=1):
         constructor_id = resolve_constructor(conn, id_map, s["Constructor"], dry_run)
@@ -801,16 +819,24 @@ def refresh_season_standings(
     driver_standings = fetch_driver_standings(year)
     constructor_standings = fetch_constructor_standings(year)
 
-    conn.execute("DELETE FROM season_driver_standing WHERE year = ?", (year,))
-    for order, s in enumerate(driver_standings, start=1):
-        driver_id = resolve_driver(conn, id_map, s["Driver"], dry_run)
-        conn.execute(
-            "INSERT INTO season_driver_standing "
-            "(year, position_display_order, position_number, position_text, driver_id, points, "
-            "championship_won) VALUES (?, ?, ?, ?, ?, ?, 0)",
-            (year, order, int(s["position"]), s["positionText"], driver_id, float(s["points"])),
-        )
+    if not driver_standings:
+        # A 200 with an empty StandingsLists is Jolpica saying "nothing here yet",
+        # not "the standings are now empty" — don't let that wipe good data.
+        print(f"[updater] {year}: empty driver standings from Jolpica, leaving rows as-is")
+    else:
+        conn.execute("DELETE FROM season_driver_standing WHERE year = ?", (year,))
+        for order, s in enumerate(driver_standings, start=1):
+            driver_id = resolve_driver(conn, id_map, s["Driver"], dry_run)
+            conn.execute(
+                "INSERT INTO season_driver_standing "
+                "(year, position_display_order, position_number, position_text, driver_id, "
+                "points, championship_won) VALUES (?, ?, ?, ?, ?, ?, 0)",
+                (year, order, int(s["position"]), s["positionText"], driver_id, float(s["points"])),
+            )
 
+    if not constructor_standings:
+        print(f"[updater] {year}: empty constructor standings from Jolpica, leaving rows as-is")
+        return
     conn.execute("DELETE FROM season_constructor_standing WHERE year = ?", (year,))
     for order, s in enumerate(constructor_standings, start=1):
         constructor_id = resolve_constructor(conn, id_map, s["Constructor"], dry_run)
@@ -1280,7 +1306,11 @@ def main() -> None:
         conn.close()
         return
 
-    year = args.year or datetime.now(UTC).year
+    # Default scans from last year, not this year: a season finale in December
+    # can go un-ingested past Jan 1 (cron runs weekly, not exactly at midnight
+    # on New Year's), and target_races() re-checks every race's RACE_RESULT
+    # anyway so scanning one extra year back costs nothing but a wider SELECT.
+    year = args.year or (datetime.now(UTC).year - 1)
 
     bootstrap_season(conn, year, id_map, args.dry_run)
 

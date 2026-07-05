@@ -113,9 +113,11 @@ def _probe_f1db() -> SourceStatus:
     t = time.monotonic()
     db_path = os.path.join(F1DB_CACHE_DIR, _DB_FILENAME)
     if not os.path.exists(db_path):
+        # Not yet downloaded still leaves 10/11 tools working (only
+        # query_f1_database depends on this db) — degraded, not down.
         return {
             "name": "f1db",
-            "status": "down",
+            "status": "degraded",
             "latency_ms": int((time.monotonic() - t) * 1000),
             "detail": "database not downloaded yet",
         }

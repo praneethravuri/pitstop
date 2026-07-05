@@ -391,10 +391,6 @@ _CONSTRUCTOR_STANDINGS = [
 ]
 
 
-def _races_table(inner) -> dict:
-    return {"MRData": {"total": str(len(inner)), "RaceTable": {"Races": [{"Results": inner}]}}}
-
-
 def _fake_query_factory():
     def fake_query(path: str, **params) -> dict:
         if path == "2020/1/results":
@@ -600,6 +596,66 @@ def test_backfill_laps_dry_run_writes_nothing(tmp_path):
     updater.backfill_laps(conn, 2020, load_id_map(conn), dry_run=True)
 
     assert conn.execute("SELECT COUNT(*) FROM lap_time").fetchone()[0] == 0
+
+
+# --------------------------------------------------------------------------
+# empty StandingsLists (BLOCKER 1): a Jolpica 200 with no standings yet must
+# never wipe rows a previous run already wrote.
+# --------------------------------------------------------------------------
+
+
+def test_empty_standings_payload_preserves_existing_rows(tmp_path, monkeypatch):
+    conn = _make_db(tmp_path)
+    conn.execute("INSERT INTO race (id, year, round, date) VALUES (1, 2020, 1, '2020-03-01')")
+    conn.execute(
+        "INSERT INTO race_driver_standing (race_id, position_display_order, position_number, "
+        "position_text, driver_id, points, positions_gained, championship_won) "
+        "VALUES (1, 1, 1, '1', 'max-verstappen', 25.0, NULL, 0)"
+    )
+    conn.execute(
+        "INSERT INTO race_constructor_standing (race_id, position_display_order, "
+        "position_number, position_text, constructor_id, engine_manufacturer_id, points, "
+        "positions_gained, championship_won) VALUES (1, 1, 1, '1', 'red-bull', 'honda-rbpt', "
+        "43.0, NULL, 0)"
+    )
+    conn.execute(
+        "INSERT INTO season_driver_standing (year, position_display_order, position_number, "
+        "position_text, driver_id, points, championship_won) "
+        "VALUES (2020, 1, 1, '1', 'max-verstappen', 25.0, 0)"
+    )
+    conn.execute(
+        "INSERT INTO season_constructor_standing (year, position_display_order, "
+        "position_number, position_text, constructor_id, engine_manufacturer_id, points, "
+        "championship_won) VALUES (2020, 1, 1, '1', 'red-bull', 'honda-rbpt', 43.0, 0)"
+    )
+    conn.commit()
+    id_map = load_id_map(conn)
+    monkeypatch.setattr(updater, "fetch_driver_standings", lambda year, round=None: [])
+    monkeypatch.setattr(updater, "fetch_constructor_standings", lambda year, round=None: [])
+
+    updater.write_race_standings(conn, race_id=1, year=2020, round=1, id_map=id_map, dry_run=False)
+    updater.refresh_season_standings(conn, year=2020, id_map=id_map, dry_run=False)
+
+    assert (
+        conn.execute("SELECT COUNT(*) FROM race_driver_standing WHERE race_id = 1").fetchone()[0]
+        == 1
+    )
+    assert (
+        conn.execute("SELECT COUNT(*) FROM race_constructor_standing WHERE race_id = 1").fetchone()[
+            0
+        ]
+        == 1
+    )
+    assert (
+        conn.execute("SELECT COUNT(*) FROM season_driver_standing WHERE year = 2020").fetchone()[0]
+        == 1
+    )
+    assert (
+        conn.execute(
+            "SELECT COUNT(*) FROM season_constructor_standing WHERE year = 2020"
+        ).fetchone()[0]
+        == 1
+    )
 
 
 # --------------------------------------------------------------------------

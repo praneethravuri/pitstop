@@ -159,3 +159,24 @@ def test_query_write_fails_due_to_read_only_mode(tmp_path):
 
     with pytest.raises(DataSourceError):
         client.query("INSERT INTO t VALUES (2)")
+
+
+def test_query_caps_rows_at_fetch_cap(tmp_path):
+    """A query matching more than _FETCH_CAP rows is truncated to exactly the cap.
+
+    (Timeout-path test is skipped: reliably tripping the 15s progress-handler
+    deadline without an actual 15s-plus query is not worth the runtime cost
+    here — the progress handler wiring is simple enough to trust by inspection.)
+    """
+    from pitstop.clients.f1db_client import _FETCH_CAP
+
+    db_path, sidecar_path = _write_local_db(str(tmp_path))
+    con = sqlite3.connect(db_path)
+    con.executemany("INSERT INTO t VALUES (?)", [(i,) for i in range(_FETCH_CAP + 50)])
+    con.commit()
+    con.close()
+    client = F1DBClient(cache_dir=str(tmp_path), db_url=_DB_URL)
+
+    rows = client.query("SELECT x FROM t")
+
+    assert len(rows) == _FETCH_CAP

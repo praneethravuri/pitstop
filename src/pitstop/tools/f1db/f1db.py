@@ -6,13 +6,16 @@ import re
 from fastmcp.exceptions import ToolError
 
 from pitstop.clients import get_f1db_client
+from pitstop.clients.f1db_client import _FETCH_CAP
 from pitstop.exceptions import DataSourceError
 from pitstop.tools.f1db.models import F1DBResponse
 from pitstop.utils import paginate, to_tool_error
 
 logger = logging.getLogger("pitstop.f1db")
 
-_MAX_ROWS = 1000
+# One less than the client's _FETCH_CAP, so a query hitting the cap still looks
+# truncated here (row_count == _MAX_ROWS would otherwise look like a clean result).
+_MAX_ROWS = _FETCH_CAP - 1
 _ALLOWED_PREFIXES = ("select", "with")
 # Strips leading `-- ...` line comments and `/* ... */` block comments so a
 # commented SELECT isn't rejected by the prefix check below.
