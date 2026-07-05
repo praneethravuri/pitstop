@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM python:3.13-slim-bookworm
 
 # Install uv.
@@ -17,21 +18,14 @@ COPY pyproject.toml uv.lock ./
 # --no-install-project installs only deps, not the project itself yet (caching layer)
 RUN uv sync --frozen --no-install-project --no-dev
 
-# Download and extract F1 database from latest release
-# ponytail: Python built-in urllib/zipfile avoids extra deps; placed here so code changes
-# don't trigger db re-download; if download fails, build fails (db is essential)
-RUN python3 << 'EOF'
-import urllib.request
-import zipfile
-import os
-
-url = "https://github.com/praneethravuri/pitstop/releases/download/database/f1db.zip"
-os.makedirs("cache/f1db", exist_ok=True)
-urllib.request.urlretrieve(url, "cache/f1db/f1db.zip")
-with zipfile.ZipFile("cache/f1db/f1db.zip") as z:
-    z.extractall("cache/f1db")
-os.remove("cache/f1db/f1db.zip")
-EOF
+# Bake the F1 database into the image so containers start warm.
+# ADD from URL is re-checksummed by BuildKit each build (no stale layer cache).
+# The empty sidecar (matching _write_sidecar's "etag\nlast_modified\n" format)
+# keeps F1DBClient._ensure_db() from re-downloading on first query; after the
+# 24h TTL one refresh happens (empty etag mismatches remote), which picks up
+# the weekly db update.
+ADD https://github.com/praneethravuri/pitstop/releases/download/database/f1db.zip /tmp/f1db.zip
+RUN python3 -c "import zipfile, os; os.makedirs('cache/f1db', exist_ok=True); zipfile.ZipFile('/tmp/f1db.zip').extractall('cache/f1db'); open('cache/f1db/f1db.db.etag', 'w').write('\n\n'); os.remove('/tmp/f1db.zip')"
 
 # Copy source code
 COPY src ./src

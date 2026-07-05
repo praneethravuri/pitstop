@@ -92,11 +92,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # Same images/tags config as release.yml so the rebuild overwrites the
+      # tags deployments actually pull (branch tag "main" on this ref).
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v7
         with:
           context: .
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:f1db-updated-${{ github.run_number }}
+          tags: ${{ steps.meta.outputs.tags }}
           labels: |
+            ${{ steps.meta.outputs.labels }}
             f1db.updated=${{ env.UPDATE_DATE }}
