@@ -15,7 +15,7 @@ classifiers = [
 dependencies = [
     "fastmcp==4.1.4",
     "fastf1==3.9.2",
-    "pydantic==2.14.1",
+    "pydantic==2.14.3",
     "httpx[http2]==0.28.1",
     "feedparser==6.0.14",
     "python-dotenv==1.2.4",
