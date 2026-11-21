@@ -19,7 +19,7 @@ dependencies = [
     "httpx[http2]==0.28.1",
     "feedparser==6.0.14",
     "python-dotenv==1.2.4",
-    "hishel==1.4.0",
+    "hishel==2.0.0",
     "tenacity==9.2.1",
     "uvloop==0.23.0",
 ]
